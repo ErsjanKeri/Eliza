@@ -1,0 +1,16 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /Users/ersibesi/AndroidStudioProjects/Eliza/core/data/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest6151642025321078128.xml:2:13-83
+INJECTED from /Users/ersibesi/AndroidStudioProjects/Eliza/core/data/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest6151642025321078128.xml:2:13-83
+	package
+		INJECTED from /Users/ersibesi/AndroidStudioProjects/Eliza/core/data/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest6151642025321078128.xml
+	xmlns:android
+		ADDED from /Users/ersibesi/AndroidStudioProjects/Eliza/core/data/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest6151642025321078128.xml:2:23-81
+uses-sdk
+INJECTED from /Users/ersibesi/AndroidStudioProjects/Eliza/core/data/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest6151642025321078128.xml reason: use-sdk injection requested
+INJECTED from /Users/ersibesi/AndroidStudioProjects/Eliza/core/data/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest6151642025321078128.xml
+INJECTED from /Users/ersibesi/AndroidStudioProjects/Eliza/core/data/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest6151642025321078128.xml
+	android:targetSdkVersion
+		INJECTED from /Users/ersibesi/AndroidStudioProjects/Eliza/core/data/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest6151642025321078128.xml
+	android:minSdkVersion
+		INJECTED from /Users/ersibesi/AndroidStudioProjects/Eliza/core/data/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest6151642025321078128.xml

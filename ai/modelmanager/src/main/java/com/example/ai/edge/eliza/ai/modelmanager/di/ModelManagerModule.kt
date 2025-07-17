@@ -16,9 +16,9 @@
 
 package com.example.ai.edge.eliza.ai.modelmanager.di
 
-import com.example.ai.edge.eliza.ai.modelmanager.ElizaInferenceHelper
+import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
+import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelperImpl
 import com.example.ai.edge.eliza.ai.modelmanager.ModelDownloadRepository
-import com.example.ai.edge.eliza.ai.modelmanager.impl.ElizaInferenceHelperImpl
 import com.example.ai.edge.eliza.ai.modelmanager.impl.ModelDownloadRepositoryImpl
 import com.example.ai.edge.eliza.core.data.chat.RagProviderFactory
 import com.example.ai.edge.eliza.core.data.chat.RagProviderFactoryImpl

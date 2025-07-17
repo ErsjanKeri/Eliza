@@ -19,343 +19,166 @@ package com.example.ai.edge.eliza.core.data.chat
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 import com.example.ai.edge.eliza.core.data.repository.ProgressRepository
 import com.example.ai.edge.eliza.core.model.Subject
-import kotlinx.coroutines.flow.first
+import com.example.ai.edge.eliza.core.model.UserAnswer
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * RAG provider for chapter reading context.
- * Retrieves relevant content from the current chapter and lesson.
+ * Simplified implementation of RAG providers for development.
+ * This provides basic mock functionality without complex data model interactions.
  */
+
+@Singleton
 class ChapterRagProvider @Inject constructor(
     private val courseRepository: CourseRepository
 ) : RagProvider {
-
-    override suspend fun getRelevantContent(
-        query: String,
-        context: ChatContext,
-        maxChunks: Int
-    ): List<ContentChunk> {
-        return when (context) {
-            is ChatContext.ChapterContext -> {
-                // Search within the current chapter content
-                val lesson = courseRepository.getLessonById(context.lessonId).first()
-                val course = courseRepository.getCourseById(context.courseId).first()
-                
-                val chunks = mutableListOf<ContentChunk>()
-                
-                // Search in lesson content
-                lesson?.let { lessonData ->
-                    val contentSections = lessonData.content.split("\n\n")
-                    contentSections.forEachIndexed { index, section ->
-                        if (section.contains(query, ignoreCase = true)) {
-                            chunks.add(ContentChunk(
-                                id = "lesson-${lessonData.id}-section-$index",
-                                title = lessonData.title,
-                                content = section,
-                                source = "lesson-${lessonData.id}",
-                                relevanceScore = calculateRelevanceScore(query, section),
-                                chunkType = ContentChunkType.CHAPTER_SECTION
-                            ))
-                        }
-                    }
-                }
-                
-                // Search in course examples
-                course?.let { courseData ->
-                    val examples = courseRepository.getExamplesByCourse(courseData.id).first()
-                    examples.forEach { example ->
-                        if (example.content.contains(query, ignoreCase = true)) {
-                            chunks.add(ContentChunk(
-                                id = "example-${example.id}",
-                                title = example.title,
-                                content = example.content,
-                                source = "course-${courseData.id}",
-                                relevanceScore = calculateRelevanceScore(query, example.content),
-                                chunkType = ContentChunkType.EXAMPLE
-                            ))
-                        }
-                    }
-                }
-                
-                chunks.sortedByDescending { it.relevanceScore }.take(maxChunks)
-            }
-            else -> emptyList()
-        }
+    
+    override suspend fun retrieveRelevantContent(query: String, context: ChatContext.ChapterContext): List<ContentChunk> {
+        // Simplified mock implementation
+        return listOf(
+            ContentChunk(
+                id = "chunk1",
+                content = "This is a mock content chunk for chapter context: ${context.courseId}",
+                type = ContentChunkType.LESSON_CONTENT,
+                relevanceScore = 0.8f,
+                metadata = mapOf("lessonId" to (context.lessonId ?: "unknown"))
+            )
+        )
     }
-
-    override suspend fun enhancePrompt(prompt: String, context: ChatContext): String {
-        val relevantContent = getRelevantContent(prompt, context)
-        if (relevantContent.isEmpty()) return prompt
+    
+    override suspend fun enhancePromptWithContext(prompt: String, context: ChatContext.ChapterContext): EnhancedPrompt {
+        val chunks = retrieveRelevantContent(prompt, context)
+        val contextInfo = chunks.joinToString("\n") { it.content }
         
-        return when (context) {
-            is ChatContext.ChapterContext -> {
-                buildString {
-                    append("You are an AI tutor helping with ${context.subject} in the lesson '${context.chapterTitle}'.\n\n")
-                    append("Context from current lesson:\n")
-                    relevantContent.forEach { chunk ->
-                        append("- ${chunk.title}: ${chunk.content}\n")
-                    }
-                    append("\nStudent's question: $prompt")
-                }
-            }
-            else -> prompt
-        }
-    }
-
-    override suspend fun getSystemInstructions(context: ChatContext): String {
-        return when (context) {
-            is ChatContext.ChapterContext -> {
-                """
-                You are an AI tutor specializing in ${context.subject}. The student is currently reading 
-                "${context.chapterTitle}" and may have questions about the content. 
-                
-                Guidelines:
-                - Provide clear, educational explanations
-                - Reference the current lesson content when relevant
-                - Use step-by-step explanations for problems
-                - Encourage active learning and understanding
-                - If the question is outside the current lesson, gently guide back to the topic
-                """.trimIndent()
-            }
-            else -> "You are a helpful AI tutor."
-        }
-    }
-
-    private fun calculateRelevanceScore(query: String, content: String): Float {
-        val queryWords = query.lowercase().split(" ")
-        val contentWords = content.lowercase().split(" ")
-        
-        val matches = queryWords.count { queryWord ->
-            contentWords.any { contentWord ->
-                contentWord.contains(queryWord) || queryWord.contains(contentWord)
-            }
-        }
-        
-        return matches.toFloat() / queryWords.size.toFloat()
+        return EnhancedPrompt(
+            originalPrompt = prompt,
+            enhancedPrompt = "Context: $contextInfo\n\nUser Question: $prompt",
+            result = PromptEnhancementResult(
+                addedContext = contextInfo,
+                relevanceScore = 0.8f,
+                chunksUsed = chunks.size
+            )
+        )
     }
 }
 
-/**
- * RAG provider for revision context.
- * Generates explanations and practice problems based on wrong answers.
- */
+@Singleton  
 class RevisionRagProvider @Inject constructor(
-    private val courseRepository: CourseRepository,
     private val progressRepository: ProgressRepository
 ) : RagProvider {
-
-    override suspend fun getRelevantContent(
-        query: String,
-        context: ChatContext,
-        maxChunks: Int
-    ): List<ContentChunk> {
-        return when (context) {
-            is ChatContext.RevisionContext -> {
-                val chunks = mutableListOf<ContentChunk>()
-                
-                // Get relevant exercises and explanations
-                val exercises = courseRepository.getExercisesByLesson(context.lessonId).first()
-                exercises.forEach { exercise ->
-                    if (exercise.explanation.contains(query, ignoreCase = true)) {
-                        chunks.add(ContentChunk(
-                            id = "exercise-${exercise.id}",
-                            title = "Exercise: ${exercise.question}",
-                            content = exercise.explanation,
-                            source = "exercise-${exercise.id}",
-                            relevanceScore = calculateRelevanceScore(query, exercise.explanation),
-                            chunkType = ContentChunkType.EXPLANATION
-                        ))
-                    }
-                }
-                
-                // Get concept explanations for review topics
-                context.conceptsToReview.forEach { concept ->
-                    if (concept.contains(query, ignoreCase = true)) {
-                        chunks.add(ContentChunk(
-                            id = "concept-$concept",
-                            title = "Concept: $concept",
-                            content = "Review focus: $concept",
-                            source = "revision-concepts",
-                            relevanceScore = 0.8f,
-                            chunkType = ContentChunkType.CONCEPT_OVERVIEW
-                        ))
-                    }
-                }
-                
-                chunks.sortedByDescending { it.relevanceScore }.take(maxChunks)
-            }
-            else -> emptyList()
-        }
+    
+    override suspend fun retrieveRelevantContent(query: String, context: ChatContext.RevisionContext): List<ContentChunk> {
+        // Simplified mock implementation
+        return listOf(
+            ContentChunk(
+                id = "revision_chunk1",
+                content = "This is mock revision content for subject: ${context.subject}",
+                type = ContentChunkType.MISTAKE_ANALYSIS,
+                relevanceScore = 0.9f,
+                metadata = mapOf("subject" to context.subject.displayName)
+            )
+        )
     }
-
-    override suspend fun enhancePrompt(prompt: String, context: ChatContext): String {
-        return when (context) {
-            is ChatContext.RevisionContext -> {
-                buildString {
-                    append("You are helping a student with revision after they got some answers wrong.\n\n")
-                    append("Wrong answers in ${context.subject}:\n")
-                    context.wrongAnswers.forEach { answer ->
-                        append("- Question: ${answer.questionText}\n")
-                        append("- Student's answer: ${answer.answer}\n")
-                        append("- Correct answer: ${answer.correctAnswer}\n")
-                    }
-                    append("\nConcepts to review: ${context.conceptsToReview.joinToString(", ")}\n")
-                    append("\nStudent's question: $prompt")
-                }
-            }
-            else -> prompt
-        }
-    }
-
-    override suspend fun getSystemInstructions(context: ChatContext): String {
-        return when (context) {
-            is ChatContext.RevisionContext -> {
-                """
-                You are an AI tutor helping with revision in ${context.subject}. The student has made 
-                mistakes and needs to review specific concepts.
-                
-                Guidelines:
-                - Focus on explaining WHY answers were wrong
-                - Provide clear step-by-step corrections
-                - Generate similar practice problems
-                - Identify common mistake patterns
-                - Build confidence through understanding
-                - Adapt difficulty to ${context.difficultyLevel} level
-                """.trimIndent()
-            }
-            else -> "You are a helpful AI tutor."
-        }
-    }
-
-    private fun calculateRelevanceScore(query: String, content: String): Float {
-        val queryWords = query.lowercase().split(" ")
-        val contentWords = content.lowercase().split(" ")
+    
+    override suspend fun enhancePromptWithContext(prompt: String, context: ChatContext.RevisionContext): EnhancedPrompt {
+        val chunks = retrieveRelevantContent(prompt, context)
+        val contextInfo = chunks.joinToString("\n") { it.content }
         
-        val matches = queryWords.count { queryWord ->
-            contentWords.any { contentWord ->
-                contentWord.contains(queryWord) || queryWord.contains(contentWord)
-            }
-        }
-        
-        return matches.toFloat() / queryWords.size.toFloat()
+        return EnhancedPrompt(
+            originalPrompt = prompt,
+            enhancedPrompt = "Revision Context for ${context.subject.displayName}: $contextInfo\n\nUser Question: $prompt",
+            result = PromptEnhancementResult(
+                addedContext = contextInfo,
+                relevanceScore = 0.9f,
+                chunksUsed = chunks.size
+            )
+        )
     }
 }
 
-/**
- * RAG provider for general context.
- * Provides open-ended tutoring support.
- */
+@Singleton
 class GeneralRagProvider @Inject constructor(
     private val courseRepository: CourseRepository
 ) : RagProvider {
-
-    override suspend fun getRelevantContent(
-        query: String,
-        context: ChatContext,
-        maxChunks: Int
-    ): List<ContentChunk> {
-        return when (context) {
-            is ChatContext.GeneralContext -> {
-                val chunks = mutableListOf<ContentChunk>()
-                
-                // Search across all courses if subject is specified
-                context.subject?.let { subject ->
-                    val courses = courseRepository.getCoursesBySubject(subject).first()
-                    courses.forEach { course ->
-                        val lessons = courseRepository.getLessonsByCourse(course.id).first()
-                        lessons.forEach { lesson ->
-                            if (lesson.content.contains(query, ignoreCase = true)) {
-                                chunks.add(ContentChunk(
-                                    id = "general-lesson-${lesson.id}",
-                                    title = "${course.title} - ${lesson.title}",
-                                    content = lesson.content.take(200) + "...",
-                                    source = "course-${course.id}",
-                                    relevanceScore = calculateRelevanceScore(query, lesson.content),
-                                    chunkType = ContentChunkType.CHAPTER_SECTION
-                                ))
-                            }
-                        }
-                    }
-                }
-                
-                chunks.sortedByDescending { it.relevanceScore }.take(maxChunks)
-            }
-            else -> emptyList()
-        }
+    
+    override suspend fun retrieveRelevantContent(query: String, context: ChatContext.GeneralContext): List<ContentChunk> {
+        // Simplified mock implementation
+        return listOf(
+            ContentChunk(
+                id = "general_chunk1",
+                content = "This is general educational content related to the query: $query",
+                type = ContentChunkType.GENERAL_KNOWLEDGE,
+                relevanceScore = 0.7f,
+                metadata = mapOf("query" to query)
+            )
+        )
     }
-
-    override suspend fun enhancePrompt(prompt: String, context: ChatContext): String {
-        return when (context) {
-            is ChatContext.GeneralContext -> {
-                buildString {
-                    append("You are an AI tutor providing general help")
-                    context.subject?.let { append(" in ${it}") }
-                    append(".\n\n")
-                    
-                    if (context.learningGoals.isNotEmpty()) {
-                        append("Student's learning goals: ${context.learningGoals.joinToString(", ")}\n")
-                    }
-                    
-                    context.userLevel?.let { append("Student level: $it\n") }
-                    context.preferredDifficulty?.let { append("Preferred difficulty: $it\n") }
-                    
-                    append("\nStudent's question: $prompt")
-                }
-            }
-            else -> prompt
-        }
-    }
-
-    override suspend fun getSystemInstructions(context: ChatContext): String {
-        return when (context) {
-            is ChatContext.GeneralContext -> {
-                """
-                You are an AI tutor providing general educational support${context.subject?.let { " in $it" } ?: ""}.
-                
-                Guidelines:
-                - Provide clear, comprehensive explanations
-                - Use examples and analogies to aid understanding
-                - Encourage critical thinking and problem-solving
-                - Adapt to the student's level and goals
-                - Be patient and supportive
-                - Guide students to discover answers themselves when possible
-                """.trimIndent()
-            }
-            else -> "You are a helpful AI tutor."
-        }
-    }
-
-    private fun calculateRelevanceScore(query: String, content: String): Float {
-        val queryWords = query.lowercase().split(" ")
-        val contentWords = content.lowercase().split(" ")
+    
+    override suspend fun enhancePromptWithContext(prompt: String, context: ChatContext.GeneralContext): EnhancedPrompt {
+        val chunks = retrieveRelevantContent(prompt, context)
+        val contextInfo = chunks.joinToString("\n") { it.content }
         
-        val matches = queryWords.count { queryWord ->
-            contentWords.any { contentWord ->
-                contentWord.contains(queryWord) || queryWord.contains(contentWord)
-            }
-        }
-        
-        return matches.toFloat() / queryWords.size.toFloat()
+        return EnhancedPrompt(
+            originalPrompt = prompt,
+            enhancedPrompt = "General Context: $contextInfo\n\nUser Question: $prompt",
+            result = PromptEnhancementResult(
+                addedContext = contextInfo,
+                relevanceScore = 0.7f,
+                chunksUsed = chunks.size
+            )
+        )
     }
 }
 
-/**
- * Factory for creating appropriate RagProvider instances.
- */
+@Singleton
+class ExerciseRagProvider @Inject constructor(
+    private val courseRepository: CourseRepository,
+    private val progressRepository: ProgressRepository
+) : RagProvider {
+    
+    override suspend fun retrieveRelevantContent(query: String, context: ChatContext.ExerciseContext): List<ContentChunk> {
+        // Simplified mock implementation
+        return listOf(
+            ContentChunk(
+                id = "exercise_chunk1",
+                content = "This is mock exercise help content for exercise: ${context.exerciseId}",
+                type = ContentChunkType.EXERCISE_HINT,
+                relevanceScore = 0.9f,
+                metadata = mapOf("exerciseId" to context.exerciseId)
+            )
+        )
+    }
+    
+    override suspend fun enhancePromptWithContext(prompt: String, context: ChatContext.ExerciseContext): EnhancedPrompt {
+        val chunks = retrieveRelevantContent(prompt, context)
+        val contextInfo = chunks.joinToString("\n") { it.content }
+        
+        return EnhancedPrompt(
+            originalPrompt = prompt,
+            enhancedPrompt = "Exercise Context for ${context.exerciseId}: $contextInfo\n\nUser Question: $prompt",
+            result = PromptEnhancementResult(
+                addedContext = contextInfo,
+                relevanceScore = 0.9f,
+                chunksUsed = chunks.size
+            )
+        )
+    }
+}
+
 @Singleton
 class RagProviderFactoryImpl @Inject constructor(
     private val chapterRagProvider: ChapterRagProvider,
     private val revisionRagProvider: RevisionRagProvider,
-    private val generalRagProvider: GeneralRagProvider
+    private val generalRagProvider: GeneralRagProvider,
+    private val exerciseRagProvider: ExerciseRagProvider
 ) : RagProviderFactory {
-
-    override fun createProvider(context: ChatContext): RagProvider {
+    
+    override fun getRagProvider(context: ChatContext): RagProvider {
         return when (context) {
             is ChatContext.ChapterContext -> chapterRagProvider
             is ChatContext.RevisionContext -> revisionRagProvider
             is ChatContext.GeneralContext -> generalRagProvider
-            is ChatContext.ExerciseContext -> chapterRagProvider // Reuse chapter provider
+            is ChatContext.ExerciseContext -> exerciseRagProvider
         }
     }
 } 

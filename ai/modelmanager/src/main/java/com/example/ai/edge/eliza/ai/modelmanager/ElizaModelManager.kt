@@ -20,9 +20,12 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
 import com.example.ai.edge.eliza.core.data.repository.ModelDownloadProgress
 import com.example.ai.edge.eliza.core.data.repository.ModelDownloadStatus
 import com.example.ai.edge.eliza.core.data.repository.ModelInitializationResult
+import com.example.ai.edge.eliza.core.model.Model
+import com.example.ai.edge.eliza.core.model.GEMMA_3N_E2B_MODEL
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -146,8 +149,9 @@ class ElizaModelManager @Inject constructor(
 
     /**
      * Initializes the Gemma 3N model for inference.
+     * Includes proper concurrent access control like Gallery's implementation.
      */
-    fun initializeModel(): Flow<ModelInitializationResult> = flow {
+    fun initializeModel(force: Boolean = false): Flow<ModelInitializationResult> = flow {
         if (!isModelDownloaded()) {
             emit(ModelInitializationResult(
                 isSuccess = false,
@@ -159,9 +163,42 @@ class ElizaModelManager @Inject constructor(
             return@flow
         }
 
-        updateInitializationStatus(ModelInitializationStatus(
-            status = ModelInitializationStatusType.INITIALIZING
-        ))
+        // Skip if already initialized (unless forced)
+        if (!force && uiState.value.initializationStatus?.status == ModelInitializationStatusType.INITIALIZED) {
+            Log.d(TAG, "Model '${model.name}' already initialized. Skipping.")
+            emit(ModelInitializationResult(
+                isSuccess = true,
+                modelName = model.name,
+                initializationTime = 0L,
+                memoryUsage = model.estimatedPeakMemoryInBytes ?: 0L,
+                error = null
+            ))
+            return@flow
+        }
+
+        // Skip if initialization is in progress
+        if (model.initializing) {
+            model.cleanUpAfterInit = false
+            Log.d(TAG, "Model '${model.name}' is being initialized. Skipping.")
+            return@flow
+        }
+
+        // Clean up any existing instance first
+        cleanupModel()
+
+        // Start initialization
+        Log.d(TAG, "Initializing model '${model.name}'...")
+        model.initializing = true
+
+        // Show initializing status after a delay
+        viewModelScope.launch {
+            delay(500)
+            if (model.instance == null && model.initializing) {
+                updateInitializationStatus(ModelInitializationStatus(
+                    status = ModelInitializationStatusType.INITIALIZING
+                ))
+            }
+        }
 
         try {
             val startTime = System.currentTimeMillis()
@@ -171,8 +208,10 @@ class ElizaModelManager @Inject constructor(
                 viewModelScope.launch {
                     val endTime = System.currentTimeMillis()
                     val initTime = endTime - startTime
+                    model.initializing = false
                     
-                    if (error.isEmpty()) {
+                    if (model.instance != null) {
+                        Log.d(TAG, "Model '${model.name}' initialized successfully")
                         updateInitializationStatus(ModelInitializationStatus(
                             status = ModelInitializationStatusType.INITIALIZED
                         ))
@@ -189,7 +228,14 @@ class ElizaModelManager @Inject constructor(
                             isReady = true,
                             memoryUsage = model.estimatedPeakMemoryInBytes ?: 0L
                         )}
-                    } else {
+                        
+                        // Clean up after init if marked
+                        if (model.cleanUpAfterInit) {
+                            Log.d(TAG, "Model '${model.name}' needs cleaning up after init.")
+                            cleanupModel()
+                        }
+                    } else if (error.isNotEmpty()) {
+                        Log.d(TAG, "Model '${model.name}' failed to initialize")
                         updateInitializationStatus(ModelInitializationStatus(
                             status = ModelInitializationStatusType.ERROR,
                             error = error
@@ -207,6 +253,7 @@ class ElizaModelManager @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Model initialization failed", e)
+            model.initializing = false
             updateInitializationStatus(ModelInitializationStatus(
                 status = ModelInitializationStatusType.ERROR,
                 error = e.message ?: "Unknown error"
@@ -224,18 +271,35 @@ class ElizaModelManager @Inject constructor(
 
     /**
      * Cleans up the model and releases resources.
+     * Includes proper concurrent access control like Gallery's implementation.
      */
     fun cleanupModel() {
         viewModelScope.launch(Dispatchers.Default) {
             try {
-                inferenceHelper.cleanUp(model)
-                _uiState.update { it.copy(
-                    isReady = false,
-                    memoryUsage = 0L
-                )}
-                updateInitializationStatus(ModelInitializationStatus(
-                    status = ModelInitializationStatusType.NOT_INITIALIZED
-                ))
+                if (model.instance != null) {
+                    model.cleanUpAfterInit = false
+                    Log.d(TAG, "Cleaning up model '${model.name}'...")
+                    
+                    inferenceHelper.cleanUp(model)
+                    model.instance = null
+                    model.initializing = false
+                    
+                    updateInitializationStatus(ModelInitializationStatus(
+                        status = ModelInitializationStatusType.NOT_INITIALIZED
+                    ))
+                    
+                    _uiState.update { it.copy(
+                        isReady = false,
+                        memoryUsage = 0L
+                    )}
+                } else {
+                    // When model is being initialized and we are trying to clean it up at same time,
+                    // we mark it to clean up and it will be cleaned up after initialization is done.
+                    if (model.initializing) {
+                        model.cleanUpAfterInit = true
+                        Log.d(TAG, "Marking model '${model.name}' for cleanup after initialization")
+                    }
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Model cleanup failed", e)
             }
@@ -319,23 +383,4 @@ interface ModelDownloadRepository {
         model: Model,
         onProgress: (ModelDownloadProgress) -> Unit
     )
-}
-
-/**
- * Helper interface for model inference operations.
- */
-interface ElizaInferenceHelper {
-    suspend fun initialize(
-        context: Context,
-        model: Model,
-        onComplete: (error: String) -> Unit
-    )
-    
-    suspend fun cleanUp(model: Model)
-    
-    suspend fun generateResponse(
-        model: Model,
-        prompt: String,
-        images: List<android.graphics.Bitmap> = emptyList()
-    ): Flow<String>
 } 

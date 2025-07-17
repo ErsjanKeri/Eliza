@@ -63,6 +63,9 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:model"))
     
+    // AI modules
+    implementation(project(":ai:inference"))
+    
     // Android Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

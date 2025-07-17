@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.11.1" type="incidents">
+
+    <incident
+        id="GradleDependency"
+        severity="warning"
+        message="A newer version of `compileSdkVersion` than 35 is available: 36">
+        <fix-replace
+            description="Set compileSdkVersion to 36"
+            oldString="35"
+            replacement="36"
+            priority="0"/>
+        <location
+            file="${:ai:inference*projectDir}/build.gradle.kts"
+            line="26"
+            column="5"
+            startOffset="818"
+            endLine="26"
+            endColumn="20"
+            endOffset="833"/>
+    </incident>
+
+    <incident
+        id="UseTomlInstead"
+        severity="warning"
+        message="Use version catalog instead">
+        <fix-composite
+            description="Replace with new library catalog declaration for tasks-genai"
+            robot="true">
+            <fix-replace
+                description="Replace with tasksGenai = &quot;0.10.25&quot;..."
+                robot="true"
+                oldString="_lint_insert_begin_"
+                replacement="tasksGenai = &quot;0.10.25&quot;&#xA;"
+                priority="0">
+                <range
+                    file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
+                    startOffset="553"
+                    endOffset="553"/>
+            </fix-replace>
+            <fix-replace
+                description="Replace with tasks-genai = { module = &quot;com.google.mediapipe:tasks-genai&quot;, version.ref = &quot;tasksGenai&quot; }..."
+                robot="true"
+                oldString="_lint_insert_begin_"
+                replacement="tasks-genai = { module = &quot;com.google.mediapipe:tasks-genai&quot;, version.ref = &quot;tasksGenai&quot; }&#xA;"
+                priority="0">
+                <range
+                    file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
+                    startOffset="3658"
+                    endOffset="3658"/>
+            </fix-replace>
+            <fix-replace
+                description="Replace with libs.tasks.genai"
+                robot="true"
+                replacement="libs.tasks.genai"
+                priority="0">
+                <range
+                    file="${:ai:inference*projectDir}/build.gradle.kts"
+                    startOffset="1846"
+                    endOffset="1888"/>
+            </fix-replace>
+        </fix-composite>
+        <location
+            file="${:ai:inference*projectDir}/build.gradle.kts"
+            line="68"
+            column="20"
+            startOffset="1846"
+            endLine="68"
+            endColumn="62"
+            endOffset="1888"/>
+    </incident>
+
+</incidents>
