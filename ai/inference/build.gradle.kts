@@ -64,7 +64,8 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     
-    // MediaPipe for AI inference
+    // MediaPipe for AI inference - exactly like Gallery
+    implementation("com.google.mediapipe:tasks-text:0.10.21")
     implementation("com.google.mediapipe:tasks-genai:0.10.25")
     
     // Testing

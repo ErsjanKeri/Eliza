@@ -1,9 +1,9 @@
 <libraries>
   <library
       name=":@@:ai:rag::debug"
-      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/ae84cb8f6ff350a2901374e8754052ad/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/ae84cb8f6ff350a2901374e8754052ad/transformed/out/jars/libs/R.jar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/fa843925a676721183a698c83d0b8307/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/fa843925a676721183a698c83d0b8307/transformed/out/jars/libs/R.jar"
       resolved="Eliza.ai:rag:unspecified"
-      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/ae84cb8f6ff350a2901374e8754052ad/transformed/out"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/fa843925a676721183a698c83d0b8307/transformed/out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -53,9 +53,9 @@
       proguardRules="proguard.txt"/>
   <library
       name=":@@:ai:modelmanager::debug"
-      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/b00412b0918975b7f36e50b474e5deb2/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/b00412b0918975b7f36e50b474e5deb2/transformed/out/jars/libs/R.jar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/dc2308c1cbad8be8c5899d18b0ecb759/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/dc2308c1cbad8be8c5899d18b0ecb759/transformed/out/jars/libs/R.jar"
       resolved="Eliza.ai:modelmanager:unspecified"
-      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/b00412b0918975b7f36e50b474e5deb2/transformed/out"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/dc2308c1cbad8be8c5899d18b0ecb759/transformed/out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -66,9 +66,9 @@
       proguardRules="proguard.txt"/>
   <library
       name=":@@:ai:inference::debug"
-      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/87751d3e5d47398f78f81da4bb762570/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/87751d3e5d47398f78f81da4bb762570/transformed/out/jars/libs/R.jar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out/jars/libs/R.jar"
       resolved="Eliza.ai:inference:unspecified"
-      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/87751d3e5d47398f78f81da4bb762570/transformed/out"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -1143,6 +1143,19 @@
       jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/androidx.collection/collection-ktx/1.4.4/2ad14aed781c4a73ed4dbb421966d408a0a06686/collection-ktx-1.4.4.jar"
       resolved="androidx.collection:collection-ktx:1.4.4"/>
   <library
+      name="com.google.mediapipe:tasks-text:0.10.21@aar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/59d6bc2738c212c7ca1869fb4a7111be/transformed/tasks-text-0.10.21/jars/classes.jar"
+      resolved="com.google.mediapipe:tasks-text:0.10.21"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/59d6bc2738c212c7ca1869fb4a7111be/transformed/tasks-text-0.10.21"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
       name="com.google.mediapipe:tasks-genai:0.10.25@aar"
       jars="/Users/ersibesi/.gradle/caches/8.13/transforms/ae876924638664c97f4e7d0378f653ae/transformed/tasks-genai-0.10.25/jars/classes.jar"
       resolved="com.google.mediapipe:tasks-genai:0.10.25"
@@ -1208,9 +1221,82 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
+      name="com.google.mediapipe:tasks-core:0.10.21@aar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/60443a872654b253e82c12a0e5ccabca/transformed/tasks-core-0.10.21/jars/classes.jar"
+      resolved="com.google.mediapipe:tasks-core:0.10.21"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/60443a872654b253e82c12a0e5ccabca/transformed/tasks-core-0.10.21"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
+      name="com.google.android.datatransport:transport-backend-cct:3.1.0@aar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/1612478b68ec115f5dc559d8235f6a1d/transformed/transport-backend-cct-3.1.0/jars/classes.jar"
+      resolved="com.google.android.datatransport:transport-backend-cct:3.1.0"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/1612478b68ec115f5dc559d8235f6a1d/transformed/transport-backend-cct-3.1.0"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
+      name="com.google.android.datatransport:transport-runtime:3.1.0@aar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/9abfc43dfe9f9f59ac9ba328c6b1f8c5/transformed/transport-runtime-3.1.0/jars/classes.jar"
+      resolved="com.google.android.datatransport:transport-runtime:3.1.0"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/9abfc43dfe9f9f59ac9ba328c6b1f8c5/transformed/transport-runtime-3.1.0"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
+      name="com.google.android.datatransport:transport-api:3.0.0@aar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/841ea560dace89ff4654441296aa5247/transformed/transport-api-3.0.0/jars/classes.jar"
+      resolved="com.google.android.datatransport:transport-api:3.0.0"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/841ea560dace89ff4654441296aa5247/transformed/transport-api-3.0.0"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
       name="androidx.concurrent:concurrent-futures:1.1.0@jar"
       jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/androidx.concurrent/concurrent-futures/1.1.0/50b7fb98350d5f42a4e49704b03278542293ba48/concurrent-futures-1.1.0.jar"
       resolved="androidx.concurrent:concurrent-futures:1.1.0"/>
+  <library
+      name="com.google.firebase:firebase-encoders-json:18.0.0@aar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/b673be4608e665ada8678a50ddf5101c/transformed/firebase-encoders-json-18.0.0/jars/classes.jar"
+      resolved="com.google.firebase:firebase-encoders-json:18.0.0"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/b673be4608e665ada8678a50ddf5101c/transformed/firebase-encoders-json-18.0.0"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
+      name="com.google.firebase:firebase-encoders-proto:16.0.0@jar"
+      jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.firebase/firebase-encoders-proto/16.0.0/a42d5fd83b96ae7b73a8617d29c94703e18c9992/firebase-encoders-proto-16.0.0.jar"
+      resolved="com.google.firebase:firebase-encoders-proto:16.0.0"/>
+  <library
+      name="com.google.firebase:firebase-encoders:17.0.0@jar"
+      jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.firebase/firebase-encoders/17.0.0/26f52dc549c42575b155f8c720e84059ee600a85/firebase-encoders-17.0.0.jar"
+      resolved="com.google.firebase:firebase-encoders:17.0.0"/>
   <library
       name="com.google.code.gson:gson:2.10.1@jar"
       jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/b3add478d4382b78ea20b1671390a858002feb6c/gson-2.10.1.jar"
@@ -1224,6 +1310,14 @@
       jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/27.0.1-android/b7e1c37f66ef193796ccd7ea6e80c2b05426182d/guava-27.0.1-android.jar"
       resolved="com.google.guava:guava:27.0.1-android"/>
   <library
+      name="com.google.auto.value:auto-value-annotations:1.8.1@jar"
+      jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.auto.value/auto-value-annotations/1.8.1/174878f9cc9cbacb8b464d774afb2ccf938f257b/auto-value-annotations-1.8.1.jar"
+      resolved="com.google.auto.value:auto-value-annotations:1.8.1"/>
+  <library
+      name="com.google.auto.value:auto-value:1.8.1@jar"
+      jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.auto.value/auto-value/1.8.1/aacb85fe6fd2a7e6619448efcde89360bda701e9/auto-value-1.8.1.jar"
+      resolved="com.google.auto.value:auto-value:1.8.1"/>
+  <library
       name="com.google.protobuf:protobuf-javalite:4.26.1@jar"
       jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protobuf-javalite/4.26.1/1b5e9b46148ff7866d0faf00b4dbcfc092c83a4e/protobuf-javalite-4.26.1.jar"
       resolved="com.google.protobuf:protobuf-javalite:4.26.1"/>
@@ -1236,9 +1330,17 @@
       jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.guava/failureaccess/1.0.1/1dcf1de382a0bf95a3d8b0849546c88bac1292c9/failureaccess-1.0.1.jar"
       resolved="com.google.guava:failureaccess:1.0.1"/>
   <library
-      name="org.checkerframework:checker-compat-qual:2.5.2@jar"
-      jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/org.checkerframework/checker-compat-qual/2.5.2/dc0b20906c9e4b9724af29d11604efa574066892/checker-compat-qual-2.5.2.jar"
-      resolved="org.checkerframework:checker-compat-qual:2.5.2"/>
+      name="com.google.flogger:flogger-system-backend:0.6@jar"
+      jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.flogger/flogger-system-backend/0.6/f0ccf8923c6c315f2f57b108bcc6e46ccd88777/flogger-system-backend-0.6.jar"
+      resolved="com.google.flogger:flogger-system-backend:0.6"/>
+  <library
+      name="com.google.flogger:flogger:0.6@jar"
+      jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.flogger/flogger/0.6/155dc6e303a58f7bbff5d2cd1a259de86827f4fe/flogger-0.6.jar"
+      resolved="com.google.flogger:flogger:0.6"/>
+  <library
+      name="org.checkerframework:checker-compat-qual:2.5.3@jar"
+      jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/org.checkerframework/checker-compat-qual/2.5.3/45f92d2e0676d05ae9297269b8268f93a875d4a/checker-compat-qual-2.5.3.jar"
+      resolved="org.checkerframework:checker-compat-qual:2.5.3"/>
   <library
       name="com.google.errorprone:error_prone_annotations:2.2.0@jar"
       jars="/Users/ersibesi/.gradle/caches/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.2.0/88e3c593e9b3586e1c6177f89267da6fc6986f0c/error_prone_annotations-2.2.0.jar"

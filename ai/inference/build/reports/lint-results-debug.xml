@@ -18,6 +18,84 @@
     </issue>
 
     <issue
+        id="GradleDependency"
+        severity="Warning"
+        message="A newer version of com.google.mediapipe:tasks-text than 0.10.21 is available: 0.20230731"
+        category="Correctness"
+        priority="4"
+        summary="Obsolete Gradle Dependency"
+        explanation="This detector looks for usages of libraries where the version you are using is not the current stable release. Using older versions is fine, and there are cases where you deliberately want to stick with an older version. However, you may simply not be aware that a more recent version is available, and that is what this lint check helps find."
+        errorLine1="    implementation(&quot;com.google.mediapipe:tasks-text:0.10.21&quot;)"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="/Users/ersibesi/AndroidStudioProjects/Eliza/ai/inference/build.gradle.kts"
+            line="68"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="Aligned16KB"
+        severity="Warning"
+        message="The native library `arm64-v8a/libmediapipe_tasks_text_jni.so` (from `com.google.mediapipe:tasks-text:0.10.21`) is not 16 KB aligned"
+        category="Correctness"
+        priority="2"
+        summary="Native library dependency not 16 KB aligned"
+        explanation="Android has traditionally used 4 KB memory page sizes. However, to support future devices that only work with 16 KB aligned libraries apps containing native libraries need to be built with 16 KB alignment.&#xA;&#xA;Apps with 4 KB aligned native libraries may not work correctly on devices requiring 16 KB alignment. To ensure compatibility and future-proof your app, it is strongly recommended that your native libraries are aligned to 16 KB boundaries.&#xA;&#xA;If your app uses any NDK libraries, directly or indirectly through an SDK, you should rebuild your app to meet this recommendation. Make sure all native libraries within your application, including those from dependencies, are built with 16 KB page alignment.&#xA;&#xA;This lint check looks at all native libraries that your app depends on. If any are found to be aligned to 4 KB instead of 16 KB, you will need to address this.&#xA;&#xA;When a library is flagged, first try to update to a newer version that supports 16 KB alignment. If an updated version is not available, contact the library vendor to ask about their plans for 16 KB support and request a compatible version. Updating your libraries proactively will help ensure your app works properly on a wider range of devices."
+        url="https://developer.android.com/guide/practices/page-sizes"
+        urls="https://developer.android.com/guide/practices/page-sizes"
+        errorLine1="    implementation(&quot;com.google.mediapipe:tasks-text:0.10.21&quot;)"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="/Users/ersibesi/AndroidStudioProjects/Eliza/ai/inference/build.gradle.kts"
+            line="68"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="Aligned16KB"
+        severity="Warning"
+        message="The native library `arm64-v8a/libmediapipe_tasks_text_jni.so` (from `com.google.mediapipe:tasks-text:0.10.21`) is not 16 KB aligned"
+        category="Correctness"
+        priority="2"
+        summary="Native library dependency not 16 KB aligned"
+        explanation="Android has traditionally used 4 KB memory page sizes. However, to support future devices that only work with 16 KB aligned libraries apps containing native libraries need to be built with 16 KB alignment.&#xA;&#xA;Apps with 4 KB aligned native libraries may not work correctly on devices requiring 16 KB alignment. To ensure compatibility and future-proof your app, it is strongly recommended that your native libraries are aligned to 16 KB boundaries.&#xA;&#xA;If your app uses any NDK libraries, directly or indirectly through an SDK, you should rebuild your app to meet this recommendation. Make sure all native libraries within your application, including those from dependencies, are built with 16 KB page alignment.&#xA;&#xA;This lint check looks at all native libraries that your app depends on. If any are found to be aligned to 4 KB instead of 16 KB, you will need to address this.&#xA;&#xA;When a library is flagged, first try to update to a newer version that supports 16 KB alignment. If an updated version is not available, contact the library vendor to ask about their plans for 16 KB support and request a compatible version. Updating your libraries proactively will help ensure your app works properly on a wider range of devices."
+        url="https://developer.android.com/guide/practices/page-sizes"
+        urls="https://developer.android.com/guide/practices/page-sizes">
+        <location
+            file="/Users/ersibesi/.gradle/caches/8.13/transforms/59d6bc2738c212c7ca1869fb4a7111be/transformed/tasks-text-0.10.21/jni/arm64-v8a/libmediapipe_tasks_text_jni.so"/>
+    </issue>
+
+    <issue
+        id="Aligned16KB"
+        severity="Warning"
+        message="The native library `arm64-v8a/libmediapipe_tasks_text_jni.so` (from `com.google.mediapipe:tasks-text:0.10.21`) is not 16 KB aligned"
+        category="Correctness"
+        priority="2"
+        summary="Native library dependency not 16 KB aligned"
+        explanation="Android has traditionally used 4 KB memory page sizes. However, to support future devices that only work with 16 KB aligned libraries apps containing native libraries need to be built with 16 KB alignment.&#xA;&#xA;Apps with 4 KB aligned native libraries may not work correctly on devices requiring 16 KB alignment. To ensure compatibility and future-proof your app, it is strongly recommended that your native libraries are aligned to 16 KB boundaries.&#xA;&#xA;If your app uses any NDK libraries, directly or indirectly through an SDK, you should rebuild your app to meet this recommendation. Make sure all native libraries within your application, including those from dependencies, are built with 16 KB page alignment.&#xA;&#xA;This lint check looks at all native libraries that your app depends on. If any are found to be aligned to 4 KB instead of 16 KB, you will need to address this.&#xA;&#xA;When a library is flagged, first try to update to a newer version that supports 16 KB alignment. If an updated version is not available, contact the library vendor to ask about their plans for 16 KB support and request a compatible version. Updating your libraries proactively will help ensure your app works properly on a wider range of devices."
+        url="https://developer.android.com/guide/practices/page-sizes"
+        urls="https://developer.android.com/guide/practices/page-sizes">
+        <location
+            file="/Users/ersibesi/.gradle/caches/8.13/transforms/59d6bc2738c212c7ca1869fb4a7111be/transformed/tasks-text-0.10.21/jni/arm64-v8a/libmediapipe_tasks_text_jni.so"/>
+    </issue>
+
+    <issue
+        id="UseTomlInstead"
+        severity="Warning"
+        message="Use version catalog instead"
+        category="Productivity"
+        priority="4"
+        summary="Use TOML Version Catalog Instead"
+        explanation="If your project is using a `libs.versions.toml` file, you should place all Gradle dependencies in the TOML file. This lint check looks for version declarations outside of the TOML file and suggests moving them (and in the IDE, provides a quickfix to performing the operation automatically)."
+        errorLine1="    implementation(&quot;com.google.mediapipe:tasks-text:0.10.21&quot;)"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="/Users/ersibesi/AndroidStudioProjects/Eliza/ai/inference/build.gradle.kts"
+            line="68"
+            column="20"/>
+    </issue>
+
+    <issue
         id="UseTomlInstead"
         severity="Warning"
         message="Use version catalog instead"
@@ -29,7 +107,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/Users/ersibesi/AndroidStudioProjects/Eliza/ai/inference/build.gradle.kts"
-            line="68"
+            line="69"
             column="20"/>
     </issue>
 

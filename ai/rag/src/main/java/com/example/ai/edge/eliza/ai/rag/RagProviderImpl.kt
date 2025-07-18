@@ -26,6 +26,42 @@ import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
+/**
+ * Interface for providing context-aware content retrieval and prompt enhancement.
+ * This is the main interface for RAG (Retrieval Augmented Generation) functionality.
+ */
+interface RagProvider {
+    /**
+     * Retrieves relevant content chunks based on the user's query and current context.
+     */
+    suspend fun getRelevantContent(
+        query: String,
+        context: ChatContext,
+        maxChunks: Int = 3
+    ): List<ContentChunk>
+    
+    /**
+     * Enhances a user prompt with relevant context information.
+     */
+    suspend fun enhancePrompt(
+        prompt: String,
+        context: ChatContext
+    ): PromptEnhancementResult
+    
+    /**
+     * Gets contextual system instructions for the AI based on the current context.
+     */
+    suspend fun getSystemInstructions(context: ChatContext): String
+}
+
+/**
+ * Factory for creating appropriate RagProvider instances based on context.
+ */
+interface RagProviderFactory {
+    fun createProvider(context: ChatContext): RagProvider
+} 
+
 /**
  * RAG provider for chapter reading context.
  */

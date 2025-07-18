@@ -233,7 +233,7 @@ class ElizaModelManager @Inject constructor(
             }
         }
 
-        // Initialize using inference helper
+        // Initialize using inference helper - exactly like Gallery's pattern
         inferenceHelper.initialize(context, model, onDone)
     }
 
@@ -369,16 +369,4 @@ class ElizaModelManager @Inject constructor(
         super.onCleared()
         cleanupModel()
     }
-}
-
-/**
- * Repository interface for model downloading.
- */
-interface ModelDownloadRepository {
-    fun downloadModel(
-        model: Model,
-        onProgress: (ModelDownloadProgress) -> Unit
-    )
-    
-    fun cancelDownloadModel(model: Model)
 } 

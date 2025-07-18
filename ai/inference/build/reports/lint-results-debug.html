@@ -177,17 +177,18 @@ document.getElementById(id).style.display = 'none';
 <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
   <header class="mdl-layout__header">
     <div class="mdl-layout__header-row">
-      <span class="mdl-layout-title">Lint Report: 2 warnings</span>
+      <span class="mdl-layout-title">Lint Report: 7 warnings</span>
       <div class="mdl-layout-spacer"></div>
-      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Fri Jul 18 11:10:40 CEST 2025 by AGP (8.11.1)</nav>
+      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Fri Jul 18 12:35:18 CEST 2025 by AGP (8.11.1)</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">
     <span class="mdl-layout-title">Issue Types</span>
     <nav class="mdl-navigation">
       <a class="mdl-navigation__link" href="#overview"><i class="material-icons">dashboard</i>Overview</a>
-      <a class="mdl-navigation__link" href="#GradleDependency"><i class="material-icons warning-icon">warning</i>Obsolete Gradle Dependency (1)</a>
-      <a class="mdl-navigation__link" href="#UseTomlInstead"><i class="material-icons warning-icon">warning</i>Use TOML Version Catalog Instead (1)</a>
+      <a class="mdl-navigation__link" href="#GradleDependency"><i class="material-icons warning-icon">warning</i>Obsolete Gradle Dependency (2)</a>
+      <a class="mdl-navigation__link" href="#Aligned16KB"><i class="material-icons warning-icon">warning</i>Native library dependency not 16 KB aligned (3)</a>
+      <a class="mdl-navigation__link" href="#UseTomlInstead"><i class="material-icons warning-icon">warning</i>Use TOML Version Catalog Instead (2)</a>
     </nav>
   </div>
   <main class="mdl-layout__content">
@@ -203,12 +204,15 @@ document.getElementById(id).style.display = 'none';
 <tr><td class="countColumn"></td><td class="categoryColumn"><a href="#Correctness">Correctness</a>
 </td></tr>
 <tr>
-<td class="countColumn">1</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
+<td class="countColumn">2</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
 <a href="#GradleDependency">GradleDependency</a>: Obsolete Gradle Dependency</td></tr>
+<tr>
+<td class="countColumn">3</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
+<a href="#Aligned16KB">Aligned16KB</a>: Native library dependency not 16 KB aligned</td></tr>
 <tr><td class="countColumn"></td><td class="categoryColumn"><a href="#Productivity">Productivity</a>
 </td></tr>
 <tr>
-<td class="countColumn">1</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
+<td class="countColumn">2</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
 <a href="#UseTomlInstead">UseTomlInstead</a>: Use TOML Version Catalog Instead</td></tr>
 <tr><td></td><td class="categoryColumn"><a href="#ExtraIssues">Included Additional Checks (20)</a>
 </td></tr>
@@ -241,6 +245,16 @@ Dismiss</button>            </div>
 <span class="lineno"> 29 </span>        minSdk = 24
 </pre>
 
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:68</span>: <span class="message">A newer version of com.google.mediapipe:tasks-text than 0.10.21 is available: 0.20230731</span><br /><pre class="errorlines">
+<span class="lineno"> 65 </span>    implementation(libs.kotlinx.coroutines.android)
+<span class="lineno"> 66 </span>    
+<span class="lineno"> 67 </span>    // MediaPipe for AI inference - exactly like Gallery
+<span class="caretline"><span class="lineno"> 68 </span>    implementation(<span class="warning">"com.google.mediapipe:tasks-text:0.10.21"</span>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 69 </span>    implementation("com.google.mediapipe:tasks-genai:0.10.25")
+<span class="lineno"> 70 </span>    
+<span class="lineno"> 71 </span>    // Testing
+</pre>
+
 </div>
 <div class="metadata"><div class="explanation" id="explanationGradleDependency" style="display: none;">
 This detector looks for usages of libraries where the version you are using is not the current stable release. Using older versions is fine, and there are cases where you deliberately want to stick with an older version. However, you may simply not be aware that a more recent version is available, and that is what this lint check helps find.<br/>Note: This issue has an associated quickfix operation in Android Studio and IntelliJ IDEA.<br>
@@ -268,6 +282,62 @@ To suppress this error, use the issue id "GradleDependency" as explained in the 
 Explain</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="GradleDependencyCardLink" onclick="hideid('GradleDependencyCard');">
 Dismiss</button>            </div>
             </div>
+          </section><a name="Aligned16KB"></a>
+<section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="Aligned16KBCard" style="display: block;">
+            <div class="mdl-card mdl-cell mdl-cell--12-col">
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Native library dependency not 16 KB aligned</h2>
+  </div>
+              <div class="mdl-card__supporting-text">
+<div class="issue">
+<div class="warningslist">
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:68</span>: <span class="message">The native library <code>arm64-v8a/libmediapipe_tasks_text_jni.so</code> (from <code>com.google.mediapipe:tasks-text:0.10.21</code>) is not 16 KB aligned</span><br /><pre class="errorlines">
+<span class="lineno"> 65 </span>    implementation(libs.kotlinx.coroutines.android)
+<span class="lineno"> 66 </span>    
+<span class="lineno"> 67 </span>    // MediaPipe for AI inference - exactly like Gallery
+<span class="caretline"><span class="lineno"> 68 </span>    implementation(<span class="warning">"com.google.mediapipe:tasks-text:0.10.21"</span>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 69 </span>    implementation("com.google.mediapipe:tasks-genai:0.10.25")
+<span class="lineno"> 70 </span>    
+<span class="lineno"> 71 </span>    // Testing
+</pre>
+
+<span class="location"><a href="../../../../../../.gradle/caches/8.13/transforms/59d6bc2738c212c7ca1869fb4a7111be/transformed/tasks-text-0.10.21/jni/arm64-v8a/libmediapipe_tasks_text_jni.so">../../../../../../.gradle/caches/8.13/transforms/59d6bc2738c212c7ca1869fb4a7111be/transformed/tasks-text-0.10.21/jni/arm64-v8a/libmediapipe_tasks_text_jni.so</a></span>: <span class="message">The native library <code>arm64-v8a/libmediapipe_tasks_text_jni.so</code> (from <code>com.google.mediapipe:tasks-text:0.10.21</code>) is not 16 KB aligned</span><br />
+<span class="location"><a href="../../../../../../.gradle/caches/8.13/transforms/59d6bc2738c212c7ca1869fb4a7111be/transformed/tasks-text-0.10.21/jni/arm64-v8a/libmediapipe_tasks_text_jni.so">../../../../../../.gradle/caches/8.13/transforms/59d6bc2738c212c7ca1869fb4a7111be/transformed/tasks-text-0.10.21/jni/arm64-v8a/libmediapipe_tasks_text_jni.so</a></span>: <span class="message">The native library <code>arm64-v8a/libmediapipe_tasks_text_jni.so</code> (from <code>com.google.mediapipe:tasks-text:0.10.21</code>) is not 16 KB aligned</span><br />
+</div>
+<div class="metadata"><div class="explanation" id="explanationAligned16KB" style="display: none;">
+Android has traditionally used 4 KB memory page sizes. However, to support future devices that only work with 16 KB aligned libraries apps containing native libraries need to be built with 16 KB alignment.<br/>
+<br/>
+Apps with 4 KB aligned native libraries may not work correctly on devices requiring 16 KB alignment. To ensure compatibility and future-proof your app, it is strongly recommended that your native libraries are aligned to 16 KB boundaries.<br/>
+<br/>
+If your app uses any NDK libraries, directly or indirectly through an SDK, you should rebuild your app to meet this recommendation. Make sure all native libraries within your application, including those from dependencies, are built with 16 KB page alignment.<br/>
+<br/>
+This lint check looks at all native libraries that your app depends on. If any are found to be aligned to 4 KB instead of 16 KB, you will need to address this.<br/>
+<br/>
+When a library is flagged, first try to update to a newer version that supports 16 KB alignment. If an updated version is not available, contact the library vendor to ask about their plans for 16 KB support and request a compatible version. Updating your libraries proactively will help ensure your app works properly on a wider range of devices.<br/><div class="moreinfo">More info: <a href="https://developer.android.com/guide/practices/page-sizes">https://developer.android.com/guide/practices/page-sizes</a>
+</div>To suppress this error, use the issue id "Aligned16KB" as explained in the <a href="#SuppressInfo">Suppressing Warnings and Errors</a> section.<br/>
+<br/></div>
+</div>
+</div>
+<div class="chips">
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Aligned16KB</span>
+</span>
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Correctness</span>
+</span>
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Warning</span>
+</span>
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Priority 2/10</span>
+</span>
+</div>
+              </div>
+              <div class="mdl-card__actions mdl-card--border">
+<button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="explanationAligned16KBLink" onclick="reveal('explanationAligned16KB');">
+Explain</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="Aligned16KBCardLink" onclick="hideid('Aligned16KBCard');">
+Dismiss</button>            </div>
+            </div>
           </section>
 <a name="Productivity"></a>
 <a name="UseTomlInstead"></a>
@@ -282,11 +352,21 @@ Dismiss</button>            </div>
 <span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:68</span>: <span class="message">Use version catalog instead</span><br /><pre class="errorlines">
 <span class="lineno"> 65 </span>    implementation(libs.kotlinx.coroutines.android)
 <span class="lineno"> 66 </span>    
-<span class="lineno"> 67 </span>    // MediaPipe for AI inference
-<span class="caretline"><span class="lineno"> 68 </span>    implementation(<span class="warning">"com.google.mediapipe:tasks-genai:0.10.25"</span>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 69 </span>    
-<span class="lineno"> 70 </span>    // Testing
-<span class="lineno"> 71 </span>    testImplementation(libs.junit)
+<span class="lineno"> 67 </span>    // MediaPipe for AI inference - exactly like Gallery
+<span class="caretline"><span class="lineno"> 68 </span>    implementation(<span class="warning">"com.google.mediapipe:tasks-text:0.10.21"</span>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 69 </span>    implementation("com.google.mediapipe:tasks-genai:0.10.25")
+<span class="lineno"> 70 </span>    
+<span class="lineno"> 71 </span>    // Testing
+</pre>
+
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:69</span>: <span class="message">Use version catalog instead</span><br /><pre class="errorlines">
+<span class="lineno"> 66 </span>    
+<span class="lineno"> 67 </span>    // MediaPipe for AI inference - exactly like Gallery
+<span class="lineno"> 68 </span>    implementation("com.google.mediapipe:tasks-text:0.10.21")
+<span class="caretline"><span class="lineno"> 69 </span>    implementation(<span class="warning">"com.google.mediapipe:tasks-genai:0.10.25"</span>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 70 </span>    
+<span class="lineno"> 71 </span>    // Testing
+<span class="lineno"> 72 </span>    testImplementation(libs.junit)
 </pre>
 
 </div>

@@ -19,7 +19,7 @@ package com.example.ai.edge.eliza.ai.modelmanager.di
 import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
 import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelperImpl
 import com.example.ai.edge.eliza.ai.modelmanager.ModelDownloadRepository
-import com.example.ai.edge.eliza.ai.modelmanager.impl.ModelDownloadRepositoryImpl
+import com.example.ai.edge.eliza.ai.modelmanager.ModelDownloadRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

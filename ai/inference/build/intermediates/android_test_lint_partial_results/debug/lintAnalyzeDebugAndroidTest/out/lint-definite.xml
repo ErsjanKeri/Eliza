@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.11.1" type="incidents">
+
+    <incident
+        id="Aligned16KB"
+        severity="warning"
+        message="The native library `arm64-v8a/libmediapipe_tasks_text_jni.so` (from `com.google.mediapipe:tasks-text:0.10.21`) is not 16 KB aligned">
+        <location
+            file="$GRADLE_USER_HOME/caches/8.13/transforms/59d6bc2738c212c7ca1869fb4a7111be/transformed/tasks-text-0.10.21/jni/arm64-v8a/libmediapipe_tasks_text_jni.so"/>
+    </incident>
+
+</incidents>
