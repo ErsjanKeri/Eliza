@@ -1,42 +1,42 @@
 [
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/ic_call_answer_low.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/ic_call_answer_low.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/notification_icon_background.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/notification_icon_background.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/ic_call_answer_video_low.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/ic_call_answer_video_low.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/ic_call_answer_low.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/ic_call_answer_low.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/ic_call_answer.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/ic_call_answer.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/ic_call_answer_video.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/ic_call_answer_video.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/notification_tile_bg.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/notification_tile_bg.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/notification_bg_low.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/notification_bg_low.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/ic_call_decline.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/ic_call_decline.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/ic_call_decline.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/ic_call_decline.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/notification_bg_low.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/notification_bg_low.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/ic_call_decline_low.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/ic_call_decline_low.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/notification_icon_background.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/notification_icon_background.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/notification_tile_bg.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/notification_tile_bg.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/ic_call_answer_video.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/ic_call_answer_video.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/notification_bg.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/notification_bg.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/ic_call_decline_low.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/ic_call_decline_low.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/ic_call_answer.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/ic_call_answer.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/drawable/notification_bg.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-41:/drawable/notification_bg.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/drawable/ic_call_answer_video_low.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-core-1.16.0-13:/drawable/ic_call_answer_video_low.xml"
     }
 ]

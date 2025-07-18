@@ -13,3 +13,4 @@
 .externalNativeBuild
 .cxx
 local.properties
+find . -type d -name build -exec rm -rf {} +

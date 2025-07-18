@@ -1,9 +1,9 @@
 <libraries>
   <library
       name=":@@:ai:inference::debug"
-      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out/jars/libs/R.jar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/42ff34c6caaa3f9735617fd6f861291c/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/42ff34c6caaa3f9735617fd6f861291c/transformed/out/jars/libs/R.jar"
       resolved="Eliza.ai:inference:unspecified"
-      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/42ff34c6caaa3f9735617fd6f861291c/transformed/out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

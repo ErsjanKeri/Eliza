@@ -43,10 +43,24 @@
       proguardRules="proguard.txt"/>
   <library
       name=":@@:ai:inference::debug"
-      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out/jars/libs/R.jar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/42ff34c6caaa3f9735617fd6f861291c/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/42ff34c6caaa3f9735617fd6f861291c/transformed/out/jars/libs/R.jar"
       resolved="Eliza.ai:inference:unspecified"
       partialResultsDir="/Users/ersibesi/AndroidStudioProjects/Eliza/ai/inference/build/intermediates/lint_partial_results/debug/lintAnalyzeDebug/out"
-      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/42ff34c6caaa3f9735617fd6f861291c/transformed/out"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
+      name=":@@:ai:rag::debug"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/fa843925a676721183a698c83d0b8307/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/fa843925a676721183a698c83d0b8307/transformed/out/jars/libs/R.jar"
+      resolved="Eliza.ai:rag:unspecified"
+      partialResultsDir="/Users/ersibesi/AndroidStudioProjects/Eliza/ai/rag/build/intermediates/lint_partial_results/debug/lintAnalyzeDebug/out"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/fa843925a676721183a698c83d0b8307/transformed/out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

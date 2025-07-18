@@ -32,12 +32,12 @@
             priority="0"/>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="99"
+            line="100"
             column="20"
-            startOffset="2989"
-            endLine="99"
+            startOffset="3028"
+            endLine="100"
             endColumn="58"
-            endOffset="3027"/>
+            endOffset="3066"/>
     </incident>
 
     <incident
@@ -52,12 +52,12 @@
             priority="0"/>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="100"
+            line="101"
             column="20"
-            startOffset="3048"
-            endLine="100"
+            startOffset="3087"
+            endLine="101"
             endColumn="51"
-            endOffset="3079"/>
+            endOffset="3118"/>
     </incident>
 
     <incident
@@ -72,12 +72,12 @@
             priority="0"/>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="103"
+            line="104"
             column="20"
-            startOffset="3142"
-            endLine="103"
+            startOffset="3181"
+            endLine="104"
             endColumn="68"
-            endOffset="3190"/>
+            endOffset="3229"/>
     </incident>
 
     <incident
@@ -92,12 +92,12 @@
             priority="0"/>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="94"
+            line="95"
             column="20"
-            startOffset="2762"
-            endLine="94"
+            startOffset="2801"
+            endLine="95"
             endColumn="56"
-            endOffset="2798"/>
+            endOffset="2837"/>
     </incident>
 
     <incident
@@ -112,12 +112,12 @@
             priority="0"/>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="95"
+            line="96"
             column="20"
-            startOffset="2819"
-            endLine="95"
+            startOffset="2858"
+            endLine="96"
             endColumn="59"
-            endOffset="2858"/>
+            endOffset="2897"/>
     </incident>
 
     <incident
@@ -132,12 +132,12 @@
             priority="0"/>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="96"
+            line="97"
             column="20"
-            startOffset="2879"
-            endLine="96"
+            startOffset="2918"
+            endLine="97"
             endColumn="65"
-            endOffset="2924"/>
+            endOffset="2963"/>
     </incident>
 
     <incident
@@ -152,12 +152,12 @@
             priority="0"/>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="106"
+            line="107"
             column="20"
-            startOffset="3245"
-            endLine="106"
+            startOffset="3284"
+            endLine="107"
             endColumn="54"
-            endOffset="3279"/>
+            endOffset="3318"/>
     </incident>
 
     <incident
@@ -165,13 +165,13 @@
         severity="warning"
         message="Use version catalog instead">
         <fix-composite
-            description="Replace with new library catalog declaration for com-squareup-okhttp3-okhttp2"
+            description="Replace with new library catalog declaration for com-squareup-okhttp3-okhttp3"
             robot="true">
             <fix-replace
-                description="Replace with comSquareupOkhttp3Okhttp = &quot;4.12.0&quot;..."
+                description="Replace with comSquareupOkhttp3Okhttp2 = &quot;4.12.0&quot;..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="comSquareupOkhttp3Okhttp = &quot;4.12.0&quot;&#xA;"
+                replacement="comSquareupOkhttp3Okhttp2 = &quot;4.12.0&quot;&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -179,10 +179,10 @@
                     endOffset="26"/>
             </fix-replace>
             <fix-replace
-                description="Replace with com-squareup-okhttp3-okhttp2 = { module = &quot;com.squareup.okhttp3:okhttp&quot;, version.ref = &quot;comSquareupOkhttp3Okhttp&quot; }..."
+                description="Replace with com-squareup-okhttp3-okhttp3 = { module = &quot;com.squareup.okhttp3:okhttp&quot;, version.ref = &quot;comSquareupOkhttp3Okhttp2&quot; }..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="com-squareup-okhttp3-okhttp2 = { module = &quot;com.squareup.okhttp3:okhttp&quot;, version.ref = &quot;comSquareupOkhttp3Okhttp&quot; }&#xA;"
+                replacement="com-squareup-okhttp3-okhttp3 = { module = &quot;com.squareup.okhttp3:okhttp&quot;, version.ref = &quot;comSquareupOkhttp3Okhttp2&quot; }&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -190,74 +190,24 @@
                     endOffset="2083"/>
             </fix-replace>
             <fix-replace
-                description="Replace with libs.com.squareup.okhttp3.okhttp2"
+                description="Replace with libs.com.squareup.okhttp3.okhttp3"
                 robot="true"
-                replacement="libs.com.squareup.okhttp3.okhttp2"
+                replacement="libs.com.squareup.okhttp3.okhttp3"
                 priority="0">
                 <range
                     file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-                    startOffset="2762"
-                    endOffset="2798"/>
-            </fix-replace>
-        </fix-composite>
-        <location
-            file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="94"
-            column="20"
-            startOffset="2762"
-            endLine="94"
-            endColumn="56"
-            endOffset="2798"/>
-    </incident>
-
-    <incident
-        id="UseTomlInstead"
-        severity="warning"
-        message="Use version catalog instead">
-        <fix-composite
-            description="Replace with new library catalog declaration for com-squareup-retrofit2-retrofit2"
-            robot="true">
-            <fix-replace
-                description="Replace with comSquareupRetrofit2Retrofit = &quot;2.9.0&quot;..."
-                robot="true"
-                oldString="_lint_insert_begin_"
-                replacement="comSquareupRetrofit2Retrofit = &quot;2.9.0&quot;&#xA;"
-                priority="0">
-                <range
-                    file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
-                    startOffset="26"
-                    endOffset="26"/>
-            </fix-replace>
-            <fix-replace
-                description="Replace with com-squareup-retrofit2-retrofit2 = { module = &quot;com.squareup.retrofit2:retrofit&quot;, version.ref = &quot;comSquareupRetrofit2Retrofit&quot; }..."
-                robot="true"
-                oldString="_lint_insert_begin_"
-                replacement="com-squareup-retrofit2-retrofit2 = { module = &quot;com.squareup.retrofit2:retrofit&quot;, version.ref = &quot;comSquareupRetrofit2Retrofit&quot; }&#xA;"
-                priority="0">
-                <range
-                    file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
-                    startOffset="2083"
-                    endOffset="2083"/>
-            </fix-replace>
-            <fix-replace
-                description="Replace with libs.com.squareup.retrofit2.retrofit2"
-                robot="true"
-                replacement="libs.com.squareup.retrofit2.retrofit2"
-                priority="0">
-                <range
-                    file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-                    startOffset="2819"
-                    endOffset="2858"/>
+                    startOffset="2801"
+                    endOffset="2837"/>
             </fix-replace>
         </fix-composite>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
             line="95"
             column="20"
-            startOffset="2819"
+            startOffset="2801"
             endLine="95"
-            endColumn="59"
-            endOffset="2858"/>
+            endColumn="56"
+            endOffset="2837"/>
     </incident>
 
     <incident
@@ -265,13 +215,13 @@
         severity="warning"
         message="Use version catalog instead">
         <fix-composite
-            description="Replace with new library catalog declaration for com-squareup-retrofit2-converter-gson2"
+            description="Replace with new library catalog declaration for com-squareup-retrofit2-retrofit3"
             robot="true">
             <fix-replace
-                description="Replace with comSquareupRetrofit2ConverterGson = &quot;2.9.0&quot;..."
+                description="Replace with comSquareupRetrofit2Retrofit2 = &quot;2.9.0&quot;..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="comSquareupRetrofit2ConverterGson = &quot;2.9.0&quot;&#xA;"
+                replacement="comSquareupRetrofit2Retrofit2 = &quot;2.9.0&quot;&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -279,10 +229,10 @@
                     endOffset="26"/>
             </fix-replace>
             <fix-replace
-                description="Replace with com-squareup-retrofit2-converter-gson2 = { module = &quot;com.squareup.retrofit2:converter-gson&quot;, version.ref = &quot;comSquareupRetrofit2ConverterGson&quot; }..."
+                description="Replace with com-squareup-retrofit2-retrofit3 = { module = &quot;com.squareup.retrofit2:retrofit&quot;, version.ref = &quot;comSquareupRetrofit2Retrofit2&quot; }..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="com-squareup-retrofit2-converter-gson2 = { module = &quot;com.squareup.retrofit2:converter-gson&quot;, version.ref = &quot;comSquareupRetrofit2ConverterGson&quot; }&#xA;"
+                replacement="com-squareup-retrofit2-retrofit3 = { module = &quot;com.squareup.retrofit2:retrofit&quot;, version.ref = &quot;comSquareupRetrofit2Retrofit2&quot; }&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -290,24 +240,24 @@
                     endOffset="2083"/>
             </fix-replace>
             <fix-replace
-                description="Replace with libs.com.squareup.retrofit2.converter.gson2"
+                description="Replace with libs.com.squareup.retrofit2.retrofit3"
                 robot="true"
-                replacement="libs.com.squareup.retrofit2.converter.gson2"
+                replacement="libs.com.squareup.retrofit2.retrofit3"
                 priority="0">
                 <range
                     file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-                    startOffset="2879"
-                    endOffset="2924"/>
+                    startOffset="2858"
+                    endOffset="2897"/>
             </fix-replace>
         </fix-composite>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
             line="96"
             column="20"
-            startOffset="2879"
+            startOffset="2858"
             endLine="96"
-            endColumn="65"
-            endOffset="2924"/>
+            endColumn="59"
+            endOffset="2897"/>
     </incident>
 
     <incident
@@ -315,13 +265,13 @@
         severity="warning"
         message="Use version catalog instead">
         <fix-composite
-            description="Replace with new library catalog declaration for androidx-work-work-runtime-ktx3"
+            description="Replace with new library catalog declaration for com-squareup-retrofit2-converter-gson3"
             robot="true">
             <fix-replace
-                description="Replace with androidxWorkWorkRuntimeKtx = &quot;2.9.0&quot;..."
+                description="Replace with comSquareupRetrofit2ConverterGson2 = &quot;2.9.0&quot;..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="androidxWorkWorkRuntimeKtx = &quot;2.9.0&quot;&#xA;"
+                replacement="comSquareupRetrofit2ConverterGson2 = &quot;2.9.0&quot;&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -329,10 +279,10 @@
                     endOffset="26"/>
             </fix-replace>
             <fix-replace
-                description="Replace with androidx-work-work-runtime-ktx3 = { module = &quot;androidx.work:work-runtime-ktx&quot;, version.ref = &quot;androidxWorkWorkRuntimeKtx&quot; }..."
+                description="Replace with com-squareup-retrofit2-converter-gson3 = { module = &quot;com.squareup.retrofit2:converter-gson&quot;, version.ref = &quot;comSquareupRetrofit2ConverterGson2&quot; }..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="androidx-work-work-runtime-ktx3 = { module = &quot;androidx.work:work-runtime-ktx&quot;, version.ref = &quot;androidxWorkWorkRuntimeKtx&quot; }&#xA;"
+                replacement="com-squareup-retrofit2-converter-gson3 = { module = &quot;com.squareup.retrofit2:converter-gson&quot;, version.ref = &quot;comSquareupRetrofit2ConverterGson2&quot; }&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -340,24 +290,24 @@
                     endOffset="2083"/>
             </fix-replace>
             <fix-replace
-                description="Replace with libs.androidx.work.work.runtime.ktx3"
+                description="Replace with libs.com.squareup.retrofit2.converter.gson3"
                 robot="true"
-                replacement="libs.androidx.work.work.runtime.ktx3"
+                replacement="libs.com.squareup.retrofit2.converter.gson3"
                 priority="0">
                 <range
                     file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-                    startOffset="2989"
-                    endOffset="3027"/>
+                    startOffset="2918"
+                    endOffset="2963"/>
             </fix-replace>
         </fix-composite>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="99"
+            line="97"
             column="20"
-            startOffset="2989"
-            endLine="99"
-            endColumn="58"
-            endOffset="3027"/>
+            startOffset="2918"
+            endLine="97"
+            endColumn="65"
+            endOffset="2963"/>
     </incident>
 
     <incident
@@ -365,13 +315,13 @@
         severity="warning"
         message="Use version catalog instead">
         <fix-composite
-            description="Replace with new library catalog declaration for androidx-hilt-hilt-work3"
+            description="Replace with new library catalog declaration for androidx-work-work-runtime-ktx4"
             robot="true">
             <fix-replace
-                description="Replace with androidxHiltHiltWork = &quot;1.1.0&quot;..."
+                description="Replace with androidxWorkWorkRuntimeKtx2 = &quot;2.9.0&quot;..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="androidxHiltHiltWork = &quot;1.1.0&quot;&#xA;"
+                replacement="androidxWorkWorkRuntimeKtx2 = &quot;2.9.0&quot;&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -379,35 +329,35 @@
                     endOffset="26"/>
             </fix-replace>
             <fix-replace
-                description="Replace with androidx-hilt-hilt-work3 = { module = &quot;androidx.hilt:hilt-work&quot;, version.ref = &quot;androidxHiltHiltWork&quot; }..."
+                description="Replace with androidx-work-work-runtime-ktx4 = { module = &quot;androidx.work:work-runtime-ktx&quot;, version.ref = &quot;androidxWorkWorkRuntimeKtx2&quot; }..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="androidx-hilt-hilt-work3 = { module = &quot;androidx.hilt:hilt-work&quot;, version.ref = &quot;androidxHiltHiltWork&quot; }&#xA;"
+                replacement="androidx-work-work-runtime-ktx4 = { module = &quot;androidx.work:work-runtime-ktx&quot;, version.ref = &quot;androidxWorkWorkRuntimeKtx2&quot; }&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
-                    startOffset="691"
-                    endOffset="691"/>
+                    startOffset="2083"
+                    endOffset="2083"/>
             </fix-replace>
             <fix-replace
-                description="Replace with libs.androidx.hilt.hilt.work3"
+                description="Replace with libs.androidx.work.work.runtime.ktx4"
                 robot="true"
-                replacement="libs.androidx.hilt.hilt.work3"
+                replacement="libs.androidx.work.work.runtime.ktx4"
                 priority="0">
                 <range
                     file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-                    startOffset="3048"
-                    endOffset="3079"/>
+                    startOffset="3028"
+                    endOffset="3066"/>
             </fix-replace>
         </fix-composite>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
             line="100"
             column="20"
-            startOffset="3048"
+            startOffset="3028"
             endLine="100"
-            endColumn="51"
-            endOffset="3079"/>
+            endColumn="58"
+            endOffset="3066"/>
     </incident>
 
     <incident
@@ -415,13 +365,13 @@
         severity="warning"
         message="Use version catalog instead">
         <fix-composite
-            description="Replace with new library catalog declaration for androidx-datastore-datastore-preferences3"
+            description="Replace with new library catalog declaration for androidx-hilt-hilt-work4"
             robot="true">
             <fix-replace
-                description="Replace with androidxDatastoreDatastorePreferences = &quot;1.0.0&quot;..."
+                description="Replace with androidxHiltHiltWork2 = &quot;1.1.0&quot;..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="androidxDatastoreDatastorePreferences = &quot;1.0.0&quot;&#xA;"
+                replacement="androidxHiltHiltWork2 = &quot;1.1.0&quot;&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -429,10 +379,10 @@
                     endOffset="26"/>
             </fix-replace>
             <fix-replace
-                description="Replace with androidx-datastore-datastore-preferences3 = { module = &quot;androidx.datastore:datastore-preferences&quot;, version.ref = &quot;androidxDatastoreDatastorePreferences&quot; }..."
+                description="Replace with androidx-hilt-hilt-work4 = { module = &quot;androidx.hilt:hilt-work&quot;, version.ref = &quot;androidxHiltHiltWork2&quot; }..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="androidx-datastore-datastore-preferences3 = { module = &quot;androidx.datastore:datastore-preferences&quot;, version.ref = &quot;androidxDatastoreDatastorePreferences&quot; }&#xA;"
+                replacement="androidx-hilt-hilt-work4 = { module = &quot;androidx.hilt:hilt-work&quot;, version.ref = &quot;androidxHiltHiltWork2&quot; }&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -440,24 +390,24 @@
                     endOffset="691"/>
             </fix-replace>
             <fix-replace
-                description="Replace with libs.androidx.datastore.datastore.preferences3"
+                description="Replace with libs.androidx.hilt.hilt.work4"
                 robot="true"
-                replacement="libs.androidx.datastore.datastore.preferences3"
+                replacement="libs.androidx.hilt.hilt.work4"
                 priority="0">
                 <range
                     file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-                    startOffset="3142"
-                    endOffset="3190"/>
+                    startOffset="3087"
+                    endOffset="3118"/>
             </fix-replace>
         </fix-composite>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="103"
+            line="101"
             column="20"
-            startOffset="3142"
-            endLine="103"
-            endColumn="68"
-            endOffset="3190"/>
+            startOffset="3087"
+            endLine="101"
+            endColumn="51"
+            endOffset="3118"/>
     </incident>
 
     <incident
@@ -465,13 +415,13 @@
         severity="warning"
         message="Use version catalog instead">
         <fix-composite
-            description="Replace with new library catalog declaration for com-google-code-gson-gson3"
+            description="Replace with new library catalog declaration for androidx-datastore-datastore-preferences4"
             robot="true">
             <fix-replace
-                description="Replace with comGoogleCodeGsonGson = &quot;2.10.1&quot;..."
+                description="Replace with androidxDatastoreDatastorePreferences2 = &quot;1.0.0&quot;..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="comGoogleCodeGsonGson = &quot;2.10.1&quot;&#xA;"
+                replacement="androidxDatastoreDatastorePreferences2 = &quot;1.0.0&quot;&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -479,10 +429,60 @@
                     endOffset="26"/>
             </fix-replace>
             <fix-replace
-                description="Replace with com-google-code-gson-gson3 = { module = &quot;com.google.code.gson:gson&quot;, version.ref = &quot;comGoogleCodeGsonGson&quot; }..."
+                description="Replace with androidx-datastore-datastore-preferences4 = { module = &quot;androidx.datastore:datastore-preferences&quot;, version.ref = &quot;androidxDatastoreDatastorePreferences2&quot; }..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="com-google-code-gson-gson3 = { module = &quot;com.google.code.gson:gson&quot;, version.ref = &quot;comGoogleCodeGsonGson&quot; }&#xA;"
+                replacement="androidx-datastore-datastore-preferences4 = { module = &quot;androidx.datastore:datastore-preferences&quot;, version.ref = &quot;androidxDatastoreDatastorePreferences2&quot; }&#xA;"
+                priority="0">
+                <range
+                    file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
+                    startOffset="691"
+                    endOffset="691"/>
+            </fix-replace>
+            <fix-replace
+                description="Replace with libs.androidx.datastore.datastore.preferences4"
+                robot="true"
+                replacement="libs.androidx.datastore.datastore.preferences4"
+                priority="0">
+                <range
+                    file="${:ai:modelmanager*projectDir}/build.gradle.kts"
+                    startOffset="3181"
+                    endOffset="3229"/>
+            </fix-replace>
+        </fix-composite>
+        <location
+            file="${:ai:modelmanager*projectDir}/build.gradle.kts"
+            line="104"
+            column="20"
+            startOffset="3181"
+            endLine="104"
+            endColumn="68"
+            endOffset="3229"/>
+    </incident>
+
+    <incident
+        id="UseTomlInstead"
+        severity="warning"
+        message="Use version catalog instead">
+        <fix-composite
+            description="Replace with new library catalog declaration for com-google-code-gson-gson4"
+            robot="true">
+            <fix-replace
+                description="Replace with comGoogleCodeGsonGson2 = &quot;2.10.1&quot;..."
+                robot="true"
+                oldString="_lint_insert_begin_"
+                replacement="comGoogleCodeGsonGson2 = &quot;2.10.1&quot;&#xA;"
+                priority="0">
+                <range
+                    file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
+                    startOffset="26"
+                    endOffset="26"/>
+            </fix-replace>
+            <fix-replace
+                description="Replace with com-google-code-gson-gson4 = { module = &quot;com.google.code.gson:gson&quot;, version.ref = &quot;comGoogleCodeGsonGson2&quot; }..."
+                robot="true"
+                oldString="_lint_insert_begin_"
+                replacement="com-google-code-gson-gson4 = { module = &quot;com.google.code.gson:gson&quot;, version.ref = &quot;comGoogleCodeGsonGson2&quot; }&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -490,24 +490,24 @@
                     endOffset="2083"/>
             </fix-replace>
             <fix-replace
-                description="Replace with libs.com.google.code.gson.gson3"
+                description="Replace with libs.com.google.code.gson.gson4"
                 robot="true"
-                replacement="libs.com.google.code.gson.gson3"
+                replacement="libs.com.google.code.gson.gson4"
                 priority="0">
                 <range
                     file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-                    startOffset="3245"
-                    endOffset="3279"/>
+                    startOffset="3284"
+                    endOffset="3318"/>
             </fix-replace>
         </fix-composite>
         <location
             file="${:ai:modelmanager*projectDir}/build.gradle.kts"
-            line="106"
+            line="107"
             column="20"
-            startOffset="3245"
-            endLine="106"
+            startOffset="3284"
+            endLine="107"
             endColumn="54"
-            endOffset="3279"/>
+            endOffset="3318"/>
     </incident>
 
 </incidents>

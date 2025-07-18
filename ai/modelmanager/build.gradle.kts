@@ -65,6 +65,7 @@ dependencies {
     
     // AI modules
     implementation(project(":ai:inference"))
+    implementation(project(":ai:rag"))
     
     // Android Core
     implementation(libs.androidx.core.ktx)

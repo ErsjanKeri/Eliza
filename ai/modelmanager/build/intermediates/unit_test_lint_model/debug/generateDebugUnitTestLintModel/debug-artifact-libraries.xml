@@ -1,9 +1,9 @@
 <libraries>
   <library
       name=":@@:ai:modelmanager::debug"
-      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/dc2308c1cbad8be8c5899d18b0ecb759/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/dc2308c1cbad8be8c5899d18b0ecb759/transformed/out/jars/libs/R.jar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/5e127bad00efad1e6840cf6c226f5db5/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/5e127bad00efad1e6840cf6c226f5db5/transformed/out/jars/libs/R.jar"
       resolved="Eliza.ai:modelmanager:unspecified"
-      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/dc2308c1cbad8be8c5899d18b0ecb759/transformed/out"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/5e127bad00efad1e6840cf6c226f5db5/transformed/out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -53,9 +53,22 @@
       proguardRules="proguard.txt"/>
   <library
       name=":@@:ai:inference::debug"
-      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out/jars/libs/R.jar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/42ff34c6caaa3f9735617fd6f861291c/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/42ff34c6caaa3f9735617fd6f861291c/transformed/out/jars/libs/R.jar"
       resolved="Eliza.ai:inference:unspecified"
-      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/b776c8f87ddc865b3ed480ea0b1d738a/transformed/out"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/42ff34c6caaa3f9735617fd6f861291c/transformed/out"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
+      name=":@@:ai:rag::debug"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/fa843925a676721183a698c83d0b8307/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/fa843925a676721183a698c83d0b8307/transformed/out/jars/libs/R.jar"
+      resolved="Eliza.ai:rag:unspecified"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/fa843925a676721183a698c83d0b8307/transformed/out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

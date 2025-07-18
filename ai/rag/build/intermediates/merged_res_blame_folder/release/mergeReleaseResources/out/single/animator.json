@@ -1,26 +1,26 @@
 [
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/animator/fragment_open_exit.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-6:/animator/fragment_open_exit.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/animator/fragment_fade_enter.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-0:/animator/fragment_fade_enter.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/animator/fragment_open_enter.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-6:/animator/fragment_open_enter.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/animator/fragment_close_exit.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-0:/animator/fragment_close_exit.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/animator/fragment_close_enter.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-6:/animator/fragment_close_enter.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/animator/fragment_open_enter.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-0:/animator/fragment_open_enter.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/animator/fragment_close_exit.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-6:/animator/fragment_close_exit.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/animator/fragment_close_enter.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-0:/animator/fragment_close_enter.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/animator/fragment_fade_enter.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-6:/animator/fragment_fade_enter.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/animator/fragment_open_exit.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-0:/animator/fragment_open_exit.xml"
     },
     {
-        "merged": "com.example.ai.edge.eliza.ai.rag-release-65:/animator/fragment_fade_exit.xml",
-        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-6:/animator/fragment_fade_exit.xml"
+        "merged": "com.example.ai.edge.eliza.ai.rag-release-23:/animator/fragment_fade_exit.xml",
+        "source": "com.example.ai.edge.eliza.ai.rag-fragment-1.5.1-0:/animator/fragment_fade_exit.xml"
     }
 ]

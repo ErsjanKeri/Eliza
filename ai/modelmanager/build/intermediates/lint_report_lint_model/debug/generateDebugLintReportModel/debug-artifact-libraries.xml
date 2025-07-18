@@ -12,6 +12,9 @@
       name=":@@:ai:inference::debug"
       project=":ai:inference"/>
   <library
+      name=":@@:ai:rag::debug"
+      project=":ai:rag"/>
+  <library
       name="androidx.hilt:hilt-navigation-compose:1.2.0@aar"
       jars="/Users/ersibesi/.gradle/caches/8.13/transforms/74cf463cfd2d5d67da7fd51e8d5b4389/transformed/hilt-navigation-compose-1.2.0/jars/classes.jar"
       resolved="androidx.hilt:hilt-navigation-compose:1.2.0"

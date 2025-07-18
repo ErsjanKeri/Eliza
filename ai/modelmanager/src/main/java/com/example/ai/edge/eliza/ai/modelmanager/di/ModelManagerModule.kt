@@ -53,4 +53,7 @@ abstract class ModelManagerModule {
     abstract fun bindElizaInferenceHelper(
         elizaInferenceHelperImpl: ElizaInferenceHelperImpl
     ): ElizaInferenceHelper
+
+    // Note: ElizaChatService is automatically provided by @Singleton and @Inject
+    // No binding needed since it's a concrete class, not an interface
 } 

@@ -41,9 +41,8 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:model"))
     
-    // AI modules
-    implementation(project(":ai:modelmanager"))
-    implementation(project(":ai:inference"))
+    // RAG module only needs core modules, no AI module dependencies
+    // This prevents circular dependencies
     
     // Android Core
     implementation(libs.androidx.core.ktx)

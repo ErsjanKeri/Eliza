@@ -43,8 +43,11 @@
  typealias CleanUpListener = () -> Unit
  
  /**
-  * Interface for AI inference operations.
-  * Based on Gallery's LlmChatModelHelper pattern but with RAG integration.
+  * Interface for pure MediaPipe LLM inference operations.
+  * Based exactly on Gallery's LlmChatModelHelper pattern.
+  * 
+  * This is a low-level interface for MediaPipe operations only.
+  * For RAG-enhanced educational responses, use ElizaChatService instead.
   */
  interface ElizaInferenceHelper {
      
@@ -70,10 +73,10 @@
      fun cleanUp(model: Model)
      
      /**
-      * Run inference with RAG integration.
+      * Run pure MediaPipe inference.
       * @param model The model to use for inference
-      * @param input The user input text
-      * @param chatContext The chat context for RAG
+      * @param input The complete prompt (should already be enhanced by higher layers)
+      * @param chatContext The chat context (for future compatibility)
       * @param resultListener Callback for streaming results
       * @param cleanUpListener Callback for cleanup
       * @param images Optional images for multimodal inference
@@ -98,8 +101,11 @@
  )
  
  /**
-  * Implementation of ElizaInferenceHelper using MediaPipe LLM Inference.
+  * Pure MediaPipe LLM inference implementation.
   * Based exactly on Gallery's LlmChatModelHelper pattern.
+  * 
+  * This class handles only MediaPipe operations. For educational AI responses
+  * with RAG enhancement, use ElizaChatService which combines this with RAG.
   */
  @Singleton
  class ElizaInferenceHelperImpl @Inject constructor() : ElizaInferenceHelper {
@@ -117,7 +123,7 @@
          val temperature = DEFAULT_TEMPERATURE
          
          // Use GPU backend by default (like Gallery)
-         val preferredBackend = LlmInference.Backend.GPU
+         val preferredBackend = LlmInference.Backend.CPU // TODO: Gallery uses GPU sometimes but that lead to app crash 
          
          val optionsBuilder = LlmInference.LlmInferenceOptions.builder()
              .setModelPath(model.getPath(context = context))
@@ -235,21 +241,14 @@
          }
          
          try {
-             // For now, use basic prompt without RAG (we'll add RAG layer later)
-             val prompt = buildString {
-                 append("You are an AI tutor helping students learn mathematics. ")
-                 append("Provide clear, step-by-step explanations and encourage learning. ")
-                 append("Context: ${chatContext.javaClass.simpleName}\n\n")
-                 append("User: $input")
-             }
-             
-             Log.d(TAG, "Running MediaPipe inference...")
+             Log.d(TAG, "Running pure MediaPipe inference...")
              
              // Run MediaPipe inference - exactly like Gallery's pattern
+             // The input should already be a complete, enhanced prompt from higher layers
              val session = instance.session
              
-             if (prompt.trim().isNotEmpty()) {
-                 session.addQueryChunk(prompt)
+             if (input.trim().isNotEmpty()) {
+                 session.addQueryChunk(input)
              }
              
              // Add images if provided
@@ -261,7 +260,7 @@
              session.generateResponseAsync(resultListener)
              
          } catch (e: Exception) {
-             Log.e(TAG, "Error during inference", e)
+             Log.e(TAG, "Error during MediaPipe inference", e)
              resultListener("Error: ${e.message}", true)
          }
      }

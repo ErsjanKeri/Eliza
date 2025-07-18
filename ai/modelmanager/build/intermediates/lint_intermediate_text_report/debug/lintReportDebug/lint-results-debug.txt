@@ -1,13 +1,13 @@
 /Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:28: Warning: A newer version of compileSdkVersion than 35 is available: 36 [GradleDependency]
     compileSdk = 35
     ~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:99: Warning: A newer version of androidx.work:work-runtime-ktx than 2.9.0 is available: 2.10.2 [GradleDependency]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:100: Warning: A newer version of androidx.work:work-runtime-ktx than 2.9.0 is available: 2.10.2 [GradleDependency]
     implementation("androidx.work:work-runtime-ktx:2.9.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:100: Warning: A newer version of androidx.hilt:hilt-work than 1.1.0 is available: 1.2.0 [GradleDependency]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:101: Warning: A newer version of androidx.hilt:hilt-work than 1.1.0 is available: 1.2.0 [GradleDependency]
     implementation("androidx.hilt:hilt-work:1.1.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:103: Warning: A newer version of androidx.datastore:datastore-preferences than 1.0.0 is available: 1.1.7 [GradleDependency]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:104: Warning: A newer version of androidx.datastore:datastore-preferences than 1.0.0 is available: 1.1.7 [GradleDependency]
     implementation("androidx.datastore:datastore-preferences:1.0.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -18,16 +18,16 @@
    However, you may simply not be aware that a more recent version is
    available, and that is what this lint check helps find.
 
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:94: Warning: A newer version of com.squareup.okhttp3:okhttp than 4.12.0 is available: 5.1.0 [NewerVersionAvailable]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:95: Warning: A newer version of com.squareup.okhttp3:okhttp than 4.12.0 is available: 5.1.0 [NewerVersionAvailable]
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:95: Warning: A newer version of com.squareup.retrofit2:retrofit than 2.9.0 is available: 3.0.0 [NewerVersionAvailable]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:96: Warning: A newer version of com.squareup.retrofit2:retrofit than 2.9.0 is available: 3.0.0 [NewerVersionAvailable]
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:96: Warning: A newer version of com.squareup.retrofit2:converter-gson than 2.9.0 is available: 3.0.0 [NewerVersionAvailable]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:97: Warning: A newer version of com.squareup.retrofit2:converter-gson than 2.9.0 is available: 3.0.0 [NewerVersionAvailable]
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:106: Warning: A newer version of com.google.code.gson:gson than 2.10.1 is available: 2.13.1 [NewerVersionAvailable]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:107: Warning: A newer version of com.google.code.gson:gson than 2.10.1 is available: 2.13.1 [NewerVersionAvailable]
     implementation("com.google.code.gson:gson:2.10.1")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -39,25 +39,25 @@
    MavenCentral dependency, and connects to the library every time, which
    makes it more flexible but also much slower.
 
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:94: Warning: Use version catalog instead [UseTomlInstead]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:95: Warning: Use version catalog instead [UseTomlInstead]
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:95: Warning: Use version catalog instead [UseTomlInstead]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:96: Warning: Use version catalog instead [UseTomlInstead]
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:96: Warning: Use version catalog instead [UseTomlInstead]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:97: Warning: Use version catalog instead [UseTomlInstead]
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:99: Warning: Use version catalog instead [UseTomlInstead]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:100: Warning: Use version catalog instead [UseTomlInstead]
     implementation("androidx.work:work-runtime-ktx:2.9.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:100: Warning: Use version catalog instead [UseTomlInstead]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:101: Warning: Use version catalog instead [UseTomlInstead]
     implementation("androidx.hilt:hilt-work:1.1.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:103: Warning: Use version catalog instead [UseTomlInstead]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:104: Warning: Use version catalog instead [UseTomlInstead]
     implementation("androidx.datastore:datastore-preferences:1.0.0")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:106: Warning: Use version catalog instead [UseTomlInstead]
+/Users/ersibesi/AndroidStudioProjects/Eliza/ai/modelmanager/build.gradle.kts:107: Warning: Use version catalog instead [UseTomlInstead]
     implementation("com.google.code.gson:gson:2.10.1")
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

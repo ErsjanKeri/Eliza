@@ -59,34 +59,34 @@
         severity="warning"
         message="Use version catalog instead">
         <fix-composite
-            description="Replace with new library catalog declaration for mediapipe-tasks-text"
+            description="Replace with new library catalog declaration for google-tasks-text"
             robot="true">
             <fix-replace
-                description="Replace with tasksTextVersion = &quot;0.10.21&quot;..."
+                description="Replace with googleTasksText = &quot;0.10.21&quot;..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="tasksTextVersion = &quot;0.10.21&quot;&#xA;"
+                replacement="googleTasksText = &quot;0.10.21&quot;&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
-                    startOffset="553"
-                    endOffset="553"/>
+                    startOffset="26"
+                    endOffset="26"/>
             </fix-replace>
             <fix-replace
-                description="Replace with mediapipe-tasks-text = { module = &quot;com.google.mediapipe:tasks-text&quot;, version.ref = &quot;tasksTextVersion&quot; }..."
+                description="Replace with google-tasks-text = { module = &quot;com.google.mediapipe:tasks-text&quot;, version.ref = &quot;googleTasksText&quot; }..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="mediapipe-tasks-text = { module = &quot;com.google.mediapipe:tasks-text&quot;, version.ref = &quot;tasksTextVersion&quot; }&#xA;"
+                replacement="google-tasks-text = { module = &quot;com.google.mediapipe:tasks-text&quot;, version.ref = &quot;googleTasksText&quot; }&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
-                    startOffset="2404"
-                    endOffset="2404"/>
+                    startOffset="2083"
+                    endOffset="2083"/>
             </fix-replace>
             <fix-replace
-                description="Replace with libs.mediapipe.tasks.text"
+                description="Replace with libs.google.tasks.text"
                 robot="true"
-                replacement="libs.mediapipe.tasks.text"
+                replacement="libs.google.tasks.text"
                 priority="0">
                 <range
                     file="${:ai:inference*projectDir}/build.gradle.kts"
@@ -109,13 +109,13 @@
         severity="warning"
         message="Use version catalog instead">
         <fix-composite
-            description="Replace with new library catalog declaration for com-google-mediapipe-tasks-genai"
+            description="Replace with new library catalog declaration for com-google-mediapipe-tasks-genai2"
             robot="true">
             <fix-replace
-                description="Replace with googleTasksGenaiVersion = &quot;0.10.25&quot;..."
+                description="Replace with comGoogleMediapipeTasksGenai = &quot;0.10.25&quot;..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="googleTasksGenaiVersion = &quot;0.10.25&quot;&#xA;"
+                replacement="comGoogleMediapipeTasksGenai = &quot;0.10.25&quot;&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -123,10 +123,10 @@
                     endOffset="26"/>
             </fix-replace>
             <fix-replace
-                description="Replace with com-google-mediapipe-tasks-genai = { module = &quot;com.google.mediapipe:tasks-genai&quot;, version.ref = &quot;googleTasksGenaiVersion&quot; }..."
+                description="Replace with com-google-mediapipe-tasks-genai2 = { module = &quot;com.google.mediapipe:tasks-genai&quot;, version.ref = &quot;comGoogleMediapipeTasksGenai&quot; }..."
                 robot="true"
                 oldString="_lint_insert_begin_"
-                replacement="com-google-mediapipe-tasks-genai = { module = &quot;com.google.mediapipe:tasks-genai&quot;, version.ref = &quot;googleTasksGenaiVersion&quot; }&#xA;"
+                replacement="com-google-mediapipe-tasks-genai2 = { module = &quot;com.google.mediapipe:tasks-genai&quot;, version.ref = &quot;comGoogleMediapipeTasksGenai&quot; }&#xA;"
                 priority="0">
                 <range
                     file="$HOME/AndroidStudioProjects/Eliza/gradle/libs.versions.toml"
@@ -134,9 +134,9 @@
                     endOffset="2083"/>
             </fix-replace>
             <fix-replace
-                description="Replace with libs.com.google.mediapipe.tasks.genai"
+                description="Replace with libs.com.google.mediapipe.tasks.genai2"
                 robot="true"
-                replacement="libs.com.google.mediapipe.tasks.genai"
+                replacement="libs.com.google.mediapipe.tasks.genai2"
                 priority="0">
                 <range
                     file="${:ai:inference*projectDir}/build.gradle.kts"
