@@ -284,26 +284,41 @@ fun createLlmChatConfigs(
 }
 
 /**
- * Pre-configured Gemma 3N model for educational AI.
+ * Device capabilities for variant selection.
  */
-val GEMMA_3N_E4B_MODEL = Model(
-    name = "Gemma-3n-E4B-it-int4",
-    version = "20250520",
-    downloadFileName = "gemma-3n-E4B-it-int4.task",
-    url = "https://huggingface.co/google/gemma-3n-E4B-it-litert-preview/resolve/main/gemma-3n-E4B-it-int4.task?download=true",
-    sizeInBytes = 4405655031L,
-    estimatedPeakMemoryInBytes = 6979321856L,
-    llmSupportImage = true,
-    llmSupportAudio = false,
-    info = "Gemma 3n E4B optimized for educational AI tutoring with text and vision capabilities",
-    learnMoreUrl = "https://ai.google.dev/gemma/docs/gemma-3n",
-    configs = createLlmChatConfigs(
-        defaultMaxToken = 4096,
-        defaultTopK = 64,
-        defaultTopP = 0.95f,
-        defaultTemperature = 1.0f,
-        accelerators = listOf(Accelerator.GPU, Accelerator.CPU)
-    )
-).apply {
-    preProcess()
-} 
+data class DeviceCapabilities(
+    val availableMemoryGB: Long,
+    val isLowMemory: Boolean,
+    val preferPerformance: Boolean
+)
+
+/**
+ * Model performance characteristics for a specific variant.
+ */
+data class ModelPerformance(
+    val variant: GemmaVariant,
+    val estimatedMemoryMB: Long,
+    val inferenceSpeedTokensPerSecond: Float,
+    val qualityScore: Float, // 0.0 to 1.0
+    val isOptimizedForDevice: Boolean
+)
+
+/**
+ * Model initialization result with variant information.
+ */
+sealed class ModelInitializationResult {
+    data class Loading(val message: String) : ModelInitializationResult()
+    data class Success(val message: String) : ModelInitializationResult()
+    data class Error(val message: String) : ModelInitializationResult()
+}
+
+/**
+ * Model variant switching result.
+ */
+sealed class ModelSwitchResult {
+    data class Loading(val message: String) : ModelSwitchResult()
+    data class Success(val message: String) : ModelSwitchResult()
+    data class Error(val message: String) : ModelSwitchResult()
+}
+
+ 

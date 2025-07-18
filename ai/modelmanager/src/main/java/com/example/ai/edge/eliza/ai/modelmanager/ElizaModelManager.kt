@@ -23,24 +23,44 @@ import androidx.lifecycle.viewModelScope
 import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
 import com.example.ai.edge.eliza.core.data.repository.ModelDownloadProgress
 import com.example.ai.edge.eliza.core.data.repository.ModelDownloadStatus
-import com.example.ai.edge.eliza.core.data.repository.ModelInitializationResult
+import com.example.ai.edge.eliza.core.model.GemmaVariant
 import com.example.ai.edge.eliza.core.model.Model
-import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
-import com.example.ai.edge.eliza.core.model.GEMMA_3N_E4B_MODEL
+import com.example.ai.edge.eliza.core.model.ModelInitializationResult
+import com.example.ai.edge.eliza.core.model.ModelSwitchResult
+import com.example.ai.edge.eliza.core.model.ModelPerformance
+import com.example.ai.edge.eliza.core.model.DeviceCapabilities
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
+import kotlinx.coroutines.CompletableDeferred
+import android.app.ActivityManager
 
 private const val TAG = "ElizaModelManager"
+
+/**
+ * Extension function to check if a model is downloaded and valid.
+ */
+private fun Model.isDownloaded(context: Context): Boolean {
+    val modelPath = this.getPath(context)
+    val file = File(modelPath)
+    
+    if (!file.exists()) {
+        return false
+    }
+    
+    // Validate file size matches expected size
+    val actualSize = file.length()
+    return actualSize == this.sizeInBytes
+}
 
 /**
  * Model initialization status types.
@@ -61,381 +81,297 @@ data class ModelInitializationStatus(
 )
 
 /**
- * UI state for model management.
+ * UI state for the model manager.
  */
 data class ModelManagerUiState(
-    val model: Model = GEMMA_3N_E4B_MODEL,
-    val downloadStatus: ModelDownloadProgress? = null,
-    val initializationStatus: ModelInitializationStatus? = null,
     val isReady: Boolean = false,
     val memoryUsage: Long = 0L,
-    val errorMessage: String? = null
+    val currentVariant: GemmaVariant? = null,
+    val downloadProgress: ModelDownloadProgress? = null
 )
 
 /**
- * Eliza Model Manager - handles Gemma 3N model lifecycle.
+ * Eliza Model Manager - handles Gemma 3N model lifecycle with variant support.
  * Adapted from Gallery's ModelManagerViewModel for educational AI use cases.
+ * Now supports MatFormer architecture with E4B/E2B variant switching.
  */
 @HiltViewModel
 class ElizaModelManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val downloadRepository: ModelDownloadRepository,
-    private val inferenceHelper: ElizaInferenceHelper
+    private val inferenceHelper: ElizaInferenceHelper,
+    private val modelRegistry: ElizaModelRegistry
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ModelManagerUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val model = GEMMA_3N_E4B_MODEL
     private val externalFilesDir = context.getExternalFilesDir(null)
 
     init {
+        // Configure model registry with defaults
+        modelRegistry.configureWithDefaults()
+        
+        // Initialize UI state with registry information
+        _uiState.value = _uiState.value.copy(
+            currentVariant = modelRegistry.getRecommendedVariant()
+        )
+        
         // Check if model is already downloaded
         checkModelStatus()
     }
+    
+    /**
+     * Gets the current active model from the registry.
+     */
+    private val activeModel: Model
+        get() = modelRegistry.getCurrentModel() ?: throw IllegalStateException("No model available in registry")
 
     /**
-     * Downloads the Gemma 3N model if not already present.
-     * Uses Gallery's callback-based pattern for progress updates.
+     * Initialize the model with variant-specific optimizations.
+     * This uses our intelligent variant switching system that optimizes MediaPipe
+     * session configuration for different MatFormer-style variants.
+     */
+    suspend fun initializeModel(variant: GemmaVariant? = null): Flow<ModelInitializationResult> = flow {
+        val targetVariant = variant ?: modelRegistry.getRecommendedVariant()
+        
+        try {
+            emit(ModelInitializationResult.Loading("Initializing ${targetVariant.displayName} variant..."))
+            
+            val model = modelRegistry.getCurrentModel()
+            if (model == null) {
+                emit(ModelInitializationResult.Error("No model available in registry"))
+                return@flow
+            }
+            
+            // Check if model file exists
+            if (!model.isDownloaded(context)) {
+                emit(ModelInitializationResult.Error("Model not downloaded. Please download first."))
+                return@flow
+            }
+            
+            // Initialize inference helper with variant-specific optimizations
+            val initResult = CompletableDeferred<String>()
+            inferenceHelper.initialize(context, model, targetVariant) { error ->
+                initResult.complete(error)
+            }
+            
+            val error = initResult.await()
+            if (error.isNotEmpty()) {
+                emit(ModelInitializationResult.Error(error))
+                return@flow
+            }
+            
+            // Update current variant
+            _uiState.update { it.copy(currentVariant = targetVariant) }
+            
+            Log.d(TAG, "Model initialized successfully with variant: ${targetVariant.displayName}")
+            emit(ModelInitializationResult.Success("Model ready with ${targetVariant.displayName} optimization"))
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize model with variant: ${targetVariant.displayName}", e)
+            emit(ModelInitializationResult.Error("Initialization failed: ${e.message}"))
+        }
+    }
+
+    /**
+     * Switch to a different variant with optimized parameters.
+     * This is our implementation of "MatFormer-style" switching within MediaPipe constraints.
+     */
+    suspend fun switchToVariant(targetVariant: GemmaVariant): Flow<ModelSwitchResult> = flow {
+        try {
+            emit(ModelSwitchResult.Loading("Switching to ${targetVariant.displayName}..."))
+            
+            val currentVariant = getCurrentVariant()
+            if (currentVariant == targetVariant) {
+                emit(ModelSwitchResult.Success("Already using ${targetVariant.displayName}"))
+                return@flow
+            }
+            
+            val model = modelRegistry.getCurrentModel()
+            if (model == null) {
+                emit(ModelSwitchResult.Error("No model available"))
+                return@flow
+            }
+            
+            // Check if model is initialized
+            if (model.instance == null) {
+                emit(ModelSwitchResult.Error("Model not initialized. Please initialize first."))
+                return@flow
+            }
+            
+            // Switch variant using inference helper
+            val switchResult = CompletableDeferred<String>()
+            inferenceHelper.switchVariant(model, targetVariant) { error ->
+                switchResult.complete(error)
+            }
+            
+            val error = switchResult.await()
+            if (error.isNotEmpty()) {
+                emit(ModelSwitchResult.Error(error))
+                return@flow
+            }
+            
+            // Update current variant in UI state
+            _uiState.update { it.copy(currentVariant = targetVariant) }
+            
+            Log.d(TAG, "Successfully switched to variant: ${targetVariant.displayName}")
+            emit(ModelSwitchResult.Success("Switched to ${targetVariant.displayName}"))
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to switch to variant: ${targetVariant.displayName}", e)
+            emit(ModelSwitchResult.Error("Variant switching failed: ${e.message}"))
+        }
+    }
+
+    /**
+     * Get the currently active variant.
+     */
+    fun getCurrentVariant(): GemmaVariant? {
+        return _uiState.value.currentVariant
+    }
+
+    /**
+     * Get device-adaptive variant recommendation.
+     * This implements intelligent variant selection based on device capabilities.
+     */
+    fun getRecommendedVariant(): GemmaVariant {
+        return modelRegistry.getRecommendedVariant()
+    }
+
+    /**
+     * Check if a variant is available for switching.
+     */
+    fun isVariantAvailable(variant: GemmaVariant): Boolean {
+        val model = modelRegistry.getCurrentModel() ?: return false
+        return model.isDownloaded(context)
+    }
+
+    /**
+     * Get performance characteristics of the current variant.
+     */
+    fun getCurrentVariantPerformance(): ModelPerformance? {
+        val currentVariant = getCurrentVariant() ?: return null
+        return modelRegistry.getVariantPerformance(currentVariant)
+    }
+
+    /**
+     * Switch to optimal variant based on current device state.
+     * This implements automatic variant switching based on memory pressure,
+     * battery level, and performance requirements.
+     */
+    suspend fun switchToOptimalVariant(): Flow<ModelSwitchResult> = flow {
+        try {
+            emit(ModelSwitchResult.Loading("Analyzing device state..."))
+            
+            val deviceCapabilities = getDeviceCapabilities()
+            val recommendedVariant = modelRegistry.getRecommendedVariant(deviceCapabilities)
+            
+            if (recommendedVariant == _uiState.value.currentVariant) {
+                emit(ModelSwitchResult.Success("Already using optimal variant"))
+                return@flow
+            }
+            
+            // Switch to recommended variant
+            switchToVariant(recommendedVariant).collect { result ->
+                emit(result)
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to switch to optimal variant", e)
+            emit(ModelSwitchResult.Error("Optimal variant switching failed: ${e.message}"))
+        }
+    }
+
+    /**
+     * Get current device capabilities for variant selection.
+     */
+    private fun getDeviceCapabilities(): DeviceCapabilities {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memoryInfo = ActivityManager.MemoryInfo()
+        activityManager.getMemoryInfo(memoryInfo)
+        
+        val availableMemoryGB = memoryInfo.availMem / (1024 * 1024 * 1024)
+        val isLowMemory = memoryInfo.lowMemory
+        
+        return DeviceCapabilities(
+            availableMemoryGB = availableMemoryGB,
+            isLowMemory = isLowMemory,
+            preferPerformance = availableMemoryGB > 6 && !isLowMemory
+        )
+    }
+
+    /**
+     * Downloads the model if not already present.
      */
     fun downloadModel() {
-        // Update status to DOWNLOADING
-        setDownloadStatus(
-            model = model,
-            status = ModelDownloadProgress(
-                progress = 0.0f,
-                status = ModelDownloadStatus.DOWNLOADING,
-                totalBytes = model.sizeInBytes,
-                bytesDownloaded = 0L,
-                downloadSpeed = 0L,
-                error = null
-            )
-        )
-
-        // Delete the model files first (like Gallery does)
-        deleteModel()
-
-        // Start download using repository (callback-based like Gallery)
-        downloadRepository.downloadModel(model, onProgress = ::setDownloadStatusFromProgress)
-    }
-
-    /**
-     * Cancels the model download.
-     */
-    fun cancelDownloadModel() {
-        downloadRepository.cancelDownloadModel(model)
-        deleteModel()
-    }
-
-    /**
-     * Initializes the Gemma 3N model for inference.
-     * Includes proper concurrent access control like Gallery's implementation.
-     */
-    fun initializeModel(force: Boolean = false): Flow<ModelInitializationResult> = flow {
-        // Use the new validation function - Gallery's pattern
-        if (!isModelDownloaded()) {
-            emit(ModelInitializationResult(
-                isSuccess = false,
-                modelName = model.name,
-                initializationTime = 0L,
-                memoryUsage = 0L,
-                error = "Model not downloaded or validation failed"
-            ))
-            return@flow
-        }
-
-        // Skip if already initialized (unless forced)
-        if (!force && uiState.value.initializationStatus?.status == ModelInitializationStatusType.INITIALIZED) {
-            Log.d(TAG, "Model '${model.name}' already initialized. Skipping.")
-            emit(ModelInitializationResult(
-                isSuccess = true,
-                modelName = model.name,
-                initializationTime = 0L,
-                memoryUsage = model.estimatedPeakMemoryInBytes ?: 0L,
-                error = null
-            ))
-            return@flow
-        }
-
-        // Skip if initialization is in progress
-        if (model.initializing) {
-            model.cleanUpAfterInit = false
-            Log.d(TAG, "Model '${model.name}' is being initialized. Skipping.")
-            return@flow
-        }
-
-        // Clean up any existing instance first
-        cleanupModel()
-
-        // Start initialization
-        Log.d(TAG, "Initializing model '${model.name}'...")
-        model.initializing = true
-
-        // Show initializing status after a delay
-        viewModelScope.launch {
-            delay(500)
-            if (model.instance == null && model.initializing) {
-                updateInitializationStatus(ModelInitializationStatus(
-                    status = ModelInitializationStatusType.INITIALIZING
-                ))
-            }
-        }
-
-        val startTime = System.currentTimeMillis()
+        val model = modelRegistry.getCurrentModel() ?: return
         
-        // Initialize the model using MediaPipe (Gallery-style callback)
-        val onDone: (error: String) -> Unit = { error ->
-            val endTime = System.currentTimeMillis()
-            val initTime = endTime - startTime
-            model.initializing = false
+        if (model.isDownloaded(context)) {
+            Log.d(TAG, "Model '${model.name}' already downloaded")
+            return
+        }
+        
+        Log.d(TAG, "Starting download for model '${model.name}'")
+        
+        downloadRepository.downloadModel(model) { progress ->
+            _uiState.update { it.copy(downloadProgress = progress) }
             
-            if (model.instance != null) {
-                Log.d(TAG, "Model '${model.name}' initialized successfully")
-                updateInitializationStatus(ModelInitializationStatus(
-                    status = ModelInitializationStatusType.INITIALIZED
-                ))
-                
-                viewModelScope.launch {
-                    emit(ModelInitializationResult(
-                        isSuccess = true,
-                        modelName = model.name,
-                        initializationTime = initTime,
-                        memoryUsage = model.estimatedPeakMemoryInBytes ?: 0L,
-                        error = null
-                    ))
-                }
-                
-                _uiState.update { it.copy(
-                    isReady = true,
-                    memoryUsage = model.estimatedPeakMemoryInBytes ?: 0L
-                )}
-                
-                // Clean up after init if marked
-                if (model.cleanUpAfterInit) {
-                    Log.d(TAG, "Model '${model.name}' needs cleaning up after init.")
-                    cleanupModel()
-                }
-            } else {
-                Log.d(TAG, "Model '${model.name}' failed to initialize: $error")
-                updateInitializationStatus(ModelInitializationStatus(
-                    status = ModelInitializationStatusType.ERROR,
-                    error = error
-                ))
-                
-                viewModelScope.launch {
-                    emit(ModelInitializationResult(
-                        isSuccess = false,
-                        modelName = model.name,
-                        initializationTime = initTime,
-                        memoryUsage = 0L,
-                        error = error
-                    ))
-                }
-            }
-        }
-
-        // Initialize using inference helper - exactly like Gallery's pattern
-        inferenceHelper.initialize(context, model, onDone)
-    }
-
-    /**
-     * Cleans up the model and releases resources.
-     * Includes proper concurrent access control like Gallery's implementation.
-     */
-    fun cleanupModel() {
-        viewModelScope.launch(Dispatchers.Default) {
-            if (model.instance != null) {
-                model.cleanUpAfterInit = false
-                Log.d(TAG, "Cleaning up model '${model.name}'...")
-                
-                inferenceHelper.cleanUp(model)
-                model.instance = null
-                model.initializing = false
-                
-                updateInitializationStatus(ModelInitializationStatus(
-                    status = ModelInitializationStatusType.NOT_INITIALIZED
-                ))
-                
-                _uiState.update { it.copy(
-                    isReady = false,
-                    memoryUsage = 0L
-                )}
-            } else {
-                // When model is being initialized and we are trying to clean it up at same time,
-                // we mark it to clean up and it will be cleaned up after initialization is done.
-                if (model.initializing) {
-                    model.cleanUpAfterInit = true
-                    Log.d(TAG, "Marking model '${model.name}' for cleanup after initialization")
-                }
+            if (progress.status == ModelDownloadStatus.COMPLETED) {
+                Log.d(TAG, "Model '${model.name}' download completed")
+                checkModelStatus()
+            } else if (progress.status == ModelDownloadStatus.FAILED) {
+                Log.e(TAG, "Model '${model.name}' download failed: ${progress.error}")
             }
         }
     }
 
     /**
-     * Deletes the downloaded model from storage.
+     * Checks if the model is downloaded and updates UI state.
      */
-    fun deleteModel() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                cleanupModel()
-                val modelDir = File(externalFilesDir, "${model.normalizedName}/${model.version}")
-                if (modelDir.exists()) {
-                    modelDir.deleteRecursively()
-                }
-                setDownloadStatus(
-                    model = model,
-                    status = ModelDownloadProgress(
-                        progress = 0.0f,
-                        status = ModelDownloadStatus.PENDING,
-                        totalBytes = 0L,
-                        bytesDownloaded = 0L,
-                        downloadSpeed = 0L,
-                        error = null
-                    )
-                )
-            } catch (e: Exception) {
-                Log.e(TAG, "Model deletion failed", e)
-            }
-        }
+    private fun checkModelStatus() {
+        val model = modelRegistry.getCurrentModel() ?: return
+        val isDownloaded = model.isDownloaded(context)
+        
+        _uiState.update { it.copy(
+            isReady = isDownloaded,
+            memoryUsage = if (isDownloaded) model.estimatedPeakMemoryInBytes ?: 0L else 0L
+        )}
+        
+        Log.d(TAG, "Model '${model.name}' status: ${if (isDownloaded) "Downloaded" else "Not downloaded"}")
     }
 
     /**
-     * Checks if the model is ready for inference.
+     * Cancels the current model download.
      */
-    fun isModelReady(): Boolean {
-        return uiState.value.isReady && 
-               uiState.value.initializationStatus?.status == ModelInitializationStatusType.INITIALIZED
+    fun cancelDownload() {
+        val model = modelRegistry.getCurrentModel() ?: return
+        downloadRepository.cancelDownloadModel(model)
+        Log.d(TAG, "Cancelled download for model '${model.name}'")
     }
 
     /**
-     * Gets the current model instance for inference.
-     */
-    fun getModelInstance(): Any? {
-        return if (isModelReady()) model.instance else null
-    }
-
-    /**
-     * Checks if the model is downloaded and validates the file.
-     * Based on Gallery's isModelDownloaded pattern.
+     * Checks if the model is downloaded.
      */
     fun isModelDownloaded(): Boolean {
-        val modelPath = model.getPath(context)
-        val file = File(modelPath)
-        
-        if (!file.exists()) {
-            Log.d(TAG, "Model file does not exist: $modelPath")
-            return false
-        }
-        
-        // Validate file size matches expected size
-        val actualSize = file.length()
-        if (actualSize != model.sizeInBytes) {
-            Log.w(TAG, "Model file size mismatch. Expected: ${model.sizeInBytes}, Actual: $actualSize")
-            return false
-        }
-        
-        Log.d(TAG, "Model is downloaded and validated: $modelPath")
-        return true
+        val model = modelRegistry.getCurrentModel() ?: return false
+        return model.isDownloaded(context)
     }
 
     /**
-     * Checks if the model is partially downloaded.
-     * Based on Gallery's isModelPartiallyDownloaded pattern.
+     * Cleans up model resources.
      */
-    fun isModelPartiallyDownloaded(): Boolean {
-        val modelPath = model.getPath(context)
-        val file = File(modelPath)
-        
-        return file.exists() && file.length() > 0 && file.length() < model.sizeInBytes
+    fun cleanupModel() {
+        val model = modelRegistry.getCurrentModel() ?: return
+        inferenceHelper.cleanUp(model)
+        Log.d(TAG, "Cleaned up model '${model.name}'")
     }
 
     /**
-     * Gets the current model download status.
-     * Based on Gallery's getModelDownloadStatus pattern.
+     * Gets the current model from the registry.
      */
-    fun getModelDownloadStatus(): ModelDownloadProgress {
-        if (isModelDownloaded()) {
-            return ModelDownloadProgress(
-                progress = 1.0f,
-                status = ModelDownloadStatus.COMPLETED,
-                bytesDownloaded = model.sizeInBytes,
-                totalBytes = model.sizeInBytes,
-                downloadSpeed = 0L,
-                error = null
-            )
-        } else if (isModelPartiallyDownloaded()) {
-            val modelPath = model.getPath(context)
-            val file = File(modelPath)
-            val receivedBytes = file.length()
-            
-            return ModelDownloadProgress(
-                progress = receivedBytes.toFloat() / model.sizeInBytes.toFloat(),
-                status = ModelDownloadStatus.DOWNLOADING,
-                bytesDownloaded = receivedBytes,
-                totalBytes = model.sizeInBytes,
-                downloadSpeed = 0L,
-                error = null
-            )
-        } else {
-            return ModelDownloadProgress(
-                progress = 0.0f,
-                status = ModelDownloadStatus.PENDING,
-                bytesDownloaded = 0L,
-                totalBytes = model.sizeInBytes,
-                downloadSpeed = 0L,
-                error = null
-            )
-        }
-    }
-
-    /**
-     * Deletes the model file if it exists.
-     * Based on Gallery's deleteFileFromExternalFilesDir pattern.
-     */
-    fun deleteModelFile() {
-        try {
-            val modelPath = model.getPath(context)
-            val file = File(modelPath)
-            if (file.exists()) {
-                file.delete()
-                Log.d(TAG, "Model file deleted: $modelPath")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to delete model file", e)
-        }
-    }
-
-    /**
-     * Sets download status (Gallery-style callback method).
-     */
-    private fun setDownloadStatus(model: Model, status: ModelDownloadProgress) {
-        _uiState.update { it.copy(downloadStatus = status) }
-    }
-
-    /**
-     * Converts ModelDownloadProgress to ModelDownloadStatus and updates UI.
-     */
-    private fun setDownloadStatusFromProgress(progress: ModelDownloadProgress) {
-        setDownloadStatus(model, progress)
-    }
-
-    private fun checkModelStatus() {
-        viewModelScope.launch {
-            // Use the new validation functions - Gallery's pattern
-            val downloadStatus = getModelDownloadStatus()
-            setDownloadStatus(model, downloadStatus)
-            
-            updateInitializationStatus(ModelInitializationStatus(
-                status = ModelInitializationStatusType.NOT_INITIALIZED
-            ))
-        }
-    }
-
-    // Note: This private function is now replaced by the public isModelDownloaded() function above
-    // which includes proper validation following Gallery's patterns
-
-    private fun updateInitializationStatus(status: ModelInitializationStatus) {
-        _uiState.update { it.copy(initializationStatus = status) }
+    fun getCurrentModel(): Model? {
+        return modelRegistry.getCurrentModel()
     }
 
     override fun onCleared() {

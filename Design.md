@@ -25,21 +25,25 @@ markdown# AI Tutor App - Technical Design
 
 ## Data Flow Architecture
 
-### 1. Model Initialization Flow
+### 1. Model Initialization Flow (MatFormer Architecture)
 ```mermaid
 sequenceDiagram
     participant App
     participant ModelManager
-    participant Gallery
+    participant ModelRegistry
+    participant WorkManager
     participant FileSystem
     
     App->>ModelManager: Initialize Gemma-3n
-    ModelManager->>Gallery: Download model if needed
-    Gallery->>FileSystem: Save model file (3.1GB)
-    FileSystem-->>Gallery: Download complete
-    Gallery-->>ModelManager: Model ready
+    ModelManager->>ModelRegistry: Get current variant
+    ModelRegistry-->>ModelManager: E4B model (contains E2B)
+    ModelManager->>WorkManager: Download model if needed
+    WorkManager->>FileSystem: Save model file (4.4GB)
+    FileSystem-->>WorkManager: Download complete
+    WorkManager-->>ModelManager: Model ready
     ModelManager->>ModelManager: Initialize inference
     ModelManager-->>App: Model initialized
+    Note over ModelRegistry: E2B available as nested subset
 2. AI Chat Interaction Flow
 mermaidsequenceDiagram
     participant User
@@ -153,26 +157,27 @@ data class UserProgressEntity(
 )
 Component Architecture
 1. AI Model Integration (from gallery-edge-ai)
-kotlinclass ModelManager @Inject constructor(
+kotlin@HiltViewModel
+class ElizaModelManager @Inject constructor(
     private val context: Context,
-    private val dataStoreRepository: DataStoreRepository
-) {
-    private val gemma3nModel = Model(
-        name = "Gemma-3n-E4B-it-int4",
-        modelId = "google/gemma-3n-E2B-it-litert-preview",
-        sizeInBytes = 3136226711,
-        estimatedPeakMemoryInBytes = 5905580032,
-        llmSupportImage = true
-    )
+    private val downloadRepository: ModelDownloadRepository,
+    private val inferenceHelper: ElizaInferenceHelper,
+    private val modelRegistry: ElizaModelRegistry
+) : ViewModel() {
     
-    suspend fun initializeModel(): Result<Unit>
-    suspend fun generateResponse(prompt: String): Result<String>
-    suspend fun processImage(imageUri: Uri, question: String): Result<String>
+    // Uses MatFormer-based model registry for variant switching
+    private val currentModel: Model
+        get() = modelRegistry.getCurrentModel() ?: throw IllegalStateException("No model available")
+    
+    suspend fun switchToVariant(targetVariant: GemmaVariant)
+    suspend fun initializeModel(): Flow<ModelInitializationResult>
+    suspend fun downloadModel()
+    fun getRecommendedVariant(): GemmaVariant
 }
-2. Chat Service
+2. Chat Service with MatFormer Model Support
 kotlin@Singleton
 class ChatService @Inject constructor(
-    private val modelManager: ModelManager,
+    private val modelManager: ElizaModelManager,
     private val chatRepository: ChatRepository,
     private val ragService: RagService
 ) {
@@ -184,6 +189,10 @@ class ChatService @Inject constructor(
     
     suspend fun generateMathSolution(problem: String): Result<String>
     suspend fun explainConcept(concept: String): Result<String>
+    
+    // New MatFormer capabilities
+    suspend fun switchToOptimalVariant(deviceCapabilities: DeviceCapabilities)
+    fun getCurrentVariant(): GemmaVariant
 }
 3. Course Content Service
 kotlin@Singleton
