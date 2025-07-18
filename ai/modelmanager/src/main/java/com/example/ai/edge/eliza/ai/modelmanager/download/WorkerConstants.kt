@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.ai.edge.eliza.ai.modelmanager
+package com.example.ai.edge.eliza.ai.modelmanager.download
 
 // Keys used to send/receive data to WorkManager - exactly like Gallery's pattern
 const val KEY_MODEL_URL = "KEY_MODEL_URL"

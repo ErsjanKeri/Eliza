@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.example.ai.edge.eliza.ai.modelmanager.di
+package com.example.ai.edge.eliza.ai.modelmanager.manager.di
 
 import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
 import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelperImpl
-import com.example.ai.edge.eliza.ai.modelmanager.ModelDownloadRepository
-import com.example.ai.edge.eliza.ai.modelmanager.ModelDownloadRepositoryImpl
+import com.example.ai.edge.eliza.ai.modelmanager.download.ModelDownloadRepository
+import com.example.ai.edge.eliza.ai.modelmanager.download.ModelDownloadRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

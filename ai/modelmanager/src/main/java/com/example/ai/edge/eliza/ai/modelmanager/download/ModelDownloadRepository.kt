@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.ai.edge.eliza.ai.modelmanager
+package com.example.ai.edge.eliza.ai.modelmanager.download
 
 import android.content.Context
 import android.util.Log

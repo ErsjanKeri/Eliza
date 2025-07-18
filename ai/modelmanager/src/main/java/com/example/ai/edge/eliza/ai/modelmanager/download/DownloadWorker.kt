@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.ai.edge.eliza.ai.modelmanager
+package com.example.ai.edge.eliza.ai.modelmanager.download
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -248,11 +248,9 @@ class DownloadWorker @AssistedInject constructor(
                         )
                     }
                     
-                    Log.d(TAG, "Model validation and verification passed")
                     Result.success()
-                    
-                } catch (e: IOException) {
-                    Log.e(TAG, "Download failed", e)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error downloading model '$modelName' from '$fileUrl'", e)
                     Result.failure(
                         Data.Builder()
                             .putString(KEY_MODEL_DOWNLOAD_ERROR_MESSAGE, e.message)
@@ -263,99 +261,96 @@ class DownloadWorker @AssistedInject constructor(
         }
     }
 
-    override suspend fun getForegroundInfo(): ForegroundInfo {
-        return createForegroundInfo(0)
-    }
-
     /**
-     * Creates a ForegroundInfo object for the download worker's ongoing notification.
-     * Based on Gallery's implementation.
+     * Create foreground notification for download progress.
      */
-    private fun createForegroundInfo(progress: Int, modelName: String? = null): ForegroundInfo {
-        val title = if (modelName != null) {
-            "Downloading \"$modelName\""
-        } else {
-            "Downloading AI model"
-        }
-        val content = "Download in progress: $progress%"
-
+    private fun createForegroundInfo(progress: Int, modelName: String): ForegroundInfo {
         val notification = NotificationCompat.Builder(applicationContext, FOREGROUND_NOTIFICATION_CHANNEL_ID)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setOngoing(true) // Makes the notification non-dismissible
+            .setContentTitle("Downloading AI Model")
+            .setContentText("Downloading $modelName...")
+            .setSmallIcon(android.R.drawable.stat_sys_download) // Replace with your own icon
+            .setOngoing(true)
             .setProgress(100, progress, false)
+            .setSilent(true)
             .build()
-
+        
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ForegroundInfo(notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         } else {
             ForegroundInfo(notificationId, notification)
         }
     }
-
+    
     /**
-     * Validates the downloaded model file exactly like Gallery's pattern.
-     * Checks file existence and size match.
+     * Check if a model is fully downloaded.
      */
-    private fun validateDownloadedModel(file: File, expectedSize: Long): Boolean {
-        if (!file.exists()) {
-            Log.e(TAG, "Downloaded model file does not exist: ${file.absolutePath}")
+    private fun validateDownloadedModel(outputFile: File, totalBytes: Long): Boolean {
+        if (!outputFile.exists()) {
             return false
         }
-
-        val actualSize = file.length()
-        if (actualSize != expectedSize) {
-            Log.e(TAG, "Downloaded model file size mismatch. Expected: $expectedSize, Actual: $actualSize")
-            return false
+        
+        return if (totalBytes > 0L) {
+            outputFile.length() == totalBytes
+        } else {
+            outputFile.length() > 0L
         }
-
-        Log.d(TAG, "Model validation passed: file exists and size matches ($actualSize bytes)")
-        return true
     }
 
     /**
-     * Verifies model file integrity using SHA-256 checksum.
-     * Based on industry-standard practices for file integrity verification.
+     * Check if a model is partially downloaded.
      */
-    private fun verifyModelChecksum(file: File, expectedChecksum: String?): Boolean {
-        if (expectedChecksum == null) {
-            Log.d(TAG, "No checksum provided for verification")
+    private fun isModelPartiallyDownloaded(outputFile: File, totalBytes: Long): Boolean {
+        if (!outputFile.exists()) {
+            return false
+        }
+        
+        return if (totalBytes > 0L) {
+            outputFile.length() < totalBytes
+        } else {
+            false
+        }
+    }
+    
+    /**
+     * Verify the SHA-256 checksum of the downloaded file.
+     */
+    private fun verifyModelChecksum(outputFile: File, sha256Checksum: String?): Boolean {
+        if (sha256Checksum.isNullOrEmpty()) {
+            // No checksum provided, consider it valid
             return true
         }
-
+        
+        Log.d(TAG, "Verifying checksum for ${outputFile.name}")
+        
         try {
-            val digest = MessageDigest.getInstance("SHA-256")
-            val fileInputStream = FileInputStream(file)
-            val buffer = ByteArray(8192)
-            var bytesRead: Int
-
-            while (fileInputStream.read(buffer).also { bytesRead = it } != -1) {
-                digest.update(buffer, 0, bytesRead)
-            }
-            fileInputStream.close()
-
-            val actualChecksum = digest.digest().joinToString("") { "%02x".format(it) }
-            val checksumMatch = actualChecksum.equals(expectedChecksum, ignoreCase = true)
-
-            if (checksumMatch) {
-                Log.d(TAG, "Model checksum verification passed")
-            } else {
-                Log.e(TAG, "Model checksum verification failed. Expected: $expectedChecksum, Actual: $actualChecksum")
-            }
-
-            return checksumMatch
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during checksum verification", e)
+            val fileChecksum = calculateSha256(outputFile)
+            Log.d(TAG, "Expected checksum: $sha256Checksum")
+            Log.d(TAG, "Calculated checksum: $fileChecksum")
+            
+            return fileChecksum.equals(sha256Checksum, ignoreCase = true)
+            
+        } catch (e: IOException) {
+            Log.e(TAG, "Error calculating checksum", e)
             return false
         }
     }
-
+    
     /**
-     * Checks if the model file is partially downloaded.
-     * Based on Gallery's partial download detection pattern.
+     * Calculate the SHA-256 hash of a file.
      */
-    private fun isModelPartiallyDownloaded(file: File, expectedSize: Long): Boolean {
-        return file.exists() && file.length() > 0 && file.length() < expectedSize
+    private fun calculateSha256(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val inputStream = FileInputStream(file)
+        val buffer = ByteArray(8192)
+        var bytesRead: Int
+        
+        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+            digest.update(buffer, 0, bytesRead)
+        }
+        
+        inputStream.close()
+        
+        val hashBytes = digest.digest()
+        return hashBytes.joinToString("") { "%02x".format(it) }
     }
 } 

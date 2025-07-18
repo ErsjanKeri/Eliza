@@ -1,8 +1,9 @@
-# Eliza Model Variant Switching System
+# Eliza AI Module
 
 ## Overview
 
-This system implements Google's **MatFormer (Matryoshka Transformer)** architecture for Gemma 3n models, enabling seamless switching between different model variants without re-downloading.
+This system implements Google's MatFormer (Matryoshka Transformer) architecture for Gemma 3n models, enabling seamless switching between different model variants without re-downloading.
+
 
 ## Key Features
 
@@ -16,180 +17,100 @@ This system implements Google's **MatFormer (Matryoshka Transformer)** architect
 - **E4B (4B effective params)**: Highest quality, ~7GB memory
 - **E2B (2B effective params)**: 2x faster inference, ~3.5GB memory
 
-## Quick Start
 
-### 1. Easy Configuration
 
-Change the default model variant in `ModelConfig.kt`:
+## Directory Structure
 
-```kotlin
-// Change this single line to switch default variant
-val DEFAULT_VARIANT = "gemma-3n-E4B"  // or "gemma-3n-E2B"
+The `ai` module is organized into the following sub-modules:
+
+-   **/inference**: Handles the core logic for running the AI model.
+-   **/modelmanager**: Manages the AI models, including downloading, variant switching, and lifecycle.
+-   **/rag**: Implements the Retrieval-Augmented Generation (RAG) functionality to enhance prompts with contextual data.
+
+```mermaid
+graph TD
+    subgraph "AI Module"
+        A[ai]
+    end
+
+    subgraph "Sub-modules"
+        B[inference]
+        C[modelmanager]
+        D[rag]
+    end
+
+    A --> B
+    A --> C
+    A --> D
 ```
 
-### 2. Manual Variant Switching
+### Inference Module
+
+The `inference` module contains the following key components:
+
+-   **ElizaInferenceHelper**: A helper class that abstracts the complexities of interacting with the MediaPipe LLM inference engine. It provides a clean and simple API for initializing models, running inference, and managing model variants.
+-   **ElizaChatService**: A high-level service that combines the capabilities of the inference helper and the RAG provider to generate intelligent, context-aware responses.
+
+### ModelManager Module
+
+The `modelmanager` module is responsible for managing the lifecycle of the AI models. It is further divided into two sub-packages:
+
+-   **/download**: Contains the components responsible for downloading the AI models from remote sources.
+    -   **DownloadWorker**: A `WorkManager` worker that handles the model download process in the background.
+    -   **ModelDownloadRepository**: A repository that provides a clean API for downloading models and observing their progress.
+    -   **WorkerConstants**: A set of constants used by the download worker and repository.
+-   **/manager**: Contains the core logic for managing the AI models.
+    -   **ElizaModelManager**: A `ViewModel` that manages the state of the AI model and provides a simple interface for initializing, switching, and interacting with the model.
+    -   **ElizaModelRegistry**: A registry that manages the available model variants and their configurations.
+
+### RAG Module
+
+The `rag` module provides the components for Retrieval-Augmented Generation:
+
+-   **RagProvider**: An interface that defines the contract for providing contextual data to the AI model.
+-   **RagProviderFactory**: A factory that creates the appropriate RAG provider based on the current context.
+
+## MatFormer Architecture
+
+The Eliza AI module is built around the MatFormer architecture, which allows for efficient switching between different model variants. This is achieved by using a single, large model (E4B) that contains a smaller, nested model (E2B) as a subset of its parameters.
+
+### Key Benefits
+
+-   **No Re-downloading**: Switch instantly between variants without needing to download additional files.
+-   **Memory Efficiency**: The Per-Layer Embeddings (PLE) technique reduces the GPU memory footprint by offloading embeddings to the CPU.
+-   **Performance Flexibility**: Choose between a high-quality variant (E4B) and a faster, more efficient variant (E2B) based on the use case and device capabilities.
+-   **Device-Adaptive**: Automatically adapts to the device's capabilities to provide the best possible user experience.
+
+## Usage
+
+### Switching Variants
+
+To switch between model variants, you can use the `ElizaModelManager`:
 
 ```kotlin
 // Inject the model manager
 @Inject lateinit var modelManager: ElizaModelManager
 
-// Switch to high-quality variant
+// Switch to the high-quality variant
 modelManager.switchToVariant("gemma-3n-E4B")
 
-// Switch to fast variant
+// Switch to the fast variant
 modelManager.switchToVariant("gemma-3n-E2B")
 ```
 
-### 3. Use Case-Based Selection
+### Use-Case-Based Selection
+
+The `ElizaChatService` automatically selects the optimal variant based on the current educational context, ensuring the best balance of performance and quality for each use case.
+
+### Device-Adaptive Selection
+
+The `ElizaModelManager` can also recommend a variant based on the device's capabilities, ensuring that the app runs smoothly even on resource-constrained devices.
 
 ```kotlin
-// Get variant based on use case
-val variant = ModelConfig.getVariantForUseCase(UseCase.EDUCATIONAL_TUTORING)
-modelManager.switchToVariant(variant)
-```
-
-### 4. Device-Adaptive Selection
-
-```kotlin
-// Get recommended variant based on device capabilities
+// Get the recommended variant for the current device
 val recommendedVariant = modelManager.getRecommendedVariant()
 modelManager.switchToVariant(recommendedVariant)
 ```
-
-## Configuration Options
-
-### Memory Thresholds
-```kotlin
-object MemoryThresholds {
-    const val E4B_MIN_MEMORY_GB = 6.0f    // Minimum for E4B
-    const val E2B_MIN_MEMORY_GB = 3.0f    // Minimum for E2B
-    const val FALLBACK_THRESHOLD_GB = 2.5f // Fallback to E2B
-}
-```
-
-### Automatic Switching
-```kotlin
-const val ENABLE_AUTO_SWITCHING = true
-const val AUTO_SWITCH_MEMORY_THRESHOLD = 0.8f // Switch when memory > 80%
-```
-
-### Performance Monitoring
-```kotlin
-const val ENABLE_PERFORMANCE_MONITORING = true
-const val PRELOAD_NESTED_VARIANTS = true // For faster switching
-```
-
-## MatFormer Architecture Details
-
-### How It Works
-1. **Single Model File**: Download only the E4B model
-2. **Nested Subsets**: E2B is extracted from E4B parameters
-3. **Parameter Selection**: Choose which parameters to activate
-4. **Memory Optimization**: PLE reduces GPU memory usage
-
-### Benefits
-- **No Re-downloading**: Switch instantly between variants
-- **Memory Efficient**: PLE keeps core parameters in CPU
-- **Performance Flexible**: Choose speed vs quality trade-off
-- **Device Adaptive**: Automatically adapt to device capabilities
-
-## Implementation Status
-
-### ✅ Completed
-- [x] String-based variant system with E4B/E2B support
-- [x] ElizaModelRegistry for variant management
-- [x] ModelConfig for easy configuration
-- [x] Updated ElizaModelManager to use registry
-- [x] Deprecated old hardcoded model references
-
-### 🔄 In Progress
-- [ ] MediaPipe LLM inference parameter switching
-- [ ] UI components for variant selection
-- [ ] Automatic switching based on device capabilities
-- [ ] Performance monitoring and benchmarking
-
-## Usage Examples
-
-### Educational Tutoring App
-```kotlin
-// Use highest quality for education
-val variant = ModelConfig.getVariantForUseCase(UseCase.EDUCATIONAL_TUTORING)
-modelManager.switchToVariant(variant)
-```
-
-### Quick Response Chat
-```kotlin
-// Use fastest variant for quick responses
-val variant = ModelConfig.getVariantForUseCase(UseCase.QUICK_RESPONSES)
-modelManager.switchToVariant(variant)
-```
-
-### Resource-Constrained Devices
-```kotlin
-// Use memory-efficient variant
-val variant = ModelConfig.getVariantForUseCase(UseCase.RESOURCE_CONSTRAINED)
-modelManager.switchToVariant(variant)
-```
-
-## API Reference
-
-### ElizaModelManager
-```kotlin
-// Switch to specific variant
-fun switchToVariant(targetVariant: String)
-
-// Get device recommendation
-fun getRecommendedVariant(): String
-
-// Check if variant is available
-fun isVariantAvailable(variant: String): Boolean
-
-// Get performance info
-fun getPerformanceInfo(variant: String): String
-```
-
-### ModelConfig
-```kotlin
-// Quick variant selection
-fun useHighQualityVariant(): String
-fun useFastVariant(): String
-
-// Use case-based selection
-fun getVariantForUseCase(useCase: UseCase): String
-```
-
-## Best Practices
-
-1. **Start with E4B**: Default to highest quality, switch to E2B if needed
-2. **Monitor Performance**: Enable performance monitoring for optimal selection
-3. **Use Auto-switching**: Enable automatic switching for better user experience
-4. **Preload Variants**: Enable preloading for faster switching
-5. **Test on Target Devices**: Verify performance on actual deployment devices
-
-## Troubleshooting
-
-### Common Issues
-
-**Model switching takes too long**
-- Enable `PRELOAD_NESTED_VARIANTS = true`
-- Check if model is already downloaded
-
-**Out of memory errors**
-- Lower `AUTO_SWITCH_MEMORY_THRESHOLD`
-- Enable automatic switching
-- Use E2B variant for low-memory devices
-
-**Performance issues**
-- Enable performance monitoring
-- Use device-adaptive selection
-- Consider automatic switching based on performance
-
-## Future Features
-
-- **Mix'n'Match**: Custom model sizes between E2B and E4B
-- **Elastic Execution**: Dynamic switching during inference
-- **Advanced PLE**: More sophisticated memory optimization
-- **Performance Profiling**: Detailed performance analytics 
 
 ```mermaid
 graph TB
@@ -254,7 +175,6 @@ graph TB
     style D fill:#fff3e0
     style F fill:#f3e5f5
 ```
-
 
 
 

@@ -14,54 +14,49 @@
  * limitations under the License.
  */
 
-package com.example.ai.edge.eliza.ai.modelmanager
+package com.example.ai.edge.eliza.ai.service
 
 import android.graphics.Bitmap
 import android.util.Log
+import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
 import com.example.ai.edge.eliza.ai.inference.ResultListener
-
+import com.example.ai.edge.eliza.ai.rag.RagProviderFactory
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.Model
-import com.example.ai.edge.eliza.ai.rag.RagProviderFactory
-
 import com.example.ai.edge.eliza.core.model.ModelInitializationResult
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlinx.coroutines.launch
 
 private const val TAG = "ElizaChatService"
 
-// Variant constants - matching ModelConfig.kt
-private const val GEMMA_3N_E4B = "gemma-3n-E4B"
-private const val GEMMA_3N_E2B = "gemma-3n-E2B"
-
 /**
- * High-level chat service that combines RAG with MediaPipe inference using MatFormer variant switching.
- * This service provides the complete educational AI experience by:
- * 1. Using RAG to enhance prompts with relevant educational content
- * 2. Selecting optimal variants for different educational contexts
- * 3. Using ModelManager for variant-aware inference
- * 4. Providing streaming responses with educational context
+ * High-level chat service that combines RAG with MediaPipe inference using MatFormer variant
+ * switching. This service provides the complete educational AI experience by: 1. Using RAG to
+ * enhance prompts with relevant educational content 2. Selecting optimal variants for different
+ * educational contexts 3. Using ModelManager for variant-aware inference 4. Providing streaming
+ * responses with educational context
  */
 @Singleton
-class ElizaChatService @Inject constructor(
+class ElizaChatService
+@Inject
+constructor(
     private val modelManager: ElizaModelManager,
     private val inferenceHelper: ElizaInferenceHelper,
-
     private val ragProviderFactory: RagProviderFactory
 ) {
-    
+
     private var currentVariant: String? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    
+
     /**
-     * Generate an AI response with RAG enhancement and intelligent variant selection.
-     * This is the main method that combines RAG + MatFormer variant switching + MediaPipe inference.
+     * Generate an AI response with RAG enhancement and intelligent variant selection. This is the
+     * main method that combines RAG + MatFormer variant switching + MediaPipe inference.
      */
     fun generateResponse(
         input: String,
@@ -70,15 +65,21 @@ class ElizaChatService @Inject constructor(
         cleanUpListener: () -> Unit,
         images: List<Bitmap> = listOf()
     ) {
-        Log.d(TAG, "Generating RAG-enhanced response for context: ${chatContext.javaClass.simpleName}")
-        
+        Log.d(
+            TAG,
+            "Generating RAG-enhanced response for context: ${chatContext.javaClass.simpleName}"
+        )
+
         // Use coroutines for RAG processing and variant management
         serviceScope.launch {
             try {
                 // Step 1: Select optimal variant for this educational context
                 val optimalVariant = selectOptimalVariantForContext(chatContext)
-                Log.d(TAG, "Selected optimal variant: ${optimalVariant} for context: ${chatContext.javaClass.simpleName}")
-                
+                Log.d(
+                    TAG,
+                    "Selected optimal variant: ${optimalVariant} for context: ${chatContext.javaClass.simpleName}"
+                )
+
                 // Step 2: Ensure model is initialized with the optimal variant
                 ensureModelInitialized(optimalVariant) { initResult ->
                     when (initResult) {
@@ -96,57 +97,66 @@ class ElizaChatService @Inject constructor(
                             }
                         }
                         is ModelInitializationResult.Error -> {
-                            Log.e(TAG, "Failed to initialize model with variant $optimalVariant: ${initResult.message}")
-                            resultListener("I apologize, but I'm having trouble initializing the AI model. Please try again in a moment.", true)
+                            Log.e(
+                                TAG,
+                                "Failed to initialize model with variant $optimalVariant: ${initResult.message}"
+                            )
+                            resultListener(
+                                "I apologize, but I'm having trouble initializing the AI model. Please try again in a moment.",
+                                true
+                            )
                         }
                         is ModelInitializationResult.Loading -> {
                             Log.d(TAG, "Model initialization in progress: ${initResult.message}")
-                            // Continue waiting - this shouldn't happen in our callback but handle gracefully
+                            // Continue waiting - this shouldn't happen in our callback but handle
+                            // gracefully
                         }
                     }
                 }
-                
             } catch (e: Exception) {
                 Log.e(TAG, "Error during RAG-enhanced inference setup", e)
-                resultListener("I apologize, but I encountered an error while processing your question. Please try again.", true)
+                resultListener(
+                    "I apologize, but I encountered an error while processing your question. Please try again.",
+                    true
+                )
             }
         }
     }
-    
+
     /**
-     * Select the optimal variant for the given educational context.
-     * This implements intelligent variant selection based on educational use cases.
+     * Select the optimal variant for the given educational context. This implements intelligent
+     * variant selection based on educational use cases.
      */
     private fun selectOptimalVariantForContext(context: ChatContext): String {
-        return when (context) {
-            is ChatContext.ChapterReading -> {
-                // E2B is optimal for reading comprehension - faster, more focused
-                GEMMA_3N_E2B
+        val model =
+            modelManager.getCurrentModel()
+                ?: throw IllegalStateException("Model must be available to select a variant.")
+        val baseName = model.name.split("-").take(2).joinToString("-")
+
+        val shortVariant =
+            when (context) {
+                is ChatContext.ChapterReading -> "E2B"
+                is ChatContext.ExerciseSolving -> "E4B"
+                is ChatContext.Revision -> "E2B"
+                is ChatContext.GeneralTutoring -> modelManager.getRecommendedVariant()
             }
-            is ChatContext.ExerciseSolving -> {
-                // E4B is optimal for problem solving - higher quality, more thorough
-                GEMMA_3N_E4B
-            }
-            is ChatContext.Revision -> {
-                // E2B is optimal for revision - efficient, quick responses
-                GEMMA_3N_E2B
-            }
-            is ChatContext.GeneralTutoring -> {
-                // Use device-adaptive recommendation for general tutoring
-                modelManager.getRecommendedVariant()
-            }
-        }
+        return "$baseName-$shortVariant"
     }
-    
+
     /**
-     * Ensure the model is initialized with the specified variant.
-     * This handles variant switching if needed.
+     * Ensure the model is initialized with the specified variant. This handles variant switching if
+     * needed.
      */
     private suspend fun ensureModelInitialized(
         targetVariant: String,
         onComplete: (ModelInitializationResult) -> Unit
     ) {
-        val initialModelManagerVariant = modelManager.getCurrentVariant() // Get it from manager
+        val currentModel = modelManager.getCurrentModel()
+        if (currentModel == null) {
+            onComplete(ModelInitializationResult.Error("No model available"))
+            return
+        }
+        val initialModelManagerVariant = modelManager.getCurrentVariant()
 
         when {
             initialModelManagerVariant == null -> {
@@ -174,9 +184,14 @@ class ElizaChatService @Inject constructor(
                 modelManager.switchToVariant(targetVariant).collect { result ->
                     when (result) {
                         is com.example.ai.edge.eliza.core.model.ModelSwitchResult.Success -> {
-                            Log.d(TAG, "Successfully switched to $targetVariant") // Use targetVariant here
+                            Log.d(
+                                TAG,
+                                "Successfully switched to $targetVariant"
+                            ) // Use targetVariant here
                             this.currentVariant = targetVariant // <--- UPDATE LOCAL VARIANT
-                            onComplete(ModelInitializationResult.Success("Switched to $targetVariant"))
+                            onComplete(
+                                ModelInitializationResult.Success("Switched to $targetVariant")
+                            )
                         }
                         is com.example.ai.edge.eliza.core.model.ModelSwitchResult.Error -> {
                             Log.e(TAG, "Variant switching failed: ${result.message}")
@@ -190,19 +205,20 @@ class ElizaChatService @Inject constructor(
                 }
             }
             else -> {
-                Log.d(TAG, "Model already initialized with correct variant: $initialModelManagerVariant")
+                Log.d(
+                    TAG,
+                    "Model already initialized with correct variant: $initialModelManagerVariant"
+                )
                 // Ensure local currentVariant is also up-to-date if it wasn't already
                 if (this.currentVariant != initialModelManagerVariant) {
                     this.currentVariant = initialModelManagerVariant // <--- SYNC IF NEEDED
                 }
-            onComplete(ModelInitializationResult.Success("Model ready"))
+                onComplete(ModelInitializationResult.Success("Model ready"))
             }
         }
-}
-    
-    /**
-     * Perform RAG enhancement and inference with the initialized model.
-     */
+    }
+
+    /** Perform RAG enhancement and inference with the initialized model. */
     // TODO: why variant given as a parameter instead of local variable?
     private suspend fun performRagEnhancedInference(
         input: String,
@@ -215,26 +231,27 @@ class ElizaChatService @Inject constructor(
         try {
             // Step 1: Get the appropriate RAG provider for this context
             val ragProvider = ragProviderFactory.createProvider(chatContext)
-            
+
             // Step 2: Enhance the prompt with RAG
             val enhancementResult = ragProvider.enhancePrompt(input, chatContext)
             val enhancedPrompt = enhancementResult.enhancedPrompt
-            
+
             // Step 3: Get system instructions
             val systemInstructions = ragProvider.getSystemInstructions(chatContext)
-            
+
             // Step 4: Build the final educational prompt
-            val finalPrompt = buildFinalPrompt(
-                systemInstructions = systemInstructions,
-                enhancedPrompt = enhancedPrompt,
-                chatContext = chatContext,
-                variant = variant
-            )
-            
+            val finalPrompt =
+                buildFinalPrompt(
+                    systemInstructions = systemInstructions,
+                    enhancedPrompt = enhancedPrompt,
+                    chatContext = chatContext,
+                    variant = variant
+                )
+
             Log.d(TAG, "RAG enhancement complete. Running MediaPipe inference with $variant")
             Log.d(TAG, "Enhanced prompt length: ${finalPrompt.length} chars")
             Log.d(TAG, "Retrieved chunks: ${enhancementResult.chunksUsed}")
-            
+
             // Step 5: Get the current model and run inference
             val model = modelManager.getCurrentModel()
             if (model != null) {
@@ -248,18 +265,23 @@ class ElizaChatService @Inject constructor(
                 )
             } else {
                 Log.e(TAG, "No model available after initialization")
-                resultListener("I apologize, but the AI model is not available. Please try again.", true)
+                resultListener(
+                    "I apologize, but the AI model is not available. Please try again.",
+                    true
+                )
             }
-            
         } catch (e: Exception) {
             Log.e(TAG, "Error during RAG-enhanced inference", e)
-            resultListener("I apologize, but I encountered an error while processing your question. Please try again.", true)
+            resultListener(
+                "I apologize, but I encountered an error while processing your question. Please try again.",
+                true
+            )
         }
     }
-    
+
     /**
-     * Build the final prompt that combines system instructions with RAG-enhanced content.
-     * Now includes variant-specific optimization hints.
+     * Build the final prompt that combines system instructions with RAG-enhanced content. Now
+     * includes variant-specific optimization hints.
      */
     private fun buildFinalPrompt(
         systemInstructions: String,
@@ -267,21 +289,26 @@ class ElizaChatService @Inject constructor(
         chatContext: ChatContext,
         variant: String
     ): String {
+        val model = modelManager.getCurrentModel()!!
+        val shortVariant = inferenceHelper.getShortVariantName(model, variant)
+
         return buildString {
             // System instructions first
             append(systemInstructions)
             append("\n\n")
-            
+
             // Add variant-specific optimization hints
-            when (variant) {
-                GEMMA_3N_E2B -> {
-                    append("OPTIMIZATION MODE: Efficient response mode. Provide concise, focused answers.\n")
-                }
-                GEMMA_3N_E4B -> {
-                    append("OPTIMIZATION MODE: High-quality response mode. Provide detailed, comprehensive answers.\n")
-                }
+            when (shortVariant) {
+                "E2B" ->
+                    append(
+                        "OPTIMIZATION MODE: Efficient response mode. Provide concise, focused answers.\n"
+                    )
+                "E4B" ->
+                    append(
+                        "OPTIMIZATION MODE: High-quality response mode. Provide detailed, comprehensive answers.\n"
+                    )
             }
-            
+
             // Add context-specific information
             when (chatContext) {
                 is ChatContext.ChapterReading -> {
@@ -289,7 +316,9 @@ class ElizaChatService @Inject constructor(
                     append("LESSON ID: ${chatContext.lessonId}\n")
                 }
                 is ChatContext.Revision -> {
-                    append("REVISION MODE: Reviewing ${chatContext.completedLessonIds.size} completed lessons\n")
+                    append(
+                        "REVISION MODE: Reviewing ${chatContext.completedLessonIds.size} completed lessons\n"
+                    )
                 }
                 is ChatContext.ExerciseSolving -> {
                     append("EXERCISE MODE: Problem ID ${chatContext.exerciseId}\n")
@@ -300,17 +329,15 @@ class ElizaChatService @Inject constructor(
                     append("GENERAL TUTORING MODE\n")
                 }
             }
-            
+
             append("\n")
-            
+
             // RAG-enhanced content
             append(enhancedPrompt.enhancedPrompt)
         }
     }
-    
-    /**
-     * Run MediaPipe inference with variant-optimized parameters.
-     */
+
+    /** Run MediaPipe inference with variant-optimized parameters. */
     private fun runVariantOptimizedInference(
         model: Model,
         finalPrompt: String,
@@ -321,7 +348,7 @@ class ElizaChatService @Inject constructor(
     ) {
         // Create a simple ChatContext for the inference layer
         val inferenceContext = ChatContext.GeneralTutoring()
-        
+
         // Run inference using the variant-aware inference helper
         inferenceHelper.runInference(
             model = model,
@@ -332,10 +359,8 @@ class ElizaChatService @Inject constructor(
             images = images
         )
     }
-    
-    /**
-     * Reset the inference session for the current variant.
-     */
+
+    /** Reset the inference session for the current variant. */
     fun resetSession() {
         val model = modelManager.getCurrentModel()
         if (model != null) {
@@ -345,10 +370,10 @@ class ElizaChatService @Inject constructor(
             Log.w(TAG, "No model available to reset session")
         }
     }
-    
+
     /**
-     * Switch to optimal variant for the given context.
-     * This can be called proactively when context changes.
+     * Switch to optimal variant for the given context. This can be called proactively when context
+     * changes.
      */
     suspend fun switchToOptimalVariant(chatContext: ChatContext) {
         val optimalVariant = selectOptimalVariantForContext(chatContext)
@@ -356,7 +381,10 @@ class ElizaChatService @Inject constructor(
         val modelManagerCurrentVariant = modelManager.getCurrentVariant()
 
         if (modelManagerCurrentVariant != optimalVariant) {
-            Log.d(TAG, "Proactively switching to optimal variant: $optimalVariant for context: ${chatContext.javaClass.simpleName}")
+            Log.d(
+                TAG,
+                "Proactively switching to optimal variant: $optimalVariant for context: ${chatContext.javaClass.simpleName}"
+            )
             modelManager.switchToVariant(optimalVariant).collect { result ->
                 when (result) {
                     is com.example.ai.edge.eliza.core.model.ModelSwitchResult.Success -> {
@@ -379,16 +407,12 @@ class ElizaChatService @Inject constructor(
         }
     }
 
-    /**
-     * Get the current variant being used.
-     */
+    /** Get the current variant being used. */
     fun getCurrentVariant(): String? {
-        return this.currentVariant;
+        return this.currentVariant
     }
-    
-    /**
-     * Get performance information for the current variant.
-     */
+
+    /** Get performance information for the current variant. */
     fun getCurrentVariantPerformance(): com.example.ai.edge.eliza.core.model.ModelPerformance? {
         return modelManager.getCurrentVariantPerformance()
     }

@@ -41,6 +41,7 @@ include(":core:testing")
 include(":ai:modelmanager")
 include(":ai:inference")
 include(":ai:rag")
+include(":ai:service")
 
 // Feature modules (UI layer)
 include(":feature:chat")

@@ -27,6 +27,7 @@
  import com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession
  import javax.inject.Inject
  import javax.inject.Singleton
+ import com.example.ai.edge.eliza.core.model.VariantConfig
  
  private const val TAG = "ElizaInferenceHelperImpl"
  private const val DEFAULT_MAX_TOKEN = 1024
@@ -35,39 +36,11 @@
  private const val DEFAULT_TEMPERATURE = 0.8f
  private const val MAX_IMAGE_COUNT = 5
  
- // MatFormer-optimized parameters for different variants
- private const val E2B_TOPK = 32          // More focused for efficiency
- private const val E2B_TOPP = 0.9f        // More deterministic
- private const val E2B_TEMPERATURE = 0.7f // Less creative, more consistent
- private const val E2B_MAX_TOKENS = 512   // Smaller context for memory efficiency
- 
- private const val E4B_TOPK = 64          // More exploration
- private const val E4B_TOPP = 0.95f       // More creative
- private const val E4B_TEMPERATURE = 0.8f // Balanced creativity
- private const val E4B_MAX_TOKENS = 1024  // Larger context for quality
- 
- // Variant constants - matching ModelConfig.kt
- private const val GEMMA_3N_E4B = "gemma-3n-E4B"
- private const val GEMMA_3N_E2B = "gemma-3n-E2B"
- 
  /**
   * Type aliases for inference callbacks - exactly like Gallery's pattern.
   */
  typealias ResultListener = (partialResult: String, done: Boolean) -> Unit
  typealias CleanUpListener = () -> Unit
- 
- /**
-  * Variant-specific configuration for optimizing inference performance.
-  * This is how we implement "MatFormer-style" optimization within MediaPipe's constraints.
-  */
- data class VariantConfig(
-     val topK: Int,
-     val topP: Float,
-     val temperature: Float,
-     val maxTokens: Int,
-     val memoryOptimized: Boolean = false,
-     val useGPU: Boolean = true
- )
  
  /**
   * Interface for MediaPipe LLM inference operations with intelligent variant switching.
@@ -133,6 +106,14 @@
       * @return The current variant, or null if not set
       */
      fun getCurrentVariant(model: Model): String?
+     
+     /**
+      * Extracts the short variant name (e.g., "E2B") from the full variant string.
+      * @param model The model to check against
+      * @param fullVariantName The full variant name (e.g., "gemma-3n-E4B")
+      * @return The short variant name (e.g., "E4B")
+      */
+     fun getShortVariantName(model: Model, fullVariantName: String): String
  } 
  
  /**
@@ -162,36 +143,33 @@
      // Indexed by model name - exactly like Gallery's pattern
      private val cleanUpListeners: MutableMap<String, CleanUpListener> = mutableMapOf()
      
-     /**
-      * Get variant-specific configuration optimized for device capabilities.
-      * This is our equivalent to MatFormer parameter selection.
+              /**
+      * Extracts the short variant name (e.g., "E2B") from the full variant string.
       */
-     private fun getVariantConfig(variant: String): VariantConfig {
-         return when (variant) {
-             GEMMA_3N_E2B -> VariantConfig(
-                 topK = E2B_TOPK,
-                 topP = E2B_TOPP,
-                 temperature = E2B_TEMPERATURE,
-                 maxTokens = E2B_MAX_TOKENS,
-                 memoryOptimized = true,
-                 useGPU = false  // CPU for memory efficiency
-             )
-             GEMMA_3N_E4B -> VariantConfig(
-                 topK = E4B_TOPK,
-                 topP = E4B_TOPP,
-                 temperature = E4B_TEMPERATURE,
-                 maxTokens = E4B_MAX_TOKENS,
-                 memoryOptimized = false,
-                 useGPU = true   // GPU for performance
-             )
-             else -> throw IllegalArgumentException("Unknown variant: $variant")
+     override fun getShortVariantName(model: Model, fullVariantName: String): String {
+         val parts = fullVariantName.split("-")
+         val variantPart = parts.getOrNull(2) // e.g., "E4B" from "gemma-3n-E4B"
+         
+         if (variantPart != null && model.availableVariants.contains(variantPart)) {
+             return variantPart
          }
+         
+         throw IllegalArgumentException("Unknown or invalid variant in '$fullVariantName'")
+     }
+
+     /**
+      * Get variant-specific configuration from the model definition.
+      */
+     private fun getVariantConfig(model: Model, variant: String): VariantConfig {
+         val shortVariant = getShortVariantName(model, variant)
+         return model.variantConfigs[shortVariant]
+             ?: throw IllegalArgumentException("No config found for variant '$shortVariant'")
      }
      
      override fun initialize(context: Context, model: Model, variant: String, onDone: (String) -> Unit) {
          Log.d(TAG, "Initializing model '${model.name}' with variant '$variant' optimization...")
          
-         val config = getVariantConfig(variant)
+         val config = getVariantConfig(model, variant)
          
          // Use variant-optimized backend selection
          val preferredBackend = if (config.useGPU) {
@@ -249,7 +227,7 @@
              instance.session.close()
              
              // Create new session with target variant configuration
-             val newConfig = getVariantConfig(targetVariant)
+             val newConfig = getVariantConfig(model, targetVariant)
              val newSession = createOptimizedSession(instance.engine, targetVariant, newConfig, model.llmSupportImage)
              
              // Update instance
