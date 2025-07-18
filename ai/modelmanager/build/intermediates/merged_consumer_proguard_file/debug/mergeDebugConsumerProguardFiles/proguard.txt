@@ -1,2 +1,0 @@
--keep,allowobfuscation,allowshrinking class com.example.ai.edge.eliza.ai.modelmanager.ElizaModelManager
--keep,allowobfuscation,allowshrinking class com.example.ai.edge.eliza.ai.modelmanager.ElizaModelManager

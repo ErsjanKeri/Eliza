@@ -13,4 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+build/
+.gradle/
+**/build/
+
 find . -type d -name build -exec rm -rf {} +
