@@ -215,8 +215,8 @@ class MockProgressRepository @Inject constructor() : ProgressRepository {
             accuracy = if (answers.isNotEmpty()) correct.toFloat() / answers.size else 0f,
             averageTimePerAnswer = 30000L, // 30 seconds
             subjectBreakdown = mapOf(
-                Subject.MATHEMATICS to SubjectAnswerStats(
-                    subject = Subject.MATHEMATICS,
+                            Subject.ALGEBRA to SubjectAnswerStats(
+                subject = Subject.ALGEBRA,
                     totalAnswers = answers.size,
                     correctAnswers = correct,
                     accuracy = if (answers.isNotEmpty()) correct.toFloat() / answers.size else 0f,

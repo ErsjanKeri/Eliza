@@ -53,9 +53,9 @@
       proguardRules="proguard.txt"/>
   <library
       name=":@@:core:model::debug"
-      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/6874ab6a05e6d408539ede8b848cf3d2/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/6874ab6a05e6d408539ede8b848cf3d2/transformed/out/jars/libs/R.jar"
+      jars="/Users/ersibesi/.gradle/caches/8.13/transforms/124ef912b97374893c8496bbb1f4f30f/transformed/out/jars/classes.jar:/Users/ersibesi/.gradle/caches/8.13/transforms/124ef912b97374893c8496bbb1f4f30f/transformed/out/jars/libs/R.jar"
       resolved="Eliza.core:model:unspecified"
-      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/6874ab6a05e6d408539ede8b848cf3d2/transformed/out"
+      folder="/Users/ersibesi/.gradle/caches/8.13/transforms/124ef912b97374893c8496bbb1f4f30f/transformed/out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

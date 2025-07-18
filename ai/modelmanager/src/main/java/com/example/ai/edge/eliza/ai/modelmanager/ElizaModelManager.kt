@@ -25,6 +25,7 @@ import com.example.ai.edge.eliza.core.data.repository.ModelDownloadProgress
 import com.example.ai.edge.eliza.core.data.repository.ModelDownloadStatus
 import com.example.ai.edge.eliza.core.data.repository.ModelInitializationResult
 import com.example.ai.edge.eliza.core.model.Model
+import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
 import com.example.ai.edge.eliza.core.model.GEMMA_3N_E2B_MODEL
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -36,12 +37,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
 import javax.inject.Inject
-import javax.inject.Singleton
 
 private const val TAG = "ElizaModelManager"
 
@@ -68,7 +65,7 @@ data class ModelInitializationStatus(
  */
 data class ModelManagerUiState(
     val model: Model = GEMMA_3N_E2B_MODEL,
-    val downloadStatus: ModelDownloadStatus? = null,
+    val downloadStatus: ModelDownloadProgress? = null,
     val initializationStatus: ModelInitializationStatus? = null,
     val isReady: Boolean = false,
     val memoryUsage: Long = 0L,
@@ -99,52 +96,35 @@ class ElizaModelManager @Inject constructor(
 
     /**
      * Downloads the Gemma 3N model if not already present.
+     * Uses Gallery's callback-based pattern for progress updates.
      */
-    fun downloadModel(): Flow<ModelDownloadProgress> = flow {
-        if (isModelDownloaded()) {
-            emit(ModelDownloadProgress(
-                progress = 1.0f,
-                status = ModelDownloadStatus.COMPLETED,
-                bytesDownloaded = model.sizeInBytes,
+    fun downloadModel() {
+        // Update status to DOWNLOADING
+        setDownloadStatus(
+            model = model,
+            status = ModelDownloadProgress(
+                progress = 0.0f,
+                status = ModelDownloadStatus.DOWNLOADING,
                 totalBytes = model.sizeInBytes,
+                bytesDownloaded = 0L,
                 downloadSpeed = 0L,
                 error = null
-            ))
-            return@flow
-        }
+            )
+        )
 
-        updateDownloadStatus(ModelDownloadStatus(
-            status = ModelDownloadStatusType.IN_PROGRESS,
-            totalBytes = model.sizeInBytes
-        ))
+        // Delete the model files first (like Gallery does)
+        deleteModel()
 
-        try {
-            downloadRepository.downloadModel(model) { progress ->
-                emit(progress)
-                updateDownloadStatus(ModelDownloadStatus(
-                    status = when (progress.status) {
-                        ModelDownloadStatus.DOWNLOADING -> ModelDownloadStatusType.IN_PROGRESS
-                        ModelDownloadStatus.COMPLETED -> ModelDownloadStatusType.SUCCEEDED
-                        ModelDownloadStatus.FAILED -> ModelDownloadStatusType.FAILED
-                        else -> ModelDownloadStatusType.IN_PROGRESS
-                    },
-                    totalBytes = model.sizeInBytes,
-                    receivedBytes = progress.bytesDownloaded,
-                    bytesPerSecond = progress.downloadSpeed,
-                    errorMessage = progress.error ?: ""
-                ))
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Model download failed", e)
-            emit(ModelDownloadProgress(
-                progress = 0f,
-                status = ModelDownloadStatus.FAILED,
-                bytesDownloaded = 0L,
-                totalBytes = model.sizeInBytes,
-                downloadSpeed = 0L,
-                error = e.message
-            ))
-        }
+        // Start download using repository (callback-based like Gallery)
+        downloadRepository.downloadModel(model, onProgress = ::setDownloadStatusFromProgress)
+    }
+
+    /**
+     * Cancels the model download.
+     */
+    fun cancelDownloadModel() {
+        downloadRepository.cancelDownloadModel(model)
+        deleteModel()
     }
 
     /**
@@ -200,73 +180,61 @@ class ElizaModelManager @Inject constructor(
             }
         }
 
-        try {
-            val startTime = System.currentTimeMillis()
+        val startTime = System.currentTimeMillis()
+        
+        // Initialize the model using MediaPipe (Gallery-style callback)
+        val onDone: (error: String) -> Unit = { error ->
+            val endTime = System.currentTimeMillis()
+            val initTime = endTime - startTime
+            model.initializing = false
             
-            // Initialize the model using MediaPipe
-            inferenceHelper.initialize(context, model) { error ->
+            if (model.instance != null) {
+                Log.d(TAG, "Model '${model.name}' initialized successfully")
+                updateInitializationStatus(ModelInitializationStatus(
+                    status = ModelInitializationStatusType.INITIALIZED
+                ))
+                
                 viewModelScope.launch {
-                    val endTime = System.currentTimeMillis()
-                    val initTime = endTime - startTime
-                    model.initializing = false
-                    
-                    if (model.instance != null) {
-                        Log.d(TAG, "Model '${model.name}' initialized successfully")
-                        updateInitializationStatus(ModelInitializationStatus(
-                            status = ModelInitializationStatusType.INITIALIZED
-                        ))
-                        
-                        emit(ModelInitializationResult(
-                            isSuccess = true,
-                            modelName = model.name,
-                            initializationTime = initTime,
-                            memoryUsage = model.estimatedPeakMemoryInBytes ?: 0L,
-                            error = null
-                        ))
-                        
-                        _uiState.update { it.copy(
-                            isReady = true,
-                            memoryUsage = model.estimatedPeakMemoryInBytes ?: 0L
-                        )}
-                        
-                        // Clean up after init if marked
-                        if (model.cleanUpAfterInit) {
-                            Log.d(TAG, "Model '${model.name}' needs cleaning up after init.")
-                            cleanupModel()
-                        }
-                    } else if (error.isNotEmpty()) {
-                        Log.d(TAG, "Model '${model.name}' failed to initialize")
-                        updateInitializationStatus(ModelInitializationStatus(
-                            status = ModelInitializationStatusType.ERROR,
-                            error = error
-                        ))
-                        
-                        emit(ModelInitializationResult(
-                            isSuccess = false,
-                            modelName = model.name,
-                            initializationTime = initTime,
-                            memoryUsage = 0L,
-                            error = error
-                        ))
-                    }
+                    emit(ModelInitializationResult(
+                        isSuccess = true,
+                        modelName = model.name,
+                        initializationTime = initTime,
+                        memoryUsage = model.estimatedPeakMemoryInBytes ?: 0L,
+                        error = null
+                    ))
+                }
+                
+                _uiState.update { it.copy(
+                    isReady = true,
+                    memoryUsage = model.estimatedPeakMemoryInBytes ?: 0L
+                )}
+                
+                // Clean up after init if marked
+                if (model.cleanUpAfterInit) {
+                    Log.d(TAG, "Model '${model.name}' needs cleaning up after init.")
+                    cleanupModel()
+                }
+            } else {
+                Log.d(TAG, "Model '${model.name}' failed to initialize: $error")
+                updateInitializationStatus(ModelInitializationStatus(
+                    status = ModelInitializationStatusType.ERROR,
+                    error = error
+                ))
+                
+                viewModelScope.launch {
+                    emit(ModelInitializationResult(
+                        isSuccess = false,
+                        modelName = model.name,
+                        initializationTime = initTime,
+                        memoryUsage = 0L,
+                        error = error
+                    ))
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Model initialization failed", e)
-            model.initializing = false
-            updateInitializationStatus(ModelInitializationStatus(
-                status = ModelInitializationStatusType.ERROR,
-                error = e.message ?: "Unknown error"
-            ))
-            
-            emit(ModelInitializationResult(
-                isSuccess = false,
-                modelName = model.name,
-                initializationTime = 0L,
-                memoryUsage = 0L,
-                error = e.message
-            ))
         }
+
+        // Initialize using inference helper
+        inferenceHelper.initialize(context, model, onDone)
     }
 
     /**
@@ -275,33 +243,29 @@ class ElizaModelManager @Inject constructor(
      */
     fun cleanupModel() {
         viewModelScope.launch(Dispatchers.Default) {
-            try {
-                if (model.instance != null) {
-                    model.cleanUpAfterInit = false
-                    Log.d(TAG, "Cleaning up model '${model.name}'...")
-                    
-                    inferenceHelper.cleanUp(model)
-                    model.instance = null
-                    model.initializing = false
-                    
-                    updateInitializationStatus(ModelInitializationStatus(
-                        status = ModelInitializationStatusType.NOT_INITIALIZED
-                    ))
-                    
-                    _uiState.update { it.copy(
-                        isReady = false,
-                        memoryUsage = 0L
-                    )}
-                } else {
-                    // When model is being initialized and we are trying to clean it up at same time,
-                    // we mark it to clean up and it will be cleaned up after initialization is done.
-                    if (model.initializing) {
-                        model.cleanUpAfterInit = true
-                        Log.d(TAG, "Marking model '${model.name}' for cleanup after initialization")
-                    }
+            if (model.instance != null) {
+                model.cleanUpAfterInit = false
+                Log.d(TAG, "Cleaning up model '${model.name}'...")
+                
+                inferenceHelper.cleanUp(model)
+                model.instance = null
+                model.initializing = false
+                
+                updateInitializationStatus(ModelInitializationStatus(
+                    status = ModelInitializationStatusType.NOT_INITIALIZED
+                ))
+                
+                _uiState.update { it.copy(
+                    isReady = false,
+                    memoryUsage = 0L
+                )}
+            } else {
+                // When model is being initialized and we are trying to clean it up at same time,
+                // we mark it to clean up and it will be cleaned up after initialization is done.
+                if (model.initializing) {
+                    model.cleanUpAfterInit = true
+                    Log.d(TAG, "Marking model '${model.name}' for cleanup after initialization")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Model cleanup failed", e)
             }
         }
     }
@@ -317,9 +281,17 @@ class ElizaModelManager @Inject constructor(
                 if (modelDir.exists()) {
                     modelDir.deleteRecursively()
                 }
-                updateDownloadStatus(ModelDownloadStatus(
-                    status = ModelDownloadStatusType.NOT_DOWNLOADED
-                ))
+                setDownloadStatus(
+                    model = model,
+                    status = ModelDownloadProgress(
+                        progress = 0.0f,
+                        status = ModelDownloadStatus.PENDING,
+                        totalBytes = 0L,
+                        bytesDownloaded = 0L,
+                        downloadSpeed = 0L,
+                        error = null
+                    )
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "Model deletion failed", e)
             }
@@ -341,14 +313,42 @@ class ElizaModelManager @Inject constructor(
         return if (isModelReady()) model.instance else null
     }
 
+    /**
+     * Sets download status (Gallery-style callback method).
+     */
+    private fun setDownloadStatus(model: Model, status: ModelDownloadProgress) {
+        _uiState.update { it.copy(downloadStatus = status) }
+    }
+
+    /**
+     * Converts ModelDownloadProgress to ModelDownloadStatus and updates UI.
+     */
+    private fun setDownloadStatusFromProgress(progress: ModelDownloadProgress) {
+        setDownloadStatus(model, progress)
+    }
+
     private fun checkModelStatus() {
         viewModelScope.launch {
             val downloadStatus = if (isModelDownloaded()) {
-                ModelDownloadStatus(status = ModelDownloadStatusType.SUCCEEDED)
+                ModelDownloadProgress(
+                    progress = 1.0f,
+                    status = ModelDownloadStatus.COMPLETED,
+                    totalBytes = model.sizeInBytes,
+                    bytesDownloaded = model.sizeInBytes,
+                    downloadSpeed = 0L,
+                    error = null
+                )
             } else {
-                ModelDownloadStatus(status = ModelDownloadStatusType.NOT_DOWNLOADED)
+                ModelDownloadProgress(
+                    progress = 0.0f,
+                    status = ModelDownloadStatus.PENDING,
+                    totalBytes = 0L,
+                    bytesDownloaded = 0L,
+                    downloadSpeed = 0L,
+                    error = null
+                )
             }
-            updateDownloadStatus(downloadStatus)
+            setDownloadStatus(model, downloadStatus)
             
             updateInitializationStatus(ModelInitializationStatus(
                 status = ModelInitializationStatusType.NOT_INITIALIZED
@@ -359,10 +359,6 @@ class ElizaModelManager @Inject constructor(
     private fun isModelDownloaded(): Boolean {
         val modelPath = model.getPath(context)
         return File(modelPath).exists()
-    }
-
-    private fun updateDownloadStatus(status: ModelDownloadStatus) {
-        _uiState.update { it.copy(downloadStatus = status) }
     }
 
     private fun updateInitializationStatus(status: ModelInitializationStatus) {
@@ -379,8 +375,10 @@ class ElizaModelManager @Inject constructor(
  * Repository interface for model downloading.
  */
 interface ModelDownloadRepository {
-    suspend fun downloadModel(
+    fun downloadModel(
         model: Model,
         onProgress: (ModelDownloadProgress) -> Unit
     )
+    
+    fun cancelDownloadModel(model: Model)
 } 

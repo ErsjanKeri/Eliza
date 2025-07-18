@@ -17,11 +17,11 @@
 **Dependencies**: None  
 
 **Subtasks**:
-- [ ] Create multi-module Android project structure
-- [ ] Set up Hilt dependency injection
-- [ ] Configure build variants (dev, demo, prod)
-- [ ] Integrate nowinandroid design system
-- [ ] Set up version control and CI/CD
+- [x] Create multi-module Android project structure
+- [x] Set up Hilt dependency injection
+- [x] Configure build variants (dev, demo, prod)
+- [x] Integrate nowinandroid design system
+- [x] Set up version control and CI/CD
 
 **Acceptance Criteria**:
 - Project builds successfully
@@ -36,11 +36,11 @@
 **Dependencies**: Day 1 completion  
 
 **Subtasks**:
-- [ ] Create Room database with course, lesson, and chat tables
-- [ ] Implement repository pattern for data access
-- [ ] Create data models for Course, Lesson, ChatMessage
-- [ ] Set up local data storage utilities
-- [ ] Write unit tests for data layer
+- [x] Create Room database with course, lesson, and chat tables
+- [x] Implement repository pattern for data access
+- [x] Create data models for Course, Lesson, ChatMessage
+- [x] Set up local data storage utilities
+- [x] Write unit tests for data layer
 
 **Acceptance Criteria**:
 - Database operations work correctly
@@ -55,10 +55,10 @@
 **Dependencies**: Day 1 completion  
 
 **Subtasks**:
-- [ ] Copy ModelManager from gallery-edge-ai
-- [ ] Adapt model configuration for Gemma-3n
-- [ ] Implement model download functionality
-- [ ] Create model initialization service
+- [x] Copy ModelManager from gallery-edge-ai
+- [x] Adapt model configuration for Gemma-3n
+- [x] Implement model download functionality
+- [x] Create model initialization service
 - [ ] Test basic text inference
 
 **Acceptance Criteria**:

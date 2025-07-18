@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.ai.edge.eliza.ai.rag-release-65:/values-v30/values-v30.xml",
+            "map": [
+                {
+                    "source": "/Users/ersibesi/.gradle/caches/8.13/transforms/feb2f62358c2fffc53cd68962ceb0d0a/transformed/material3-release/res/values-v30/values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "72",
+                        "endOffsets": "123"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.example.ai.edge.eliza.ai.rag-mergeReleaseResources-63:/values-v30/values-v30.xml",
+            "map": [
+                {
+                    "source": "/Users/ersibesi/.gradle/caches/8.13/transforms/feb2f62358c2fffc53cd68962ceb0d0a/transformed/material3-release/res/values-v30/values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "72",
+                        "endOffsets": "123"
+                    }
+                }
+            ]
+        }
+    ]
+}

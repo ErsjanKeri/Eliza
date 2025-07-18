@@ -20,8 +20,6 @@ import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
 import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelperImpl
 import com.example.ai.edge.eliza.ai.modelmanager.ModelDownloadRepository
 import com.example.ai.edge.eliza.ai.modelmanager.impl.ModelDownloadRepositoryImpl
-import com.example.ai.edge.eliza.core.data.chat.RagProviderFactory
-import com.example.ai.edge.eliza.core.data.chat.RagProviderFactoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -55,14 +53,4 @@ abstract class ModelManagerModule {
     abstract fun bindElizaInferenceHelper(
         elizaInferenceHelperImpl: ElizaInferenceHelperImpl
     ): ElizaInferenceHelper
-
-    /**
-     * Binds the RagProviderFactory interface to its implementation.
-     * This creates appropriate RAG providers based on chat context.
-     */
-    @Binds
-    @Singleton
-    abstract fun bindRagProviderFactory(
-        ragProviderFactoryImpl: RagProviderFactoryImpl
-    ): RagProviderFactory
 } 

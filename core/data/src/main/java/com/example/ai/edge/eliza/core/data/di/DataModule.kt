@@ -16,12 +16,6 @@
 
 package com.example.ai.edge.eliza.core.data.di
 
-import com.example.ai.edge.eliza.core.data.chat.ChapterRagProvider
-import com.example.ai.edge.eliza.core.data.chat.GeneralRagProvider
-import com.example.ai.edge.eliza.core.data.chat.RagProvider
-import com.example.ai.edge.eliza.core.data.chat.RagProviderFactory
-import com.example.ai.edge.eliza.core.data.chat.RagProviderFactoryImpl
-import com.example.ai.edge.eliza.core.data.chat.RevisionRagProvider
 import com.example.ai.edge.eliza.core.data.repository.ChatRepository
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 import com.example.ai.edge.eliza.core.data.repository.ProgressRepository
@@ -71,14 +65,4 @@ abstract class DataModule {
     abstract fun bindProgressRepository(
         mockProgressRepository: MockProgressRepository
     ): ProgressRepository
-
-    /**
-     * Binds the RagProviderFactory interface to its implementation.
-     * This creates context-appropriate RAG providers for educational content.
-     */
-    @Binds
-    @Singleton
-    abstract fun bindRagProviderFactory(
-        ragProviderFactoryImpl: RagProviderFactoryImpl
-    ): RagProviderFactory
 } 
