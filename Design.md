@@ -169,10 +169,10 @@ class ElizaModelManager @Inject constructor(
     private val currentModel: Model
         get() = modelRegistry.getCurrentModel() ?: throw IllegalStateException("No model available")
     
-    suspend fun switchToVariant(targetVariant: GemmaVariant)
+    suspend fun switchToVariant(targetVariant: String)
     suspend fun initializeModel(): Flow<ModelInitializationResult>
     suspend fun downloadModel()
-    fun getRecommendedVariant(): GemmaVariant
+    fun getRecommendedVariant(): String
 }
 2. Chat Service with MatFormer Model Support
 kotlin@Singleton
@@ -192,7 +192,7 @@ class ChatService @Inject constructor(
     
     // New MatFormer capabilities
     suspend fun switchToOptimalVariant(deviceCapabilities: DeviceCapabilities)
-    fun getCurrentVariant(): GemmaVariant
+    fun getCurrentVariant(): String
 }
 3. Course Content Service
 kotlin@Singleton

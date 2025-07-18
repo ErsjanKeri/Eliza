@@ -16,8 +16,6 @@
 
 package com.example.ai.edge.eliza.ai.modelmanager
 
-import com.example.ai.edge.eliza.core.model.GemmaVariant
-
 /**
  * Configuration for Gemma model variants and switching behavior.
  * 
@@ -29,15 +27,30 @@ import com.example.ai.edge.eliza.core.model.GemmaVariant
  */
 object ModelConfig {
     
+    // ===========================================
+    // VARIANT CONSTANTS
+    // ===========================================
+    
+    /**
+     * Gemma 3N E4B variant - highest quality with 4B effective parameters.
+     * Uses ~7GB memory but provides the best results.
+     */
+    const val GEMMA_3N_E4B = "gemma-3n-E4B"
+    
+    /**
+     * Gemma 3N E2B variant - faster speed with 2B effective parameters.
+     * Uses ~3.5GB memory and provides 2x faster inference.
+     */
+    const val GEMMA_3N_E2B = "gemma-3n-E2B"
     
     /**
      * Default model variant to use.
      * 
      * Change this to switch between variants:
-     * - GemmaVariant.GEMMA_3N_E4B: Highest quality (4B effective params, ~7GB memory)
-     * - GemmaVariant.GEMMA_3N_E2B: Faster speed (2B effective params, ~3.5GB memory)
+     * - GEMMA_3N_E4B: Highest quality (4B effective params, ~7GB memory)
+     * - GEMMA_3N_E2B: Faster speed (2B effective params, ~3.5GB memory)
      */
-    val DEFAULT_VARIANT = GemmaVariant.GEMMA_3N_E4B
+    val DEFAULT_VARIANT = GEMMA_3N_E4B
     
     /**
      * Enable automatic variant switching based on device capabilities.
@@ -139,23 +152,23 @@ object ModelConfig {
      * Quick switch to high-quality variant.
      * Use this method in your code to easily switch to E4B.
      */
-    fun useHighQualityVariant() = GemmaVariant.GEMMA_3N_E4B
+    fun useHighQualityVariant() = GEMMA_3N_E4B
     
     /**
      * Quick switch to fast variant.
      * Use this method in your code to easily switch to E2B.
      */
-    fun useFastVariant() = GemmaVariant.GEMMA_3N_E2B
+    fun useFastVariant() = GEMMA_3N_E2B
     
     /**
      * Get variant based on use case.
      */
-    fun getVariantForUseCase(useCase: UseCase): GemmaVariant {
+    fun getVariantForUseCase(useCase: UseCase): String {
         return when (useCase) {
-            UseCase.EDUCATIONAL_TUTORING -> GemmaVariant.GEMMA_3N_E4B // High quality for education
-            UseCase.QUICK_RESPONSES -> GemmaVariant.GEMMA_3N_E2B // Fast for quick responses
-            UseCase.RESOURCE_CONSTRAINED -> GemmaVariant.GEMMA_3N_E2B // E2B for low resources
-            UseCase.DEMO_SHOWCASE -> GemmaVariant.GEMMA_3N_E4B // E4B for demos
+            UseCase.EDUCATIONAL_TUTORING -> GEMMA_3N_E4B // High quality for education
+            UseCase.QUICK_RESPONSES -> GEMMA_3N_E2B // Fast for quick responses
+            UseCase.RESOURCE_CONSTRAINED -> GEMMA_3N_E2B // E2B for low resources
+            UseCase.DEMO_SHOWCASE -> GEMMA_3N_E4B // E4B for demos
         }
     }
     

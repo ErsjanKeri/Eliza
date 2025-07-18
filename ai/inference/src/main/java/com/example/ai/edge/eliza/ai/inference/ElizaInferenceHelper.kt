@@ -21,7 +21,6 @@
  import android.util.Log
  import com.example.ai.edge.eliza.core.model.ChatContext
  import com.example.ai.edge.eliza.core.model.Model
- import com.example.ai.edge.eliza.core.model.GemmaVariant
  import com.google.mediapipe.framework.image.BitmapImageBuilder
  import com.google.mediapipe.tasks.genai.llminference.GraphOptions
  import com.google.mediapipe.tasks.genai.llminference.LlmInference
@@ -46,6 +45,10 @@
  private const val E4B_TOPP = 0.95f       // More creative
  private const val E4B_TEMPERATURE = 0.8f // Balanced creativity
  private const val E4B_MAX_TOKENS = 1024  // Larger context for quality
+ 
+ // Variant constants - matching ModelConfig.kt
+ private const val GEMMA_3N_E4B = "gemma-3n-E4B"
+ private const val GEMMA_3N_E2B = "gemma-3n-E2B"
  
  /**
   * Type aliases for inference callbacks - exactly like Gallery's pattern.
@@ -82,7 +85,7 @@
       * @param variant The specific variant to optimize for
       * @param onDone Callback when initialization is complete (error message or empty string)
       */
-     fun initialize(context: Context, model: Model, variant: GemmaVariant, onDone: (String) -> Unit)
+     fun initialize(context: Context, model: Model, variant: String, onDone: (String) -> Unit)
      
      /**
       * Switch to a different variant by recreating the session with optimized parameters.
@@ -91,7 +94,7 @@
       * @param targetVariant The variant to switch to
       * @param onDone Callback when switching is complete
       */
-     fun switchVariant(model: Model, targetVariant: GemmaVariant, onDone: (String) -> Unit)
+     fun switchVariant(model: Model, targetVariant: String, onDone: (String) -> Unit)
      
      /**
       * Reset the inference session while keeping the model loaded.
@@ -129,7 +132,7 @@
       * @param model The model to check
       * @return The current variant, or null if not set
       */
-     fun getCurrentVariant(model: Model): GemmaVariant?
+     fun getCurrentVariant(model: Model): String?
  } 
  
  /**
@@ -138,7 +141,7 @@
  data class ElizaModelInstance(
      val engine: LlmInference,
      var session: LlmInferenceSession,
-     var currentVariant: GemmaVariant,
+     var currentVariant: String,
      var config: VariantConfig
  )
  
@@ -163,9 +166,9 @@
       * Get variant-specific configuration optimized for device capabilities.
       * This is our equivalent to MatFormer parameter selection.
       */
-     private fun getVariantConfig(variant: GemmaVariant): VariantConfig {
+     private fun getVariantConfig(variant: String): VariantConfig {
          return when (variant) {
-             GemmaVariant.GEMMA_3N_E2B -> VariantConfig(
+             GEMMA_3N_E2B -> VariantConfig(
                  topK = E2B_TOPK,
                  topP = E2B_TOPP,
                  temperature = E2B_TEMPERATURE,
@@ -173,7 +176,7 @@
                  memoryOptimized = true,
                  useGPU = false  // CPU for memory efficiency
              )
-             GemmaVariant.GEMMA_3N_E4B -> VariantConfig(
+             GEMMA_3N_E4B -> VariantConfig(
                  topK = E4B_TOPK,
                  topP = E4B_TOPP,
                  temperature = E4B_TEMPERATURE,
@@ -181,10 +184,11 @@
                  memoryOptimized = false,
                  useGPU = true   // GPU for performance
              )
+             else -> throw IllegalArgumentException("Unknown variant: $variant")
          }
      }
      
-     override fun initialize(context: Context, model: Model, variant: GemmaVariant, onDone: (String) -> Unit) {
+     override fun initialize(context: Context, model: Model, variant: String, onDone: (String) -> Unit) {
          Log.d(TAG, "Initializing model '${model.name}' with variant '$variant' optimization...")
          
          val config = getVariantConfig(variant)
@@ -226,7 +230,7 @@
          }
      }
      
-     override fun switchVariant(model: Model, targetVariant: GemmaVariant, onDone: (String) -> Unit) {
+     override fun switchVariant(model: Model, targetVariant: String, onDone: (String) -> Unit) {
          val instance = model.instance as ElizaModelInstance? ?: run {
              onDone("Model not initialized")
              return
@@ -268,7 +272,7 @@
       */
      private fun createOptimizedSession(
          inference: LlmInference,
-         variant: GemmaVariant,
+         variant: String,
          config: VariantConfig,
          supportImage: Boolean
      ): LlmInferenceSession {
@@ -380,7 +384,7 @@
          }
      }
      
-     override fun getCurrentVariant(model: Model): GemmaVariant? {
+     override fun getCurrentVariant(model: Model): String? {
          val instance = model.instance as ElizaModelInstance? ?: return null
          return instance.currentVariant
      }

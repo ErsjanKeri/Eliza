@@ -79,6 +79,13 @@ data class Model(
     /** The estimated peak memory in byte to run the model. */
     val estimatedPeakMemoryInBytes: Long? = null,
 
+
+    // new fields for variant support (since 4b supports 2b)
+    val availableVariants: List<String>,
+    var currentVariant: String,
+    val variantConfigs: Map<String, VariantConfig>,
+
+
     // The following fields are managed by the app. Don't need to set manually.
     var normalizedName: String = "",
     @Contextual var instance: Any? = null,
@@ -91,6 +98,21 @@ data class Model(
     init {
         normalizedName = NORMALIZE_NAME_REGEX.matcher(name).replaceAll("_")
     }
+
+    // new functions to support variant switching 
+    fun switchToVariant(variant: String): Boolean {
+        return if (variant in availableVariants) {
+            currentVariant = variant
+            true
+        } else false
+    }
+    fun getCurrentVariantConfig(): VariantConfig {
+        return variantConfigs[currentVariant] ?: VariantConfig()
+    }
+    fun getCurrentVariantMemory(): Long {
+        return variantConfigs[currentVariant]?.estimatedMemoryBytes ?: estimatedPeakMemoryInBytes ?: 0L
+    }
+
 
     fun preProcess() {
         val configValues: MutableMap<String, Any> = mutableMapOf()
@@ -138,7 +160,45 @@ data class Model(
             valueType = valueType,
         )
     }
+
+    /**
+     * Check if a model is downloaded and valid.
+     * Validates both file existence and file size.
+     */
+    fun isDownloaded(context: Context): Boolean {
+        val modelPath = this.getPath(context)
+        val file = File(modelPath)
+        
+        if (!file.exists()) {
+            return false
+        }
+        
+        // Validate file size matches expected size
+        val actualSize = file.length()
+        return actualSize == this.sizeInBytes
+    }
 }
+
+/**
+ * Variant configuration for model parameters.
+ * Contains settings for different model variants with performance optimizations.
+ */
+@Serializable
+data class VariantConfig(
+    val topK: Int = 64,
+    val topP: Float = 0.95f,
+    val temperature: Float = 0.8f,
+    val maxTokens: Int = 1024,
+    val memoryOptimized: Boolean = false,
+    val useGPU: Boolean = true,
+    val estimatedMemoryBytes: Long = 0L,
+
+    // Additional performance characteristics
+    val inferenceSpeedTokensPerSecond: Float = 4.0f,
+    val qualityScore: Float = 0.95f,
+    val isOptimizedForDevice: Boolean = false
+)
+
 
 /**
  * Represents additional data files required by a model.
@@ -296,7 +356,7 @@ data class DeviceCapabilities(
  * Model performance characteristics for a specific variant.
  */
 data class ModelPerformance(
-    val variant: GemmaVariant,
+    val variant: String,
     val estimatedMemoryMB: Long,
     val inferenceSpeedTokensPerSecond: Float,
     val qualityScore: Float, // 0.0 to 1.0

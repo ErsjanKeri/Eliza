@@ -20,10 +20,11 @@ import android.graphics.Bitmap
 import android.util.Log
 import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
 import com.example.ai.edge.eliza.ai.inference.ResultListener
-import com.example.ai.edge.eliza.ai.rag.RagProviderFactory
+
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.Model
-import com.example.ai.edge.eliza.core.model.GemmaVariant
+import com.example.ai.edge.eliza.ai.rag.RagProviderFactory
+
 import com.example.ai.edge.eliza.core.model.ModelInitializationResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +35,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val TAG = "ElizaChatService"
+
+// Variant constants - matching ModelConfig.kt
+private const val GEMMA_3N_E4B = "gemma-3n-E4B"
+private const val GEMMA_3N_E2B = "gemma-3n-E2B"
 
 /**
  * High-level chat service that combines RAG with MediaPipe inference using MatFormer variant switching.
@@ -47,9 +52,11 @@ private const val TAG = "ElizaChatService"
 class ElizaChatService @Inject constructor(
     private val modelManager: ElizaModelManager,
     private val inferenceHelper: ElizaInferenceHelper,
+
     private val ragProviderFactory: RagProviderFactory
 ) {
     
+    private var currentVariant: String? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
     /**
@@ -70,7 +77,7 @@ class ElizaChatService @Inject constructor(
             try {
                 // Step 1: Select optimal variant for this educational context
                 val optimalVariant = selectOptimalVariantForContext(chatContext)
-                Log.d(TAG, "Selected optimal variant: ${optimalVariant.displayName} for context: ${chatContext.javaClass.simpleName}")
+                Log.d(TAG, "Selected optimal variant: ${optimalVariant} for context: ${chatContext.javaClass.simpleName}")
                 
                 // Step 2: Ensure model is initialized with the optimal variant
                 ensureModelInitialized(optimalVariant) { initResult ->
@@ -110,19 +117,19 @@ class ElizaChatService @Inject constructor(
      * Select the optimal variant for the given educational context.
      * This implements intelligent variant selection based on educational use cases.
      */
-    private fun selectOptimalVariantForContext(context: ChatContext): GemmaVariant {
+    private fun selectOptimalVariantForContext(context: ChatContext): String {
         return when (context) {
             is ChatContext.ChapterReading -> {
                 // E2B is optimal for reading comprehension - faster, more focused
-                GemmaVariant.GEMMA_3N_E2B
+                GEMMA_3N_E2B
             }
             is ChatContext.ExerciseSolving -> {
                 // E4B is optimal for problem solving - higher quality, more thorough
-                GemmaVariant.GEMMA_3N_E4B
+                GEMMA_3N_E4B
             }
             is ChatContext.Revision -> {
                 // E2B is optimal for revision - efficient, quick responses
-                GemmaVariant.GEMMA_3N_E2B
+                GEMMA_3N_E2B
             }
             is ChatContext.GeneralTutoring -> {
                 // Use device-adaptive recommendation for general tutoring
@@ -136,69 +143,71 @@ class ElizaChatService @Inject constructor(
      * This handles variant switching if needed.
      */
     private suspend fun ensureModelInitialized(
-        targetVariant: GemmaVariant,
+        targetVariant: String,
         onComplete: (ModelInitializationResult) -> Unit
     ) {
-        val currentVariant = modelManager.getCurrentVariant()
-        
+        val initialModelManagerVariant = modelManager.getCurrentVariant() // Get it from manager
+
         when {
-            // Model not initialized at all
-            currentVariant == null -> {
-                Log.d(TAG, "Model not initialized. Initializing with variant: ${targetVariant.displayName}")
+            initialModelManagerVariant == null -> {
+                Log.d(TAG, "Model not initialized. Initializing with variant: $targetVariant")
                 modelManager.initializeModel(targetVariant).collect { result ->
                     when (result) {
                         is ModelInitializationResult.Success -> {
-                            Log.d(TAG, "Model initialized successfully with ${targetVariant.displayName}")
+                            Log.d(TAG, "Model initialized successfully with $targetVariant")
+                            this.currentVariant = targetVariant // <--- UPDATE LOCAL VARIANT
                             onComplete(ModelInitializationResult.Success(result.message))
                         }
                         is ModelInitializationResult.Error -> {
                             Log.e(TAG, "Model initialization failed: ${result.message}")
+                            // Potentially set this.currentVariant = null or leave as is
                             onComplete(ModelInitializationResult.Error(result.message))
                         }
                         is ModelInitializationResult.Loading -> {
                             Log.d(TAG, "Model initialization in progress: ${result.message}")
-                            // Continue waiting
                         }
                     }
                 }
             }
-            
-            // Model initialized with different variant - switch
-            currentVariant != targetVariant -> {
-                Log.d(TAG, "Switching from ${currentVariant.displayName} to ${targetVariant.displayName}")
+            initialModelManagerVariant != targetVariant -> {
+                Log.d(TAG, "Switching from $initialModelManagerVariant to $targetVariant")
                 modelManager.switchToVariant(targetVariant).collect { result ->
                     when (result) {
                         is com.example.ai.edge.eliza.core.model.ModelSwitchResult.Success -> {
-                            Log.d(TAG, "Successfully switched to ${targetVariant.displayName}")
-                            onComplete(ModelInitializationResult.Success("Switched to ${targetVariant.displayName}"))
+                            Log.d(TAG, "Successfully switched to $targetVariant") // Use targetVariant here
+                            this.currentVariant = targetVariant // <--- UPDATE LOCAL VARIANT
+                            onComplete(ModelInitializationResult.Success("Switched to $targetVariant"))
                         }
                         is com.example.ai.edge.eliza.core.model.ModelSwitchResult.Error -> {
                             Log.e(TAG, "Variant switching failed: ${result.message}")
+                            // currentVariant remains the old one from modelManager
                             onComplete(ModelInitializationResult.Error(result.message))
                         }
                         is com.example.ai.edge.eliza.core.model.ModelSwitchResult.Loading -> {
                             Log.d(TAG, "Variant switching in progress: ${result.message}")
-                            // Continue waiting
                         }
                     }
                 }
             }
-            
-            // Model already initialized with correct variant
             else -> {
-                Log.d(TAG, "Model already initialized with correct variant: ${targetVariant.displayName}")
-                onComplete(ModelInitializationResult.Success("Model ready"))
+                Log.d(TAG, "Model already initialized with correct variant: $initialModelManagerVariant")
+                // Ensure local currentVariant is also up-to-date if it wasn't already
+                if (this.currentVariant != initialModelManagerVariant) {
+                    this.currentVariant = initialModelManagerVariant // <--- SYNC IF NEEDED
+                }
+            onComplete(ModelInitializationResult.Success("Model ready"))
             }
         }
-    }
+}
     
     /**
      * Perform RAG enhancement and inference with the initialized model.
      */
+    // TODO: why variant given as a parameter instead of local variable?
     private suspend fun performRagEnhancedInference(
         input: String,
         chatContext: ChatContext,
-        variant: GemmaVariant,
+        variant: String,
         resultListener: ResultListener,
         cleanUpListener: () -> Unit,
         images: List<Bitmap>
@@ -222,7 +231,7 @@ class ElizaChatService @Inject constructor(
                 variant = variant
             )
             
-            Log.d(TAG, "RAG enhancement complete. Running MediaPipe inference with ${variant.displayName}")
+            Log.d(TAG, "RAG enhancement complete. Running MediaPipe inference with $variant")
             Log.d(TAG, "Enhanced prompt length: ${finalPrompt.length} chars")
             Log.d(TAG, "Retrieved chunks: ${enhancementResult.chunksUsed}")
             
@@ -256,7 +265,7 @@ class ElizaChatService @Inject constructor(
         systemInstructions: String,
         enhancedPrompt: com.example.ai.edge.eliza.core.model.EnhancedPrompt,
         chatContext: ChatContext,
-        variant: GemmaVariant
+        variant: String
     ): String {
         return buildString {
             // System instructions first
@@ -265,10 +274,10 @@ class ElizaChatService @Inject constructor(
             
             // Add variant-specific optimization hints
             when (variant) {
-                GemmaVariant.GEMMA_3N_E2B -> {
+                GEMMA_3N_E2B -> {
                     append("OPTIMIZATION MODE: Efficient response mode. Provide concise, focused answers.\n")
                 }
-                GemmaVariant.GEMMA_3N_E4B -> {
+                GEMMA_3N_E4B -> {
                     append("OPTIMIZATION MODE: High-quality response mode. Provide detailed, comprehensive answers.\n")
                 }
             }
@@ -343,31 +352,38 @@ class ElizaChatService @Inject constructor(
      */
     suspend fun switchToOptimalVariant(chatContext: ChatContext) {
         val optimalVariant = selectOptimalVariantForContext(chatContext)
-        val currentVariant = modelManager.getCurrentVariant()
-        
-        if (currentVariant != optimalVariant) {
-            Log.d(TAG, "Proactively switching to optimal variant: ${optimalVariant.displayName} for context: ${chatContext.javaClass.simpleName}")
+        // Use modelManager's current variant for the check
+        val modelManagerCurrentVariant = modelManager.getCurrentVariant()
+
+        if (modelManagerCurrentVariant != optimalVariant) {
+            Log.d(TAG, "Proactively switching to optimal variant: $optimalVariant for context: ${chatContext.javaClass.simpleName}")
             modelManager.switchToVariant(optimalVariant).collect { result ->
                 when (result) {
                     is com.example.ai.edge.eliza.core.model.ModelSwitchResult.Success -> {
-                        Log.d(TAG, "Successfully switched to optimal variant: ${optimalVariant.displayName}")
+                        Log.d(TAG, "Successfully switched to optimal variant: $optimalVariant")
+                        this.currentVariant = optimalVariant // <--- UPDATE LOCAL VARIANT
                     }
                     is com.example.ai.edge.eliza.core.model.ModelSwitchResult.Error -> {
                         Log.e(TAG, "Failed to switch to optimal variant: ${result.message}")
+                        // this.currentVariant would still hold the old value
                     }
                     is com.example.ai.edge.eliza.core.model.ModelSwitchResult.Loading -> {
                         Log.d(TAG, "Switching to optimal variant: ${result.message}")
                     }
                 }
             }
+        } else if (this.currentVariant != optimalVariant) {
+            // If modelManager is already on optimal, but our local copy is not, sync it.
+            this.currentVariant = optimalVariant
+            Log.d(TAG, "Local currentVariant synced to optimalVariant: $optimalVariant")
         }
     }
-    
+
     /**
      * Get the current variant being used.
      */
-    fun getCurrentVariant(): GemmaVariant? {
-        return modelManager.getCurrentVariant()
+    fun getCurrentVariant(): String? {
+        return this.currentVariant;
     }
     
     /**

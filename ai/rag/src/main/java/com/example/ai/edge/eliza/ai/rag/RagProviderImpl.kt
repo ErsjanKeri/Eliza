@@ -58,7 +58,7 @@ interface RagProvider {
 /**
  * Factory for creating appropriate RagProvider instances based on context.
  */
-interface RagProviderFactory {
+public interface RagProviderFactory {
     fun createProvider(context: ChatContext): RagProvider
 } 
 

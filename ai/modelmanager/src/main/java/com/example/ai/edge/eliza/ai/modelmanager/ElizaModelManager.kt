@@ -23,7 +23,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
 import com.example.ai.edge.eliza.core.data.repository.ModelDownloadProgress
 import com.example.ai.edge.eliza.core.data.repository.ModelDownloadStatus
-import com.example.ai.edge.eliza.core.model.GemmaVariant
+
 import com.example.ai.edge.eliza.core.model.Model
 import com.example.ai.edge.eliza.core.model.ModelInitializationResult
 import com.example.ai.edge.eliza.core.model.ModelSwitchResult
@@ -46,21 +46,7 @@ import android.app.ActivityManager
 
 private const val TAG = "ElizaModelManager"
 
-/**
- * Extension function to check if a model is downloaded and valid.
- */
-private fun Model.isDownloaded(context: Context): Boolean {
-    val modelPath = this.getPath(context)
-    val file = File(modelPath)
-    
-    if (!file.exists()) {
-        return false
-    }
-    
-    // Validate file size matches expected size
-    val actualSize = file.length()
-    return actualSize == this.sizeInBytes
-}
+
 
 /**
  * Model initialization status types.
@@ -86,7 +72,7 @@ data class ModelInitializationStatus(
 data class ModelManagerUiState(
     val isReady: Boolean = false,
     val memoryUsage: Long = 0L,
-    val currentVariant: GemmaVariant? = null,
+    val currentVariant: String? = null,
     val downloadProgress: ModelDownloadProgress? = null
 )
 
@@ -132,11 +118,11 @@ class ElizaModelManager @Inject constructor(
      * This uses our intelligent variant switching system that optimizes MediaPipe
      * session configuration for different MatFormer-style variants.
      */
-    suspend fun initializeModel(variant: GemmaVariant? = null): Flow<ModelInitializationResult> = flow {
+    suspend fun initializeModel(variant: String? = null): Flow<ModelInitializationResult> = flow {
         val targetVariant = variant ?: modelRegistry.getRecommendedVariant()
         
         try {
-            emit(ModelInitializationResult.Loading("Initializing ${targetVariant.displayName} variant..."))
+            emit(ModelInitializationResult.Loading("Initializing $targetVariant variant..."))
             
             val model = modelRegistry.getCurrentModel()
             if (model == null) {
@@ -165,11 +151,11 @@ class ElizaModelManager @Inject constructor(
             // Update current variant
             _uiState.update { it.copy(currentVariant = targetVariant) }
             
-            Log.d(TAG, "Model initialized successfully with variant: ${targetVariant.displayName}")
-            emit(ModelInitializationResult.Success("Model ready with ${targetVariant.displayName} optimization"))
+            Log.d(TAG, "Model initialized successfully with variant: $targetVariant")
+            emit(ModelInitializationResult.Success("Model ready with $targetVariant optimization"))
             
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to initialize model with variant: ${targetVariant.displayName}", e)
+            Log.e(TAG, "Failed to initialize model with variant: $targetVariant", e)
             emit(ModelInitializationResult.Error("Initialization failed: ${e.message}"))
         }
     }
@@ -178,13 +164,13 @@ class ElizaModelManager @Inject constructor(
      * Switch to a different variant with optimized parameters.
      * This is our implementation of "MatFormer-style" switching within MediaPipe constraints.
      */
-    suspend fun switchToVariant(targetVariant: GemmaVariant): Flow<ModelSwitchResult> = flow {
+    suspend fun switchToVariant(targetVariant: String): Flow<ModelSwitchResult> = flow {
         try {
-            emit(ModelSwitchResult.Loading("Switching to ${targetVariant.displayName}..."))
+            emit(ModelSwitchResult.Loading("Switching to $targetVariant..."))
             
             val currentVariant = getCurrentVariant()
             if (currentVariant == targetVariant) {
-                emit(ModelSwitchResult.Success("Already using ${targetVariant.displayName}"))
+                emit(ModelSwitchResult.Success("Already using $targetVariant"))
                 return@flow
             }
             
@@ -209,11 +195,11 @@ class ElizaModelManager @Inject constructor(
             // Update UI state
             _uiState.update { it.copy(currentVariant = targetVariant) }
             
-            Log.d(TAG, "Successfully switched to variant: ${targetVariant.displayName}")
-            emit(ModelSwitchResult.Success("Switched to ${targetVariant.displayName}"))
+            Log.d(TAG, "Successfully switched to variant: $targetVariant")
+            emit(ModelSwitchResult.Success("Switched to $targetVariant"))
             
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to switch to variant: ${targetVariant.displayName}", e)
+            Log.e(TAG, "Failed to switch to variant: $targetVariant", e)
             emit(ModelSwitchResult.Error("Variant switching failed: ${e.message}"))
         }
     }
@@ -221,7 +207,7 @@ class ElizaModelManager @Inject constructor(
     /**
      * Get the current variant being used.
      */
-    fun getCurrentVariant(): GemmaVariant? {
+    fun getCurrentVariant(): String? {
         return inferenceHelper.getCurrentVariant(activeModel)
     }
     
@@ -251,14 +237,14 @@ class ElizaModelManager @Inject constructor(
     /**
      * Get the recommended variant for the current device.
      */
-    fun getRecommendedVariant(): GemmaVariant {
+    fun getRecommendedVariant(): String {
         return modelRegistry.getRecommendedVariant()
     }
 
     /**
      * Check if a variant is available for switching.
      */
-    fun isVariantAvailable(variant: GemmaVariant): Boolean {
+    fun isVariantAvailable(variant: String): Boolean {
         val model = modelRegistry.getCurrentModel() ?: return false
         return model.isDownloaded(context)
     }

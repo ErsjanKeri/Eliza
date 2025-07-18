@@ -24,7 +24,7 @@ Change the default model variant in `ModelConfig.kt`:
 
 ```kotlin
 // Change this single line to switch default variant
-val DEFAULT_VARIANT = GemmaVariant.GEMMA_3N_E4B  // or GEMMA_3N_E2B
+val DEFAULT_VARIANT = "gemma-3n-E4B"  // or "gemma-3n-E2B"
 ```
 
 ### 2. Manual Variant Switching
@@ -34,10 +34,10 @@ val DEFAULT_VARIANT = GemmaVariant.GEMMA_3N_E4B  // or GEMMA_3N_E2B
 @Inject lateinit var modelManager: ElizaModelManager
 
 // Switch to high-quality variant
-modelManager.switchToVariant(GemmaVariant.GEMMA_3N_E4B)
+modelManager.switchToVariant("gemma-3n-E4B")
 
 // Switch to fast variant
-modelManager.switchToVariant(GemmaVariant.GEMMA_3N_E2B)
+modelManager.switchToVariant("gemma-3n-E2B")
 ```
 
 ### 3. Use Case-Based Selection
@@ -96,7 +96,7 @@ const val PRELOAD_NESTED_VARIANTS = true // For faster switching
 ## Implementation Status
 
 ### ✅ Completed
-- [x] GemmaVariant enum with E4B/E2B support
+- [x] String-based variant system with E4B/E2B support
 - [x] ElizaModelRegistry for variant management
 - [x] ModelConfig for easy configuration
 - [x] Updated ElizaModelManager to use registry
@@ -136,26 +136,26 @@ modelManager.switchToVariant(variant)
 ### ElizaModelManager
 ```kotlin
 // Switch to specific variant
-fun switchToVariant(targetVariant: GemmaVariant)
+fun switchToVariant(targetVariant: String)
 
 // Get device recommendation
-fun getRecommendedVariant(): GemmaVariant
+fun getRecommendedVariant(): String
 
 // Check if variant is available
-fun isVariantAvailable(variant: GemmaVariant): Boolean
+fun isVariantAvailable(variant: String): Boolean
 
 // Get performance info
-fun getPerformanceInfo(variant: GemmaVariant): String
+fun getPerformanceInfo(variant: String): String
 ```
 
 ### ModelConfig
 ```kotlin
 // Quick variant selection
-fun useHighQualityVariant(): GemmaVariant
-fun useFastVariant(): GemmaVariant
+fun useHighQualityVariant(): String
+fun useFastVariant(): String
 
 // Use case-based selection
-fun getVariantForUseCase(useCase: UseCase): GemmaVariant
+fun getVariantForUseCase(useCase: UseCase): String
 ```
 
 ## Best Practices
@@ -254,7 +254,7 @@ graph TB
     style D fill:#fff3e0
     style F fill:#f3e5f5
 ```
-```
+
 
 
 
