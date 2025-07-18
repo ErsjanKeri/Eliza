@@ -158,7 +158,7 @@ kotlinclass ModelManager @Inject constructor(
     private val dataStoreRepository: DataStoreRepository
 ) {
     private val gemma3nModel = Model(
-        name = "Gemma-3n-E2B-it-int4",
+        name = "Gemma-3n-E4B-it-int4",
         modelId = "google/gemma-3n-E2B-it-litert-preview",
         sizeInBytes = 3136226711,
         estimatedPeakMemoryInBytes = 5905580032,

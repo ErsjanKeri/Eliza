@@ -55,9 +55,9 @@ class MockChatRepository @Inject constructor() : ChatRepository {
         isInitialized = true,
         isDownloading = false,
         downloadProgress = 1.0f,
-        modelName = "Gemma-3n-E2B-it-int4",
-        sizeInBytes = 3136226711L,
-        estimatedPeakMemoryInBytes = 5905580032L,
+                    modelName = "Gemma-3n-E4B-it-int4",
+                  sizeInBytes = 4405655031L,
+          estimatedPeakMemoryInBytes = 6979321856L,
         errorMessage = null
     )
 
@@ -273,9 +273,9 @@ class MockChatRepository @Inject constructor() : ChatRepository {
     override suspend fun initializeModel(): Flow<ModelInitializationResult> = flow {
         emit(ModelInitializationResult(
             isSuccess = true,
-            modelName = "Gemma-3n-E2B-it-int4",
+            modelName = "Gemma-3n-E4B-it-int4",
             initializationTime = 5000L,
-            memoryUsage = 3136226711L,
+                          memoryUsage = 4405655031L,
             error = null
         ))
     }
@@ -299,7 +299,7 @@ class MockChatRepository @Inject constructor() : ChatRepository {
             confidence = 0.9f,
             processingTime = 500L,
             tokensUsed = 50,
-            model = "Gemma-3n-E2B-it-int4"
+            model = "Gemma-3n-E4B-it-int4"
         ))
     }
 
@@ -330,7 +330,7 @@ class MockChatRepository @Inject constructor() : ChatRepository {
             confidence = 0.95f,
             processingTime = 1000L,
             tokensUsed = 75,
-            model = "Gemma-3n-E2B-it-int4"
+            model = "Gemma-3n-E4B-it-int4"
         ))
     }
 
@@ -342,7 +342,7 @@ class MockChatRepository @Inject constructor() : ChatRepository {
             confidence = 0.85f,
             processingTime = 800L,
             tokensUsed = 60,
-            model = "Gemma-3n-E2B-it-int4"
+            model = "Gemma-3n-E4B-it-int4"
         ))
     }
 
@@ -397,7 +397,7 @@ class MockChatRepository @Inject constructor() : ChatRepository {
             confidence = 0.95f,
             processingTime = 1200L,
             tokensUsed = 80,
-            model = "Gemma-3n-E2B-it-int4"
+            model = "Gemma-3n-E4B-it-int4"
         ))
     }
 

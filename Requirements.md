@@ -3,7 +3,7 @@
 ## Project Overview
 **Timeline**: 21 days  
 **Target**: Functional MVP demo  
-**AI Model**: Gemma-3n-E2B-it-int4 (3.1GB, text + vision)  
+**AI Model**: Gemma-3n-E4B-it-int4 (4.4GB, text + vision)  
 **Architecture**: nowinandroid modular + gallery-edge-ai integration
 
 ## User Stories with EARS Notation

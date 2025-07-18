@@ -283,16 +283,16 @@ fun createLlmChatConfigs(
 /**
  * Pre-configured Gemma 3N model for educational AI.
  */
-val GEMMA_3N_E2B_MODEL = Model(
-    name = "Gemma-3n-E2B-it-int4",
+val GEMMA_3N_E4B_MODEL = Model(
+    name = "Gemma-3n-E4B-it-int4",
     version = "20250520",
-    downloadFileName = "gemma-3n-E2B-it-int4.task",
-    url = "https://huggingface.co/google/gemma-3n-E2B-it-litert-preview/resolve/main/gemma-3n-E2B-it-int4.task?download=true",
-    sizeInBytes = 3136226711L,
-    estimatedPeakMemoryInBytes = 5905580032L,
+    downloadFileName = "gemma-3n-E4B-it-int4.task",
+    url = "https://huggingface.co/google/gemma-3n-E4B-it-litert-preview/resolve/main/gemma-3n-E4B-it-int4.task?download=true",
+    sizeInBytes = 4405655031L,
+    estimatedPeakMemoryInBytes = 6979321856L,
     llmSupportImage = true,
     llmSupportAudio = false,
-    info = "Gemma 3n E2B optimized for educational AI tutoring with text and vision capabilities",
+    info = "Gemma 3n E4B optimized for educational AI tutoring with text and vision capabilities",
     learnMoreUrl = "https://ai.google.dev/gemma/docs/gemma-3n",
     configs = createLlmChatConfigs(
         defaultMaxToken = 4096,

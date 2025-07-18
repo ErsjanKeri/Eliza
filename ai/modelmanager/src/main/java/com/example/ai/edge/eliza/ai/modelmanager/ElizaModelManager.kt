@@ -26,7 +26,7 @@ import com.example.ai.edge.eliza.core.data.repository.ModelDownloadStatus
 import com.example.ai.edge.eliza.core.data.repository.ModelInitializationResult
 import com.example.ai.edge.eliza.core.model.Model
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
-import com.example.ai.edge.eliza.core.model.GEMMA_3N_E2B_MODEL
+import com.example.ai.edge.eliza.core.model.GEMMA_3N_E4B_MODEL
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -64,7 +64,7 @@ data class ModelInitializationStatus(
  * UI state for model management.
  */
 data class ModelManagerUiState(
-    val model: Model = GEMMA_3N_E2B_MODEL,
+    val model: Model = GEMMA_3N_E4B_MODEL,
     val downloadStatus: ModelDownloadProgress? = null,
     val initializationStatus: ModelInitializationStatus? = null,
     val isReady: Boolean = false,
@@ -86,7 +86,7 @@ class ElizaModelManager @Inject constructor(
     private val _uiState = MutableStateFlow(ModelManagerUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val model = GEMMA_3N_E2B_MODEL
+    private val model = GEMMA_3N_E4B_MODEL
     private val externalFilesDir = context.getExternalFilesDir(null)
 
     init {

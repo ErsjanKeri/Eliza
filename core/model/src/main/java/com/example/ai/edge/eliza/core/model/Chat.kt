@@ -96,9 +96,9 @@ data class ModelState(
     val isDownloading: Boolean = false,
     val downloadProgress: Float = 0f,
     val errorMessage: String? = null,
-    val modelName: String = "Gemma-3n-E2B-it-int4",
-    val sizeInBytes: Long = 3136226711L,
-    val estimatedPeakMemoryInBytes: Long = 5905580032L
+    val modelName: String = "Gemma-3n-E4B-it-int4",
+    val sizeInBytes: Long = 4405655031L,
+    val estimatedPeakMemoryInBytes: Long = 6979321856L
 )
 
 /**

@@ -140,7 +140,7 @@ data class AIResponse(
     val confidence: Float = 0f,
     val processingTime: Long = 0L,
     val tokensUsed: Int = 0,
-    val model: String = "Gemma-3n-E2B-it-int4"
+                val model: String = "Gemma-3n-E4B-it-int4"
 )
 
 /**
