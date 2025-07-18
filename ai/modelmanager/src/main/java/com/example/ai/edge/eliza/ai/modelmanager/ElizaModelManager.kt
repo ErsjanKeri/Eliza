@@ -188,19 +188,13 @@ class ElizaModelManager @Inject constructor(
                 return@flow
             }
             
-            val model = modelRegistry.getCurrentModel()
+            val model = getCurrentModel()
             if (model == null) {
-                emit(ModelSwitchResult.Error("No model available"))
+                emit(ModelSwitchResult.Error("No model available to switch"))
                 return@flow
             }
             
-            // Check if model is initialized
-            if (model.instance == null) {
-                emit(ModelSwitchResult.Error("Model not initialized. Please initialize first."))
-                return@flow
-            }
-            
-            // Switch variant using inference helper
+            // Use the inference helper to perform the actual variant switching
             val switchResult = CompletableDeferred<String>()
             inferenceHelper.switchVariant(model, targetVariant) { error ->
                 switchResult.complete(error)
@@ -212,7 +206,7 @@ class ElizaModelManager @Inject constructor(
                 return@flow
             }
             
-            // Update current variant in UI state
+            // Update UI state
             _uiState.update { it.copy(currentVariant = targetVariant) }
             
             Log.d(TAG, "Successfully switched to variant: ${targetVariant.displayName}")
@@ -225,15 +219,37 @@ class ElizaModelManager @Inject constructor(
     }
 
     /**
-     * Get the currently active variant.
+     * Get the current variant being used.
      */
     fun getCurrentVariant(): GemmaVariant? {
-        return _uiState.value.currentVariant
+        return inferenceHelper.getCurrentVariant(activeModel)
     }
-
+    
     /**
-     * Get device-adaptive variant recommendation.
-     * This implements intelligent variant selection based on device capabilities.
+     * Get the current active model.
+     */
+    fun getCurrentModel(): Model? {
+        return try {
+            activeModel
+        } catch (e: IllegalStateException) {
+            null
+        }
+    }
+    
+    /**
+     * Get performance characteristics for the current variant.
+     */
+    fun getCurrentVariantPerformance(): ModelPerformance? {
+        val currentVariant = getCurrentVariant()
+        return if (currentVariant != null) {
+            modelRegistry.getVariantPerformance(currentVariant)
+        } else {
+            null
+        }
+    }
+    
+    /**
+     * Get the recommended variant for the current device.
      */
     fun getRecommendedVariant(): GemmaVariant {
         return modelRegistry.getRecommendedVariant()
@@ -245,14 +261,6 @@ class ElizaModelManager @Inject constructor(
     fun isVariantAvailable(variant: GemmaVariant): Boolean {
         val model = modelRegistry.getCurrentModel() ?: return false
         return model.isDownloaded(context)
-    }
-
-    /**
-     * Get performance characteristics of the current variant.
-     */
-    fun getCurrentVariantPerformance(): ModelPerformance? {
-        val currentVariant = getCurrentVariant() ?: return null
-        return modelRegistry.getVariantPerformance(currentVariant)
     }
 
     /**
@@ -365,13 +373,6 @@ class ElizaModelManager @Inject constructor(
         val model = modelRegistry.getCurrentModel() ?: return
         inferenceHelper.cleanUp(model)
         Log.d(TAG, "Cleaned up model '${model.name}'")
-    }
-
-    /**
-     * Gets the current model from the registry.
-     */
-    fun getCurrentModel(): Model? {
-        return modelRegistry.getCurrentModel()
     }
 
     override fun onCleared() {
