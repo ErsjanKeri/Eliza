@@ -190,3 +190,77 @@ fun getVariantForUseCase(useCase: UseCase): GemmaVariant
 - **Elastic Execution**: Dynamic switching during inference
 - **Advanced PLE**: More sophisticated memory optimization
 - **Performance Profiling**: Detailed performance analytics 
+
+```mermaid
+graph TB
+    subgraph "User Input"
+        A[User Question + Context]
+    end
+
+    subgraph "ElizaChatService (RAG + MatFormer)"
+        B[Select Optimal Variant]
+        C[Ensure Model Initialized]
+        D[RAG Enhancement]
+        E[Build Final Prompt]
+        F[Variant-Optimized Inference]
+    end
+
+    subgraph "Variant Selection Logic"
+        G[ChapterReading → E2B]
+        H[ExerciseSolving → E4B]
+        I[Revision → E2B]
+        J[GeneralTutoring → Auto]
+    end
+
+    subgraph "ModelManager (MatFormer)"
+        K[Model Initialization]
+        L[Variant Switching]
+        M[Performance Monitoring]
+    end
+
+    subgraph "InferenceHelper (MediaPipe)"
+        N[Variant-Optimized Session]
+        O[Parameter Configuration]
+        P[Memory Management]
+    end
+
+    subgraph "RAG System"
+        Q[Content Retrieval]
+        R[Prompt Enhancement]
+        S[Context Integration]
+    end
+
+    A --> B
+    B --> G
+    B --> H
+    B --> I
+    B --> J
+    B --> C
+    C --> K
+    C --> L
+    L --> M
+    C --> D
+    D --> Q
+    D --> R
+    D --> S
+    D --> E
+    E --> F
+    F --> N
+    N --> O
+    N --> P
+
+    style B fill:#e1f5fe
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style F fill:#f3e5f5
+```
+```
+
+
+
+
+
+
+
+
+
