@@ -73,6 +73,9 @@ data class Model(
     /** Whether the model is imported or not. */
     val imported: Boolean = false,
 
+    /** SHA-256 checksum for model file integrity verification (optional). */
+    val sha256Checksum: String? = null,
+
     /** The estimated peak memory in byte to run the model. */
     val estimatedPeakMemoryInBytes: Long? = null,
 

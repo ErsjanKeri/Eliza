@@ -132,13 +132,14 @@ class ElizaModelManager @Inject constructor(
      * Includes proper concurrent access control like Gallery's implementation.
      */
     fun initializeModel(force: Boolean = false): Flow<ModelInitializationResult> = flow {
+        // Use the new validation function - Gallery's pattern
         if (!isModelDownloaded()) {
             emit(ModelInitializationResult(
                 isSuccess = false,
                 modelName = model.name,
                 initializationTime = 0L,
                 memoryUsage = 0L,
-                error = "Model not downloaded"
+                error = "Model not downloaded or validation failed"
             ))
             return@flow
         }
@@ -314,6 +315,97 @@ class ElizaModelManager @Inject constructor(
     }
 
     /**
+     * Checks if the model is downloaded and validates the file.
+     * Based on Gallery's isModelDownloaded pattern.
+     */
+    fun isModelDownloaded(): Boolean {
+        val modelPath = model.getPath(context)
+        val file = File(modelPath)
+        
+        if (!file.exists()) {
+            Log.d(TAG, "Model file does not exist: $modelPath")
+            return false
+        }
+        
+        // Validate file size matches expected size
+        val actualSize = file.length()
+        if (actualSize != model.sizeInBytes) {
+            Log.w(TAG, "Model file size mismatch. Expected: ${model.sizeInBytes}, Actual: $actualSize")
+            return false
+        }
+        
+        Log.d(TAG, "Model is downloaded and validated: $modelPath")
+        return true
+    }
+
+    /**
+     * Checks if the model is partially downloaded.
+     * Based on Gallery's isModelPartiallyDownloaded pattern.
+     */
+    fun isModelPartiallyDownloaded(): Boolean {
+        val modelPath = model.getPath(context)
+        val file = File(modelPath)
+        
+        return file.exists() && file.length() > 0 && file.length() < model.sizeInBytes
+    }
+
+    /**
+     * Gets the current model download status.
+     * Based on Gallery's getModelDownloadStatus pattern.
+     */
+    fun getModelDownloadStatus(): ModelDownloadProgress {
+        if (isModelDownloaded()) {
+            return ModelDownloadProgress(
+                progress = 1.0f,
+                status = ModelDownloadStatus.COMPLETED,
+                bytesDownloaded = model.sizeInBytes,
+                totalBytes = model.sizeInBytes,
+                downloadSpeed = 0L,
+                error = null
+            )
+        } else if (isModelPartiallyDownloaded()) {
+            val modelPath = model.getPath(context)
+            val file = File(modelPath)
+            val receivedBytes = file.length()
+            
+            return ModelDownloadProgress(
+                progress = receivedBytes.toFloat() / model.sizeInBytes.toFloat(),
+                status = ModelDownloadStatus.DOWNLOADING,
+                bytesDownloaded = receivedBytes,
+                totalBytes = model.sizeInBytes,
+                downloadSpeed = 0L,
+                error = null
+            )
+        } else {
+            return ModelDownloadProgress(
+                progress = 0.0f,
+                status = ModelDownloadStatus.PENDING,
+                bytesDownloaded = 0L,
+                totalBytes = model.sizeInBytes,
+                downloadSpeed = 0L,
+                error = null
+            )
+        }
+    }
+
+    /**
+     * Deletes the model file if it exists.
+     * Based on Gallery's deleteFileFromExternalFilesDir pattern.
+     */
+    fun deleteModelFile() {
+        try {
+            val modelPath = model.getPath(context)
+            val file = File(modelPath)
+            if (file.exists()) {
+                file.delete()
+                Log.d(TAG, "Model file deleted: $modelPath")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to delete model file", e)
+        }
+    }
+
+    /**
      * Sets download status (Gallery-style callback method).
      */
     private fun setDownloadStatus(model: Model, status: ModelDownloadProgress) {
@@ -329,25 +421,8 @@ class ElizaModelManager @Inject constructor(
 
     private fun checkModelStatus() {
         viewModelScope.launch {
-            val downloadStatus = if (isModelDownloaded()) {
-                ModelDownloadProgress(
-                    progress = 1.0f,
-                    status = ModelDownloadStatus.COMPLETED,
-                    totalBytes = model.sizeInBytes,
-                    bytesDownloaded = model.sizeInBytes,
-                    downloadSpeed = 0L,
-                    error = null
-                )
-            } else {
-                ModelDownloadProgress(
-                    progress = 0.0f,
-                    status = ModelDownloadStatus.PENDING,
-                    totalBytes = 0L,
-                    bytesDownloaded = 0L,
-                    downloadSpeed = 0L,
-                    error = null
-                )
-            }
+            // Use the new validation functions - Gallery's pattern
+            val downloadStatus = getModelDownloadStatus()
             setDownloadStatus(model, downloadStatus)
             
             updateInitializationStatus(ModelInitializationStatus(
@@ -356,10 +431,8 @@ class ElizaModelManager @Inject constructor(
         }
     }
 
-    private fun isModelDownloaded(): Boolean {
-        val modelPath = model.getPath(context)
-        return File(modelPath).exists()
-    }
+    // Note: This private function is now replaced by the public isModelDownloaded() function above
+    // which includes proper validation following Gallery's patterns
 
     private fun updateInitializationStatus(status: ModelInitializationStatus) {
         _uiState.update { it.copy(initializationStatus = status) }

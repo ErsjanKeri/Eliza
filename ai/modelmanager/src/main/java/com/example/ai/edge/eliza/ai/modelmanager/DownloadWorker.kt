@@ -32,10 +32,12 @@ import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -81,6 +83,7 @@ class DownloadWorker @AssistedInject constructor(
         val modelDir = inputData.getString(KEY_MODEL_DOWNLOAD_MODEL_DIR) ?: "models"
         val totalBytes = inputData.getLong(KEY_MODEL_TOTAL_BYTES, 0L)
         val accessToken = inputData.getString(KEY_MODEL_DOWNLOAD_ACCESS_TOKEN)
+        val sha256Checksum = inputData.getString(KEY_MODEL_SHA256_CHECKSUM)
 
         return withContext(Dispatchers.IO) {
             if (fileUrl == null || fileName == null) {
@@ -97,9 +100,9 @@ class DownloadWorker @AssistedInject constructor(
                     val url = URL(fileUrl)
                     val connection = url.openConnection() as HttpURLConnection
                     
-                    // Add access token if provided
-                    if (accessToken != null) {
-                        Log.d(TAG, "Using access token: ${accessToken.subSequence(0, 10)}...")
+                    // Add access token if provided - Gallery's pattern for HuggingFace
+                    if (accessToken != null && fileUrl.startsWith("https://huggingface.co")) {
+                        Log.d(TAG, "Using HuggingFace access token: ${accessToken.subSequence(0, 10)}...")
                         connection.setRequestProperty("Authorization", "Bearer $accessToken")
                     }
 
@@ -117,10 +120,17 @@ class DownloadWorker @AssistedInject constructor(
                         outputDir,
                         fileName
                     )
-                    val outputFileBytes = outputFile.length()
-                    var downloadedBytes = 0L
                     
-                    if (outputFileBytes > 0) {
+                    // Check if model is already fully downloaded - Gallery's pattern
+                    if (validateDownloadedModel(outputFile, totalBytes)) {
+                        Log.d(TAG, "Model already fully downloaded and validated")
+                        return@withContext Result.success()
+                    }
+                    
+                    // Check for partial download - Gallery's pattern
+                    var downloadedBytes = 0L
+                    if (isModelPartiallyDownloaded(outputFile, totalBytes)) {
+                        val outputFileBytes = outputFile.length()
                         Log.d(TAG, "File '$fileName' partial size: $outputFileBytes. Trying to resume download")
                         connection.setRequestProperty("Range", "bytes=$outputFileBytes-")
                         downloadedBytes = outputFileBytes
@@ -217,6 +227,28 @@ class DownloadWorker @AssistedInject constructor(
                     inputStream.close()
 
                     Log.d(TAG, "Download completed successfully")
+                    
+                    // Validate downloaded model exactly like Gallery's pattern
+                    if (!validateDownloadedModel(outputFile, totalBytes)) {
+                        Log.e(TAG, "Downloaded model validation failed")
+                        return@withContext Result.failure(
+                            Data.Builder()
+                                .putString(KEY_MODEL_DOWNLOAD_ERROR_MESSAGE, "Downloaded model validation failed")
+                                .build()
+                        )
+                    }
+                    
+                    // Verify checksum if available
+                    if (!verifyModelChecksum(outputFile, sha256Checksum)) {
+                        Log.e(TAG, "Model checksum verification failed")
+                        return@withContext Result.failure(
+                            Data.Builder()
+                                .putString(KEY_MODEL_DOWNLOAD_ERROR_MESSAGE, "Model checksum verification failed")
+                                .build()
+                        )
+                    }
+                    
+                    Log.d(TAG, "Model validation and verification passed")
                     Result.success()
                     
                 } catch (e: IOException) {
@@ -260,5 +292,70 @@ class DownloadWorker @AssistedInject constructor(
         } else {
             ForegroundInfo(notificationId, notification)
         }
+    }
+
+    /**
+     * Validates the downloaded model file exactly like Gallery's pattern.
+     * Checks file existence and size match.
+     */
+    private fun validateDownloadedModel(file: File, expectedSize: Long): Boolean {
+        if (!file.exists()) {
+            Log.e(TAG, "Downloaded model file does not exist: ${file.absolutePath}")
+            return false
+        }
+
+        val actualSize = file.length()
+        if (actualSize != expectedSize) {
+            Log.e(TAG, "Downloaded model file size mismatch. Expected: $expectedSize, Actual: $actualSize")
+            return false
+        }
+
+        Log.d(TAG, "Model validation passed: file exists and size matches ($actualSize bytes)")
+        return true
+    }
+
+    /**
+     * Verifies model file integrity using SHA-256 checksum.
+     * Based on industry-standard practices for file integrity verification.
+     */
+    private fun verifyModelChecksum(file: File, expectedChecksum: String?): Boolean {
+        if (expectedChecksum == null) {
+            Log.d(TAG, "No checksum provided for verification")
+            return true
+        }
+
+        try {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val fileInputStream = FileInputStream(file)
+            val buffer = ByteArray(8192)
+            var bytesRead: Int
+
+            while (fileInputStream.read(buffer).also { bytesRead = it } != -1) {
+                digest.update(buffer, 0, bytesRead)
+            }
+            fileInputStream.close()
+
+            val actualChecksum = digest.digest().joinToString("") { "%02x".format(it) }
+            val checksumMatch = actualChecksum.equals(expectedChecksum, ignoreCase = true)
+
+            if (checksumMatch) {
+                Log.d(TAG, "Model checksum verification passed")
+            } else {
+                Log.e(TAG, "Model checksum verification failed. Expected: $expectedChecksum, Actual: $actualChecksum")
+            }
+
+            return checksumMatch
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during checksum verification", e)
+            return false
+        }
+    }
+
+    /**
+     * Checks if the model file is partially downloaded.
+     * Based on Gallery's partial download detection pattern.
+     */
+    private fun isModelPartiallyDownloaded(file: File, expectedSize: Long): Boolean {
+        return file.exists() && file.length() > 0 && file.length() < expectedSize
     }
 } 

@@ -70,14 +70,20 @@ class ModelDownloadRepositoryImpl @Inject constructor(
         Log.d(TAG, "Starting WorkManager download for model: ${model.name}")
         
         // Create input data exactly like Gallery's pattern
-        val inputData = Data.Builder()
+        val inputDataBuilder = Data.Builder()
             .putString(KEY_MODEL_NAME, model.name)
             .putString(KEY_MODEL_URL, model.url)
             .putString(KEY_MODEL_VERSION, model.version)
             .putString(KEY_MODEL_DOWNLOAD_MODEL_DIR, model.normalizedName)
             .putString(KEY_MODEL_DOWNLOAD_FILE_NAME, model.downloadFileName)
             .putLong(KEY_MODEL_TOTAL_BYTES, model.sizeInBytes)
-            .build()
+            
+        // Add checksum if available
+        if (model.sha256Checksum != null) {
+            inputDataBuilder.putString(KEY_MODEL_SHA256_CHECKSUM, model.sha256Checksum)
+        }
+        
+        val inputData = inputDataBuilder.build()
         
         // Create worker request exactly like Gallery's pattern
         val downloadWorkRequest = OneTimeWorkRequestBuilder<DownloadWorker>()
