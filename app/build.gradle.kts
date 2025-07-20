@@ -42,10 +42,18 @@ android {
 }
 
 dependencies {
+    // Feature modules
+    implementation(project(":feature:home"))
+    // TODO: Add other features as they're implemented
+    // implementation(project(":feature:chat"))
+    // implementation(project(":feature:courses"))
+    // implementation(project(":feature:settings"))
+    
     // Core modules
     implementation(project(":core:common"))
     implementation(project(":core:data"))
     implementation(project(":core:model"))
+    implementation(project(":core:designsystem"))
     
     // AI modules
     implementation(project(":ai:modelmanager"))
@@ -56,6 +64,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    // TODO: Add splash screen when available in version catalog
+    // implementation(libs.androidx.core.splashscreen)
     
     // Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -63,6 +73,11 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     
     // Hilt
     implementation(libs.hilt.android)

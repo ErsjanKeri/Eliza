@@ -27,15 +27,12 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 // Main app module
 include(":app")
 
-// Core modules (foundation layer)
+// Core modules (foundation layer) - only include existing modules
 include(":core:common")
 include(":core:model")
 include(":core:database")
 include(":core:data")
 include(":core:designsystem")
-include(":core:domain")
-include(":core:ui")
-include(":core:testing")
 
 // AI-specific modules
 include(":ai:modelmanager")
@@ -43,12 +40,9 @@ include(":ai:inference")
 include(":ai:rag")
 include(":ai:service")
 
-// Feature modules (UI layer)
+// Feature modules (UI layer) - only include existing modules
+include(":feature:home")
 include(":feature:chat")
-include(":feature:courses")
-include(":feature:camera")
-include(":feature:progress")
-include(":feature:settings")
 
 // Check Java version compatibility
 check(JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {

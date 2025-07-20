@@ -22,6 +22,8 @@ import com.example.ai.edge.eliza.core.data.repository.ProgressRepository
 import com.example.ai.edge.eliza.core.data.repository.mock.MockChatRepository
 import com.example.ai.edge.eliza.core.data.repository.mock.MockCourseRepository
 import com.example.ai.edge.eliza.core.data.repository.mock.MockProgressRepository
+import com.example.ai.edge.eliza.core.data.util.NetworkMonitor
+import com.example.ai.edge.eliza.core.data.util.SimpleNetworkMonitor
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -65,4 +67,14 @@ abstract class DataModule {
     abstract fun bindProgressRepository(
         mockProgressRepository: MockProgressRepository
     ): ProgressRepository
+
+    /**
+     * Binds the NetworkMonitor interface to its simple implementation.
+     * This provides basic network connectivity monitoring.
+     */
+    @Binds
+    @Singleton
+    abstract fun bindNetworkMonitor(
+        simpleNetworkMonitor: SimpleNetworkMonitor
+    ): NetworkMonitor
 } 
