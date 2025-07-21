@@ -63,26 +63,15 @@ class ElizaAppState(
     coroutineScope: CoroutineScope,
     networkMonitor: NetworkMonitor,
 ) {
-    private val previousDestination = mutableStateOf<NavDestination?>(null)
-
     val currentDestination: NavDestination?
-        @Composable get() {
-            // Collect the currentBackStackEntryFlow as a state
-            val currentEntry = navController.currentBackStackEntryFlow
-                .collectAsState(initial = null)
-
-            // Fallback to previousDestination if currentEntry is null
-            return currentEntry.value?.destination.also { destination ->
-                if (destination != null) {
-                    previousDestination.value = destination
-                }
-            } ?: previousDestination.value
-        }
+        @Composable get() = navController.currentDestination
 
     val currentTopLevelDestination: TopLevelDestination?
         @Composable get() {
-            return TopLevelDestination.entries.firstOrNull { topLevelDestination ->
-                currentDestination?.route == topLevelDestination.route
+            return when (currentDestination?.route) {
+                HOME.route -> HOME
+                SETTINGS.route -> SETTINGS
+                else -> HOME // Default to HOME
             }
         }
 

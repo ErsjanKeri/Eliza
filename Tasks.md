@@ -6,439 +6,529 @@
 ## Overview
 **Timeline**: 21 days  
 **Team**: 2-3 developers  
-**Goal**: Functional MVP demo with core AI tutoring features  
+**Goal**: Functional MVP demo with core AI tutoring features + NEW VIDEO EXPLANATION SYSTEM
 
-## Week 1: Foundation (Days 1-7)
+## Week 1: Foundation + Video Infrastructure (Days 1-7)
 
-### Day 1: Project Setup
-**Task**: Initialize project with modular architecture  
+### Day 1: Project Setup and Data Model Updates
+**Task**: Update project structure for video system and rename lessons to chapters  
 **Owner**: Lead Developer  
-**Estimated**: 4 hours  
+**Estimated**: 6 hours  
 **Dependencies**: None  
 
 **Subtasks**:
-- [x] Create multi-module Android project structure
-- [x] Set up Hilt dependency injection
-- [x] Configure build variants (dev, demo, prod)
-- [x] Integrate nowinandroid design system
-- [x] Set up version control and CI/CD
+- [x] Update all data models: Lesson → Chapter throughout codebase
+- [ ] Create new video explanation entities and database schema
+- [ ] Add network module to core for video API integration
+- [ ] Update Room database schema with new video tables
+- [ ] Create migration scripts for database changes
+- [ ] Update mock repositories with chapter-based data
+- [ ] Set up video API service interfaces
 
 **Acceptance Criteria**:
-- Project builds successfully
-- All modules compile without errors
-- Basic navigation between screens works
-- Hilt injection configured
+- All "lesson" references renamed to "chapter" 
+- New database tables for video explanations and exercise help
+- Video API service interfaces defined
+- Project builds successfully with updated schema
 
-### Day 2: Core Data Layer
-**Task**: Implement local database and data models  
+### Day 2: Network Infrastructure and Video API Integration
+**Task**: Implement network detection and video API client  
+**Owner**: Backend Developer  
+**Estimated**: 8 hours  
+**Dependencies**: Day 1 completion  
+
+**Subtasks**:
+- [ ] Create NetworkMonitor service for online/offline detection
+- [ ] Implement VideoExplanationService with Retrofit
+- [ ] Create API request/response models for chapter and exercise videos
+- [ ] Add video download functionality with progress tracking
+- [ ] Implement local video storage management
+- [ ] Create VideoManager for file operations
+- [ ] Add network state repository and data models
+
+**Acceptance Criteria**:
+- Network connectivity properly detected
+- Video API endpoints functional with proper error handling
+- Local video storage and retrieval working
+- Video download progress tracking implemented
+
+### Day 3: Database Implementation for Video System
+**Task**: Implement Room DAOs and entities for video features  
 **Owner**: Backend Developer  
 **Estimated**: 6 hours  
 **Dependencies**: Day 1 completion  
 
 **Subtasks**:
-- [x] Create Room database with course, lesson, and chat tables
-- [x] Implement repository pattern for data access
-- [x] Create data models for Course, Lesson, ChatMessage
-- [x] Set up local data storage utilities
-- [x] Write unit tests for data layer
+- [ ] Create VideoExplanationDao with CRUD operations
+- [ ] Create ExerciseHelpDao for help system
+- [ ] Update ChatSessionDao for chapter-based sessions
+- [ ] Create NetworkStateDao for connectivity tracking
+- [ ] Implement database migrations from current schema
+- [ ] Create repository implementations for video features
+- [ ] Add proper database indexing for performance
 
 **Acceptance Criteria**:
-- Database operations work correctly
-- All data models properly defined
-- Repository pattern implemented
-- Data persistence works across app restarts
+- All new entities persist correctly in database
+- Chapter-based chat sessions working
+- Video metadata properly stored and retrieved
+- Database migrations run successfully
 
-### Day 3: Gemma-3n Model Integration
-**Task**: Integrate model from gallery-edge-ai  
-**Owner**: AI Specialist  
+### Day 4: Chapter-Based Chat Architecture
+**Task**: Restructure chat system for chapter organization  
+**Owner**: Frontend Developer + AI Specialist  
 **Estimated**: 8 hours  
-**Dependencies**: Day 1 completion  
+**Dependencies**: Day 3 completion  
 
 **Subtasks**:
-- [x] Copy ModelManager from gallery-edge-ai
-- [x] Adapt model configuration for Gemma-3n
-- [x] Implement model download functionality
-- [x] Create model initialization service
-- [x] Test basic text inference
+- [ ] Update ChatRepository for chapter-specific sessions
+- [ ] Create ChapterChatService for session management  
+- [ ] Modify ElizaChatService for chapter context integration
+- [ ] Update RAG system for chapter-specific content
+- [ ] Implement chat session creation and switching
+- [ ] Add support for multiple sessions per chapter
+- [ ] Update chat message models for video content
 
 **Acceptance Criteria**:
-- Model downloads successfully (3.1GB)
-- Model initializes within 10 seconds
-- Basic text inference works
-- Memory usage under 6GB
+- Multiple chat sessions per chapter working
+- Chat sessions properly scoped to chapters
+- RAG enhancement using chapter content
+- Session creation and switching functional
 
-### Day 4: Basic UI Framework
-**Task**: Create core UI components and navigation  
+### Day 5: Basic Video UI Components
+**Task**: Create core video-related UI components  
 **Owner**: Frontend Developer  
-**Estimated**: 6 hours  
-**Dependencies**: Day 1 completion  
-
-**Subtasks**:
-- [ ] Set up Compose navigation
-- [ ] Create bottom navigation bar
-- [ ] Implement basic screen layouts
-- [ ] Add Material 3 theming
-- [ ] Create reusable UI components
-
-**Acceptance Criteria**:
-- Navigation between screens works
-- UI follows Material Design guidelines
-- Responsive design for different screen sizes
-- Dark/light theme support
-
-### Day 5: Chat Interface Foundation
-**Task**: Build basic chat UI and message handling  
-**Owner**: Frontend Developer  
-**Estimated**: 6 hours  
-**Dependencies**: Day 2, 4 completion  
-
-**Subtasks**:
-- [ ] Create chat message UI components
-- [ ] Implement message list with scrolling
-- [ ] Add text input field with send button
-- [ ] Connect to chat data layer
-- [ ] Handle message state management
-
-**Acceptance Criteria**:
-- Chat interface displays messages correctly
-- Text input and send functionality works
-- Message history persists
-- Loading states handled properly
-
-### Day 6: AI Chat Integration
-**Task**: Connect chat UI to Gemma-3n model  
-**Owner**: AI Specialist + Frontend Developer  
-**Estimated**: 8 hours  
-**Dependencies**: Day 3, 5 completion  
-
-**Subtasks**:
-- [ ] Create ChatService to handle AI interactions
-- [ ] Implement prompt engineering for educational context
-- [ ] Connect chat UI to model inference
-- [ ] Add typing indicators and loading states
-- [ ] Handle error cases and retries
-
-**Acceptance Criteria**:
-- Users can send messages and receive AI responses
-- Response time under 3 seconds
-- Error handling works correctly
-- Chat history saved properly
-
-### Day 7: Testing and Bug Fixes
-**Task**: Test Week 1 functionality and fix issues  
-**Owner**: All Developers  
-**Estimated**: 6 hours  
-**Dependencies**: Days 1-6 completion  
-
-**Subtasks**:
-- [ ] Test basic chat functionality
-- [ ] Verify model performance
-- [ ] Fix any critical bugs
-- [ ] Optimize memory usage
-- [ ] Prepare demo for Week 1 milestone
-
-**Acceptance Criteria**:
-- Basic chat demo works reliably
-- No critical bugs or crashes
-- Performance meets targets
-- Code ready for Week 2 features
-
-## Week 2: Core Features (Days 8-14)
-
-### Day 8: Image Processing Setup
-**Task**: Implement camera and image processing  
-**Owner**: AI Specialist  
-**Estimated**: 6 hours  
-**Dependencies**: Day 6 completion  
-
-**Subtasks**:
-- [ ] Add camera permission handling
-- [ ] Create image capture UI
-- [ ] Implement image picker for gallery
-- [ ] Add image preprocessing utilities
-- [ ] Test basic image capture flow
-
-**Acceptance Criteria**:
-- Camera functionality works
-- Image picker integration complete
-- Images properly preprocessed
-- Permissions handled correctly
-
-### Day 9: Vision-Based Problem Solving
-**Task**: Integrate image analysis with Gemma-3n  
-**Owner**: AI Specialist  
-**Estimated**: 8 hours  
-**Dependencies**: Day 8 completion  
-
-**Subtasks**:
-- [ ] Integrate Gemma-3n vision capabilities
-- [ ] Create image-to-text processing pipeline
-- [ ] Implement math problem recognition
-- [ ] Add step-by-step solution generation
-- [ ] Test with various math problem images
-
-**Acceptance Criteria**:
-- Images with math problems processed correctly
-- Step-by-step solutions generated
-- Vision analysis works reliably
-- Response time under 5 seconds for images
-
-### Day 10: Course Content System
-**Task**: Build course and lesson management  
-**Owner**: Backend Developer  
 **Estimated**: 6 hours  
 **Dependencies**: Day 2 completion  
 
 **Subtasks**:
-- [ ] Create course content data structure
-- [ ] Implement lesson content parser
-- [ ] Add sample math course content
-- [ ] Create course navigation UI
-- [ ] Implement lesson completion tracking
+- [ ] Create VideoRequestButton with network state awareness
+- [ ] Implement video player component for chat messages
+- [ ] Create video download progress indicator
+- [ ] Build network status indicators (online/offline)
+- [ ] Create video loading and error states
+- [ ] Implement video storage management UI
+- [ ] Add video metadata display components
 
 **Acceptance Criteria**:
-- Course content displays correctly
-- Lesson navigation works
-- Progress tracking functional
-- Sample content available
+- Video request button shows/hides based on network
+- Video player displays downloaded videos
+- Loading states and progress indicators work
+- Network status clearly indicated to users
 
-### Day 11: Course Content UI
-**Task**: Create course browsing and lesson viewing  
+### Day 6: Chapter Interface Layout (Gallery-Style)
+**Task**: Build split-screen chapter interface with chat sidebar  
+**Owner**: Frontend Developer  
+**Estimated**: 8 hours  
+**Dependencies**: Days 4, 5 completion  
+
+**Subtasks**:
+- [ ] Create split-screen layout (chapter content + chat)
+- [ ] Implement chapter content display (markdown rendering)
+- [ ] Build chat session sidebar with session list
+- [ ] Create active chat interface with message history
+- [ ] Add chat session creation and naming
+- [ ] Implement session switching functionality
+- [ ] Add responsive design for different screen sizes
+
+**Acceptance Criteria**:
+- Split-screen layout matches design mockups
+- Chapter content displays properly
+- Chat sessions can be created and switched
+- Interface responsive and user-friendly
+
+### Day 7: Video Request Integration
+**Task**: Connect video request UI with backend services  
+**Owner**: Full Team  
+**Estimated**: 6 hours  
+**Dependencies**: Days 2, 6 completion  
+
+**Subtasks**:
+- [ ] Connect video request button to API service
+- [ ] Implement video download and storage flow
+- [ ] Add video display in chat messages
+- [ ] Create error handling for failed video requests
+- [ ] Test video request flow end-to-end
+- [ ] Add loading states during video processing
+- [ ] Implement video retry mechanism
+
+**Acceptance Criteria**:
+- Video requests successfully sent to API
+- Videos download and display in chat
+- Error handling and retry logic working
+- End-to-end video flow functional
+
+## Week 2: Exercise Help System + Advanced Features (Days 8-14)
+
+### Day 8: Exercise Help Infrastructure
+**Task**: Build exercise help system with dual options  
+**Owner**: Backend Developer + AI Specialist  
+**Estimated**: 7 hours  
+**Dependencies**: Day 7 completion  
+
+**Subtasks**:
+- [ ] Create ExerciseHelpService for wrong answer handling
+- [ ] Implement trial generation using existing AI system
+- [ ] Add local AI explanation generation
+- [ ] Create exercise video request functionality
+- [ ] Implement help history tracking per exercise
+- [ ] Add user feedback system for explanations
+- [ ] Create help type management (local vs video)
+
+**Acceptance Criteria**:
+- Exercise help options working (trial vs explanation)
+- Local AI explanations generated properly
+- Exercise video requests functional
+- Help history properly tracked
+
+### Day 9: Exercise Help UI Implementation
+**Task**: Create exercise help interface and user experience  
 **Owner**: Frontend Developer  
 **Estimated**: 6 hours  
-**Dependencies**: Day 10 completion  
+**Dependencies**: Day 8 completion  
 
 **Subtasks**:
-- [ ] Design course list interface
-- [ ] Create lesson content viewer
-- [ ] Add progress indicators
-- [ ] Implement course search functionality
-- [ ] Add bookmarking features
+- [ ] Create exercise help screen layout
+- [ ] Implement "Generate New Trial" functionality
+- [ ] Build "Ask for Explanation" interface
+- [ ] Add local vs video explanation options
+- [ ] Create help history display
+- [ ] Implement user feedback collection
+- [ ] Add exercise help navigation
 
 **Acceptance Criteria**:
-- Course browsing interface complete
-- Lesson content displays properly
-- Progress visualization works
-- Search and bookmarking functional
+- Exercise help UI matches design specifications
+- Both help options (trial/explanation) accessible
+- Help history displays correctly
+- User can provide feedback on explanations
 
-### Day 12: Contextual AI Responses
-**Task**: Implement RAG for course-aware responses  
-**Owner**: AI Specialist  
-**Estimated**: 8 hours  
-**Dependencies**: Day 11 completion  
+### Day 10: Advanced Chat Features
+**Task**: Enhance chat interface with advanced functionality  
+**Owner**: Frontend Developer + Backend Developer  
+**Estimated**: 6 hours  
+**Dependencies**: Day 6 completion  
 
 **Subtasks**:
-- [ ] Create simple vector storage for course content
-- [ ] Implement basic RAG retrieval
-- [ ] Integrate course context into AI responses
-- [ ] Add topic-specific response prompts
-- [ ] Test contextual understanding
+- [ ] Add chat session statistics (message/video count)
+- [ ] Implement chat history search functionality
+- [ ] Create chat export functionality
+- [ ] Add message timestamp and read indicators
+- [ ] Implement chat session archiving
+- [ ] Add bulk operations for chat management
+- [ ] Create chat session templates
 
 **Acceptance Criteria**:
-- AI responses reference course content
-- Contextual relevance improved
-- Topic-specific help available
-- RAG system performs well
+- Chat sessions show proper statistics
+- Users can search chat history
+- Chat export working in multiple formats
+- Session management features complete
 
-### Day 13: Progress Tracking
-**Task**: Build progress analytics and visualization  
+### Day 11: Video Storage Management
+**Task**: Implement comprehensive video storage features  
+**Owner**: Backend Developer  
+**Estimated**: 6 hours  
+**Dependencies**: Day 7 completion  
+
+**Subtasks**:
+- [ ] Create video storage analytics and reporting
+- [ ] Implement automatic cleanup for old videos
+- [ ] Add manual video deletion functionality
+- [ ] Create storage quota management
+- [ ] Implement video compression for space saving
+- [ ] Add video metadata management
+- [ ] Create storage optimization recommendations
+
+**Acceptance Criteria**:
+- Video storage properly managed and monitored
+- Automatic cleanup prevents storage overflow
+- Users can manually manage video storage
+- Storage analytics provide useful insights
+
+### Day 12: Network Resilience and Offline Features
+**Task**: Enhance offline functionality and network handling  
 **Owner**: Backend Developer + Frontend Developer  
-**Estimated**: 6 hours  
+**Estimated**: 7 hours  
 **Dependencies**: Day 11 completion  
 
 **Subtasks**:
-- [ ] Implement progress calculation logic
-- [ ] Create progress visualization components
-- [ ] Add time tracking for sessions
-- [ ] Build achievement system
-- [ ] Create progress dashboard
+- [ ] Implement video request queuing for offline-to-online
+- [ ] Add network transition handling (online ↔ offline)
+- [ ] Create robust error recovery for network failures
+- [ ] Implement video request retry with exponential backoff
+- [ ] Add bandwidth detection for video quality
+- [ ] Create offline mode indicators throughout UI
+- [ ] Implement graceful degradation for network features
 
 **Acceptance Criteria**:
-- Progress tracking accurate
-- Visual progress indicators work
-- Time tracking functional
-- Achievement system operational
+- Smooth transitions between online and offline modes
+- Video requests queue when offline and process when online
+- Network errors handled gracefully with user feedback
+- Offline mode clearly communicated to users
 
-### Day 14: Integration Testing
-**Task**: Test all Week 2 features integration  
-**Owner**: All Developers  
+### Day 13: Performance Optimization
+**Task**: Optimize app performance for video and chat features  
+**Owner**: Lead Developer  
 **Estimated**: 6 hours  
+**Dependencies**: Day 12 completion  
+
+**Subtasks**:
+- [ ] Optimize chat message loading with pagination
+- [ ] Implement lazy loading for video thumbnails
+- [ ] Add video streaming capabilities for large files
+- [ ] Optimize database queries with proper indexing
+- [ ] Implement memory management for video playback
+- [ ] Add performance monitoring and metrics
+- [ ] Optimize UI rendering for large chat sessions
+
+**Acceptance Criteria**:
+- Chat interface responsive with many messages
+- Video loading and playback smooth
+- Memory usage stays within acceptable limits
+- Database queries perform efficiently
+
+### Day 14: Integration Testing and Polish
+**Task**: Test all new features and fix integration issues  
+**Owner**: Full Team  
+**Estimated**: 8 hours  
 **Dependencies**: Days 8-13 completion  
 
 **Subtasks**:
-- [ ] Test complete user workflows
-- [ ] Verify feature interactions
-- [ ] Performance testing
-- [ ] Bug fixes and optimization
-- [ ] Prepare Week 2 demo
+- [ ] Test complete video request flow (chapter + exercise)
+- [ ] Verify chat session management across chapters
+- [ ] Test network transition scenarios
+- [ ] Verify exercise help system end-to-end
+- [ ] Performance testing under load
+- [ ] UI polish and consistency improvements
+- [ ] Bug fixes from integration testing
 
 **Acceptance Criteria**:
-- All features work together
-- No critical integration issues
-- Performance targets met
-- Demo ready for stakeholders
+- All video features working reliably
+- Chapter-based chat system stable
+- Exercise help system complete
+- Performance meets target metrics
 
-## Week 3: Polish and Demo (Days 15-21)
+## Week 3: Polish, Testing, and Demo Preparation (Days 15-21)
 
-### Day 15: Performance Optimization
-**Task**: Optimize app performance and memory usage  
-**Owner**: Lead Developer  
+### Day 15: Comprehensive UI/UX Polish
+**Task**: Refine user interface and experience  
+**Owner**: Frontend Developer + Designer  
 **Estimated**: 8 hours  
 **Dependencies**: Day 14 completion  
 
 **Subtasks**:
-- [ ] Profile memory usage and optimize
-- [ ] Improve AI response times
-- [ ] Optimize database queries
-- [ ] Reduce app startup time
-- [ ] Fix memory leaks
-
-**Acceptance Criteria**:
-- Memory usage under 6GB consistently
-- AI responses under 3 seconds
-- App startup under 3 seconds
-- No memory leaks detected
-
-### Day 16: UI/UX Polish
-**Task**: Enhance user interface and experience  
-**Owner**: Frontend Developer  
-**Estimated**: 6 hours  
-**Dependencies**: Day 15 completion  
-
-**Subtasks**:
-- [ ] Improve visual design consistency
-- [ ] Add smooth animations and transitions
-- [ ] Enhance accessibility features
-- [ ] Optimize for different screen sizes
-- [ ] Add helpful user guidance
+- [ ] Polish chapter interface layout and spacing
+- [ ] Enhance video player controls and experience
+- [ ] Improve chat session management UX
+- [ ] Add animations and transitions for video features
+- [ ] Refine exercise help interface design
+- [ ] Implement consistent loading states
+- [ ] Add haptic feedback for interactions
 
 **Acceptance Criteria**:
 - UI visually polished and consistent
-- Smooth animations implemented
-- Accessibility requirements met
-- Responsive design works well
+- User experience smooth and intuitive
+- Animations enhance rather than distract
+- Interface meets accessibility standards
 
-### Day 17: Error Handling and Edge Cases
-**Task**: Implement robust error handling  
+### Day 16: Advanced Error Handling and Edge Cases
+**Task**: Handle edge cases and improve error resilience  
 **Owner**: Backend Developer  
 **Estimated**: 6 hours  
 **Dependencies**: Day 15 completion  
 
 **Subtasks**:
-- [ ] Add comprehensive error handling
-- [ ] Implement graceful degradation
+- [ ] Handle video API failures gracefully
+- [ ] Implement proper timeout handling for video requests
+- [ ] Add validation for video file formats and sizes
+- [ ] Handle storage full scenarios
+- [ ] Implement network instability recovery
+- [ ] Add comprehensive error logging
 - [ ] Create user-friendly error messages
-- [ ] Add retry mechanisms
-- [ ] Test failure scenarios
 
 **Acceptance Criteria**:
-- Robust error handling in place
-- User-friendly error messages
-- Graceful degradation works
-- Recovery mechanisms functional
+- App handles all error scenarios gracefully
+- Users receive helpful error messages
+- Error recovery mechanisms work automatically
+- System remains stable under all conditions
 
-### Day 18: Content and Data Preparation
-**Task**: Prepare demo content and test data  
-**Owner**: All Developers  
-**Estimated**: 4 hours  
+### Day 17: Demo Content and Data Preparation
+**Task**: Create comprehensive demo content and scenarios  
+**Owner**: All Developers + Content Creator  
+**Estimated**: 6 hours  
+**Dependencies**: Day 16 completion  
+
+**Subtasks**:
+- [ ] Create demo chapters with rich markdown content
+- [ ] Prepare sample video responses for demo
+- [ ] Set up demo exercises with incorrect answers
+- [ ] Create realistic chat conversation examples
+- [ ] Prepare video explanation scenarios
+- [ ] Set up demo user profiles and progress
+- [ ] Create demo script for video features
+
+**Acceptance Criteria**:
+- Demo content showcases all video features
+- Realistic usage scenarios prepared
+- Demo flow rehearsed and polished
+- Video explanations demonstrate system value
+
+### Day 18: Performance Testing and Optimization
+**Task**: Final performance testing and optimization  
+**Owner**: Lead Developer  
+**Estimated**: 8 hours  
 **Dependencies**: Day 17 completion  
 
 **Subtasks**:
-- [ ] Create comprehensive demo content
-- [ ] Prepare test math problems
-- [ ] Set up demo user scenarios
-- [ ] Create sample conversations
-- [ ] Prepare demo script
+- [ ] Load testing with multiple video downloads
+- [ ] Memory usage testing during video playback
+- [ ] Battery consumption analysis
+- [ ] Network usage optimization testing
+- [ ] Database performance under load
+- [ ] UI responsiveness testing
+- [ ] Video quality vs bandwidth optimization
 
 **Acceptance Criteria**:
-- Demo content ready and tested
-- Test scenarios prepared
-- Demo script finalized
-- All sample data works correctly
+- App performs well under heavy video usage
+- Memory and battery usage optimized
+- Network usage efficient
+- All performance targets met
 
-### Day 19: Final Testing and Bug Fixes
-**Task**: Comprehensive testing and issue resolution  
-**Owner**: All Developers  
-**Estimated**: 8 hours  
+### Day 19: Security and Privacy Review
+**Task**: Security audit for video and network features  
+**Owner**: Lead Developer + Security Specialist  
+**Estimated**: 6 hours  
 **Dependencies**: Day 18 completion  
 
 **Subtasks**:
-- [ ] End-to-end testing of all features
-- [ ] Device compatibility testing
-- [ ] Performance regression testing
-- [ ] Critical bug fixes
-- [ ] Final code review
+- [ ] Audit video API communication security
+- [ ] Review local video storage encryption
+- [ ] Verify user data privacy in video requests
+- [ ] Check for potential data leaks in video system
+- [ ] Review network request authentication
+- [ ] Audit video file handling security
+- [ ] Verify compliance with privacy requirements
 
 **Acceptance Criteria**:
-- All features tested thoroughly
-- No critical bugs remaining
-- Performance standards met
-- Code quality approved
+- Video system meets security standards
+- User privacy protected in all video interactions
+- No security vulnerabilities identified
+- Compliance requirements satisfied
 
-### Day 20: Demo Preparation
-**Task**: Prepare final demo and documentation  
-**Owner**: Lead Developer  
-**Estimated**: 4 hours  
+### Day 20: Final Testing and Bug Fixes
+**Task**: Comprehensive testing and critical bug fixes  
+**Owner**: Full Team  
+**Estimated**: 8 hours  
 **Dependencies**: Day 19 completion  
 
 **Subtasks**:
-- [ ] Create demo presentation
-- [ ] Prepare demo devices
-- [ ] Practice demo scenarios
-- [ ] Create technical documentation
-- [ ] Prepare deployment package
+- [ ] End-to-end testing of all video features
+- [ ] Cross-device testing for video playback
+- [ ] Network scenario testing (poor connection, etc.)
+- [ ] Stress testing with multiple simultaneous video requests
+- [ ] User acceptance testing with focus groups
+- [ ] Critical bug fixes only
+- [ ] Final code review
 
 **Acceptance Criteria**:
-- Demo presentation ready
-- Demo runs smoothly
-- Documentation complete
-- Deployment package prepared
+- All critical bugs resolved
+- Video system working reliably across devices
+- User feedback incorporated
+- System ready for demo
 
-### Day 21: Demo Day and Handover
-**Task**: Present demo and prepare for next phase  
+### Day 21: Demo Preparation and Presentation
+**Task**: Final demo preparation and stakeholder presentation  
 **Owner**: All Developers  
-**Estimated**: 4 hours  
+**Estimated**: 6 hours  
 **Dependencies**: Day 20 completion  
 
 **Subtasks**:
-- [ ] Present working demo
-- [ ] Gather feedback and requirements
-- [ ] Document lessons learned
-- [ ] Plan next iteration
-- [ ] Handover to next development phase
+- [ ] Final demo rehearsal with video features
+- [ ] Prepare demo devices with sample content
+- [ ] Create presentation highlighting video system
+- [ ] Document video feature capabilities
+- [ ] Prepare technical architecture explanation
+- [ ] Create user guide for video features
+- [ ] Present to stakeholders
 
 **Acceptance Criteria**:
-- Successful demo presentation
-- Feedback collected and documented
-- Next phase requirements clarified
-- Handover documentation complete
+- Successful demo showcasing all video features
+- Stakeholders understand system capabilities
+- Technical documentation complete
+- Next phase requirements gathered
 
-## Critical Success Factors
+## New Critical Success Factors
 
 ### Technical Milestones
-- [ ] Gemma-3n model integration complete by Day 3
-- [ ] Basic chat functionality working by Day 6
-- [ ] Image processing operational by Day 9
-- [ ] Course content system ready by Day 11
-- [ ] Performance optimization complete by Day 15
+- [ ] Video API integration complete by Day 2
+- [ ] Chapter-based chat system working by Day 6
+- [ ] Exercise help system functional by Day 9
+- [ ] Network resilience implemented by Day 12
+- [ ] Performance optimization complete by Day 18
 
-### Quality Gates
-- [ ] No critical bugs at each week milestone
-- [ ] Performance targets met at each checkpoint
-- [ ] Code review completed for all major features
-- [ ] User testing feedback incorporated
-- [ ] Demo readiness verified
+### Video System Quality Gates
+- [ ] Video request success rate > 90% when online
+- [ ] Video download time < 15 seconds for 2MB files
+- [ ] Local video playback starts within 2 seconds
+- [ ] Network detection accuracy > 99%
+- [ ] Video storage management working efficiently
 
-### Risk Mitigation
-- **Model Integration Issues**: Have fallback to simpler text responses
-- **Performance Problems**: Implement graceful degradation
-- **Timeline Delays**: Prioritize core features over polish
-- **Device Compatibility**: Test on multiple devices early
-- **Memory Constraints**: Continuous monitoring and optimization
+### User Experience Targets
+- [ ] Intuitive video request process with minimal steps
+- [ ] Clear network status communication
+- [ ] Smooth chapter-to-chat workflow
+- [ ] Effective exercise help discovery and usage
+- [ ] Reliable offline mode functionality
 
-## Success Metrics
-- [ ] Demo completes 5-minute presentation without issues
-- [ ] AI responds to math questions with 90% relevance
-- [ ] Image processing works on 80% of clear math problems
-- [ ] App performance meets all defined targets
-- [ ] Stakeholder approval for next development phase
+## Risk Mitigation for Video Features
+
+### Technical Risks
+- **Video API Reliability**: Implement robust retry and fallback mechanisms
+- **Storage Management**: Add automatic cleanup and user controls
+- **Network Handling**: Comprehensive offline/online state management
+- **Performance Impact**: Lazy loading and efficient video handling
+
+### User Experience Risks
+- **Feature Discovery**: Clear UI indicators and onboarding
+- **Network Confusion**: Prominent online/offline status indicators
+- **Storage Concerns**: Transparent storage usage and management
+- **Video Quality**: Adaptive quality based on network conditions
+
+## Enhanced Success Metrics
+
+### Video Feature Metrics
+- [ ] Video explanation requests per user session > 2
+- [ ] Video completion rate > 80%
+- [ ] User satisfaction with video explanations > 85%
+- [ ] Video feature usage grows over demo period
+- [ ] Technical demo showcases full video workflow
+
+### Integration Metrics
+- [ ] Chapter-based chat adoption > 90% of test users
+- [ ] Exercise help system usage > 70% for wrong answers
+- [ ] Network transition handling success rate 100%
+- [ ] Video storage management user satisfaction > 85%
+
+### Overall System Metrics
+- [ ] Feature completeness: 100% of specified video features
+- [ ] Performance: All video targets met
+- [ ] Reliability: < 1% critical issues during demo
+- [ ] User Experience: Positive feedback on video integration
+
+## Implementation Notes
+
+### Development Approach
+- **Parallel Development**: UI and backend video features developed simultaneously
+- **Incremental Testing**: Each video feature tested individually before integration
+- **User-Centric Design**: Video UI designed based on Gallery patterns
+- **Performance First**: Video features optimized from initial implementation
+
+### Quality Assurance
+- **Continuous Integration**: Automated testing for video API integration
+- **Device Testing**: Video playback tested on multiple Android devices
+- **Network Testing**: Comprehensive testing under various network conditions
+- **User Testing**: Regular feedback sessions throughout development
+
+### Documentation Requirements
+- **API Documentation**: Complete video API endpoint documentation
+- **User Guides**: Clear instructions for video feature usage
+- **Technical Specs**: Detailed video system architecture documentation
+- **Troubleshooting**: Common video issues and solutions guide
