@@ -66,12 +66,12 @@ class MockProgressRepository @Inject constructor() : ProgressRepository {
     private val mockAchievements = mutableMapOf<String, Achievement>()
 
     init {
-        // Create some mock progress data
-        mockUserProgress["course1"] = UserProgress(
-            id = "progress1",
-            courseId = "course1",
+        // Create mock progress data matching the course IDs from MockCourseRepository
+        mockUserProgress["course_algebra_101"] = UserProgress(
+            id = "progress_algebra_101",
+            courseId = "course_algebra_101",
             completedLessons = 3,
-            totalLessons = 10,
+            totalLessons = 8,
             completedExercises = 8,
             totalExercises = 25,
             correctAnswers = 15,
@@ -83,16 +83,45 @@ class MockProgressRepository @Inject constructor() : ProgressRepository {
             updatedAt = System.currentTimeMillis() - 86400000
         )
 
-        mockLessonProgress["lesson1"] = LessonProgress(
-            id = "lessonProgress1",
-            lessonId = "lesson1",
-            userId = "user1",
-            isCompleted = false,
+        mockUserProgress["course_geometry_101"] = UserProgress(
+            id = "progress_geometry_101",
+            courseId = "course_geometry_101",
+            completedLessons = 1,
+            totalLessons = 10,
             completedExercises = 3,
-            totalExercises = 5,
+            totalExercises = 30,
+            correctAnswers = 2,
+            totalAnswers = 3,
+            timeSpentMinutes = 60,
+            streakDays = 2,
+            lastStudiedAt = System.currentTimeMillis() - 172800000, // 2 days ago
+            createdAt = System.currentTimeMillis() - 1209600000, // 2 weeks ago
+            updatedAt = System.currentTimeMillis() - 172800000
+        )
+
+        mockLessonProgress["lesson_1"] = LessonProgress(
+            id = "lessonProgress_1",
+            lessonId = "lesson_1",
+            userId = "user_default",
+            isCompleted = true,
+            completedExercises = 3,
+            totalExercises = 3,
             timeSpentMinutes = 45,
             firstAccessAt = System.currentTimeMillis() - 86400000,
             lastAccessAt = System.currentTimeMillis() - 3600000,
+            completedAt = System.currentTimeMillis() - 86400000
+        )
+
+        mockLessonProgress["lesson_2"] = LessonProgress(
+            id = "lessonProgress_2",
+            lessonId = "lesson_2",
+            userId = "user_default",
+            isCompleted = false,
+            completedExercises = 1,
+            totalExercises = 5,
+            timeSpentMinutes = 20,
+            firstAccessAt = System.currentTimeMillis() - 3600000,
+            lastAccessAt = System.currentTimeMillis() - 1800000,
             completedAt = null
         )
 
