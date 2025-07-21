@@ -220,15 +220,15 @@ This ensures:
 
 ```mermaid
 graph LR
-    Hilt[Hilt Container] --> |@Inject| MainActivity
-    Hilt --> |@HiltViewModel| HomeViewModel
-    Hilt --> |@Binds| CourseRepository
-    Hilt --> |@Binds| ProgressRepository
+    Hilt[Hilt Container] -->|Inject| MainActivity
+    Hilt -->|HiltViewModel| HomeViewModel
+    Hilt -->|Binds| CourseRepository
+    Hilt -->|Binds| ProgressRepository
     
-    MainActivity --> |rememberElizaAppState| AppState
-    AppState --> |Navigation| HomeScreen
-    HomeScreen --> |@HiltViewModel| HomeViewModel
-    HomeViewModel --> |Constructor Injection| Repositories
+    MainActivity -->|rememberElizaAppState| AppState
+    AppState -->|Navigation| HomeScreen
+    HomeScreen -->|HiltViewModel| HomeViewModel
+    HomeViewModel -->|Constructor Injection| Repositories
 ```
 
 ## 🎯 Key Design Patterns
