@@ -23,6 +23,7 @@ import com.example.ai.edge.eliza.core.database.converter.Converters
 
 /**
  * Room entity for courses.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Entity(tableName = "courses")
 @TypeConverters(Converters::class)
@@ -33,7 +34,7 @@ data class CourseEntity(
     val subject: String,
     val grade: String,
     val description: String,
-    val totalLessons: Int,
+    val totalChapters: Int, // RENAMED from totalLessons
     val estimatedHours: Int,
     val imageUrl: String? = null,
     val isDownloaded: Boolean = false,
@@ -45,10 +46,11 @@ data class CourseEntity(
 )
 
 /**
- * Room entity for lessons.
+ * Room entity for chapters.
+ * RENAMED from LessonEntity to ChapterEntity.
  */
 @Entity(
-    tableName = "lessons",
+    tableName = "chapters", // RENAMED from "lessons"
     foreignKeys = [
         androidx.room.ForeignKey(
             entity = CourseEntity::class,
@@ -58,11 +60,11 @@ data class CourseEntity(
         )
     ]
 )
-data class LessonEntity(
+data class ChapterEntity(
     @PrimaryKey
     val id: String,
     val courseId: String,
-    val lessonNumber: Int,
+    val chapterNumber: Int, // RENAMED from lessonNumber
     val title: String,
     val markdownContent: String,
     val imageReferences: List<String> = emptyList(),
@@ -73,14 +75,15 @@ data class LessonEntity(
 
 /**
  * Room entity for exercises.
+ * UPDATED: Changed foreign key reference from lessons to chapters.
  */
 @Entity(
     tableName = "exercises",
     foreignKeys = [
         androidx.room.ForeignKey(
-            entity = LessonEntity::class,
+            entity = ChapterEntity::class, // UPDATED from LessonEntity
             parentColumns = ["id"],
-            childColumns = ["lessonId"],
+            childColumns = ["chapterId"], // UPDATED from lessonId
             onDelete = androidx.room.ForeignKey.CASCADE
         )
     ]
@@ -88,7 +91,7 @@ data class LessonEntity(
 data class ExerciseEntity(
     @PrimaryKey
     val id: String,
-    val lessonId: String,
+    val chapterId: String, // RENAMED from lessonId
     val questionText: String,
     val options: List<String>,
     val correctAnswerIndex: Int,
@@ -127,4 +130,78 @@ data class TrialEntity(
     val userAnswer: Int? = null,
     val isCorrect: Boolean? = null,
     val generatedAt: Long = System.currentTimeMillis()
+)
+
+/**
+ * Room entity for video explanations.
+ * NEW: Core entity for the video explanation system.
+ */
+@Entity(
+    tableName = "video_explanations",
+    foreignKeys = [
+        androidx.room.ForeignKey(
+            entity = ChapterEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["chapterId"],
+            onDelete = androidx.room.ForeignKey.CASCADE
+        ),
+        androidx.room.ForeignKey(
+            entity = ExerciseEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["exerciseId"],
+            onDelete = androidx.room.ForeignKey.CASCADE
+        )
+    ]
+)
+data class VideoExplanationEntity(
+    @PrimaryKey
+    val id: String,
+    val userId: String, // User-specific, no sharing between users
+    val chapterId: String? = null, // For chapter video explanations
+    val exerciseId: String? = null, // For exercise video explanations
+    val requestType: String, // VideoRequestType enum as string
+    val userQuestion: String,
+    val contextData: String, // JSON of chapter markdown or exercise data
+    val videoUrl: String, // Original API URL
+    val localFilePath: String, // Local storage path
+    val fileSizeBytes: Long,
+    val durationSeconds: Int,
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastAccessedAt: Long = System.currentTimeMillis()
+)
+
+/**
+ * Room entity for exercise help.
+ * NEW: Core entity for the exercise help system.
+ */
+@Entity(
+    tableName = "exercise_help",
+    foreignKeys = [
+        androidx.room.ForeignKey(
+            entity = ExerciseEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["exerciseId"],
+            onDelete = androidx.room.ForeignKey.CASCADE
+        ),
+        androidx.room.ForeignKey(
+            entity = VideoExplanationEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["videoExplanationId"],
+            onDelete = androidx.room.ForeignKey.SET_NULL
+        )
+    ]
+)
+data class ExerciseHelpEntity(
+    @PrimaryKey
+    val id: String,
+    val exerciseId: String,
+    val userId: String,
+    val incorrectAnswer: Int,
+    val correctAnswer: Int,
+    val userQuestion: String? = null,
+    val helpType: String, // HelpType enum as string
+    val explanation: String? = null, // For local AI explanations
+    val videoExplanationId: String? = null, // FK to video_explanations
+    val createdAt: Long = System.currentTimeMillis(),
+    val wasHelpful: Boolean? = null // User feedback
 ) 

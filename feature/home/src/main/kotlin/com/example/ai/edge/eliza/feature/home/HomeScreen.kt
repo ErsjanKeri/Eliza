@@ -51,7 +51,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaBackground
+import com.example.ai.edge.eliza.core.designsystem.component.CourseCard
 import com.example.ai.edge.eliza.core.designsystem.theme.ElizaTheme
 import com.example.ai.edge.eliza.core.model.Course
 
@@ -99,11 +102,10 @@ internal fun HomeScreen(
     Box(modifier = modifier.fillMaxSize()) {
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Adaptive(300.dp),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalItemSpacing = 24.dp,
-            modifier = Modifier.testTag("home:feed"),
-            state = state,
+            verticalItemSpacing = 16.dp,
+            modifier = Modifier.fillMaxSize(),
         ) {
             // Welcome header
             item(span = StaggeredGridItemSpan.FullLine, contentType = "header") {
@@ -180,8 +182,8 @@ private fun WelcomeHeader(
                 Text(
                     text = buildString {
                         val overview = progressState.overallProgress
-                        if (overview.totalLessonsCompleted > 0) {
-                            append("${overview.totalLessonsCompleted} lessons completed")
+                        if (overview.totalChaptersCompleted > 0) {
+                            append("${overview.totalChaptersCompleted} chapters completed")
                             if (overview.formattedTimeSpent.isNotEmpty()) {
                                 append(" • ${overview.formattedTimeSpent} studied")
                             }
@@ -261,7 +263,7 @@ private fun LazyStaggeredGridScope.continueLearningContent(
             if (courseFeedState.continuingCourses.isEmpty()) {
                 item(span = StaggeredGridItemSpan.FullLine) {
                     EmptyState(
-                        message = "No courses in progress.\nStart a new course to begin learning!",
+                        message = "🚀 Ready to start your learning journey?\nTap 'Start New Course' to begin with your first course!",
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -303,7 +305,7 @@ private fun LazyStaggeredGridScope.startNewCourseContent(
             if (courseFeedState.newCourses.isEmpty()) {
                 item(span = StaggeredGridItemSpan.FullLine) {
                     EmptyState(
-                        message = "All courses have been started!\nCheck the Continue Learning tab.",
+                        message = "🎉 Amazing! You've started all available courses!\nKeep up the great work in 'Continue Learning'.",
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -389,8 +391,8 @@ private fun EmptyState(
 }
 
 /**
- * Placeholder course card for continuing courses.
- * TODO: Create proper course card components.
+ * Beautiful course card for continuing courses with progress.
+ * Features circular progress indicator and expandable course details.
  */
 @Composable
 private fun ContinueCourseCard(
@@ -398,15 +400,38 @@ private fun ContinueCourseCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // TODO: Implement with design system components
-    Box(modifier = modifier.padding(8.dp)) {
-        Text("Continue: ${courseWithProgress.course.title}")
-    }
+    val course = courseWithProgress.course
+    val progress = courseWithProgress.progress
+    
+    CourseCard(
+        title = course.title,
+        description = course.description,
+        subject = course.subject.displayName,
+        grade = course.grade,
+        totalChapters = course.totalChapters,
+        completedChapters = progress?.completedChapters ?: 0,
+        estimatedHours = course.estimatedHours,
+        progressPercentage = courseWithProgress.progressPercentage,
+        isDownloaded = course.isDownloaded,
+        isStarted = courseWithProgress.isStarted,
+        timeSpent = if (progress != null && progress.timeSpentMinutes > 0) {
+            val hours = progress.timeSpentMinutes / 60
+            val minutes = progress.timeSpentMinutes % 60
+            when {
+                hours > 0 && minutes > 0 -> "${hours}h ${minutes}m"
+                hours > 0 -> "${hours}h"
+                else -> "${minutes}m"
+            }
+        } else "",
+        onCardClick = onClick,
+        onContinueClick = onClick,
+        modifier = modifier
+    )
 }
 
 /**
- * Placeholder course card for new courses.
- * TODO: Create proper course card components.
+ * Beautiful course card for new courses to start.
+ * Features play icon in progress circle and course overview.
  */
 @Composable
 private fun NewCourseCard(
@@ -414,8 +439,19 @@ private fun NewCourseCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // TODO: Implement with design system components
-    Box(modifier = modifier.padding(8.dp)) {
-        Text("Start: ${course.title}")
-    }
+    CourseCard(
+        title = course.title,
+        description = course.description,
+        subject = course.subject.displayName,
+        grade = course.grade,
+        totalChapters = course.totalChapters,
+        completedChapters = 0,
+        estimatedHours = course.estimatedHours,
+        progressPercentage = 0f,
+        isDownloaded = course.isDownloaded,
+        isStarted = false,
+        onCardClick = onClick,
+        onContinueClick = onClick,
+        modifier = modifier
+    )
 } 

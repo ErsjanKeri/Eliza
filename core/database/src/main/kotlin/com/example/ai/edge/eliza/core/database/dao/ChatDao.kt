@@ -30,11 +30,12 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Data Access Object for chat-related operations.
+ * UPDATED: Now supports chapter-based chat sessions with user-specific organization.
  */
 @Dao
 interface ChatDao {
     
-    // Chat Session operations
+    // Chat Session operations (UPDATED for chapter-based organization)
     @Query("SELECT * FROM chat_sessions ORDER BY lastMessageAt DESC")
     fun getAllChatSessions(): Flow<List<ChatSessionEntity>>
     
@@ -44,11 +45,21 @@ interface ChatDao {
     @Query("SELECT * FROM chat_sessions WHERE isActive = 1 ORDER BY lastMessageAt DESC")
     fun getActiveChatSessions(): Flow<List<ChatSessionEntity>>
     
-    @Query("SELECT * FROM chat_sessions WHERE subject = :subject ORDER BY lastMessageAt DESC")
-    fun getChatSessionsBySubject(subject: String): Flow<List<ChatSessionEntity>>
-    
     @Query("SELECT * FROM chat_sessions WHERE courseId = :courseId ORDER BY lastMessageAt DESC")
     fun getChatSessionsByCourse(courseId: String): Flow<List<ChatSessionEntity>>
+    
+    // NEW: Chapter-specific session queries
+    @Query("SELECT * FROM chat_sessions WHERE chapterId = :chapterId ORDER BY lastMessageAt DESC")
+    fun getChatSessionsByChapter(chapterId: String): Flow<List<ChatSessionEntity>>
+    
+    @Query("SELECT * FROM chat_sessions WHERE chapterId = :chapterId AND userId = :userId ORDER BY lastMessageAt DESC")
+    fun getChatSessionsByChapterAndUser(chapterId: String, userId: String): Flow<List<ChatSessionEntity>>
+    
+    @Query("SELECT * FROM chat_sessions WHERE userId = :userId ORDER BY lastMessageAt DESC")
+    fun getChatSessionsByUser(userId: String): Flow<List<ChatSessionEntity>>
+    
+    @Query("SELECT * FROM chat_sessions WHERE chapterId = :chapterId AND userId = :userId AND isActive = 1 ORDER BY lastMessageAt DESC LIMIT 1")
+    fun getActiveSessionForChapterAndUser(chapterId: String, userId: String): Flow<ChatSessionEntity?>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChatSession(session: ChatSessionEntity)
@@ -65,7 +76,13 @@ interface ChatDao {
     @Query("UPDATE chat_sessions SET isActive = 0 WHERE id = :sessionId")
     suspend fun deactivateChatSession(sessionId: String)
     
-    // Chat Message operations
+    @Query("UPDATE chat_sessions SET messageCount = messageCount + 1, lastMessageAt = :timestamp WHERE id = :sessionId")
+    suspend fun incrementMessageCount(sessionId: String, timestamp: Long)
+    
+    @Query("UPDATE chat_sessions SET videoCount = videoCount + 1 WHERE id = :sessionId")
+    suspend fun incrementVideoCount(sessionId: String)
+    
+    // Chat Message operations (UPDATED with video support)
     @Query("SELECT * FROM chat_messages WHERE sessionId = :sessionId ORDER BY timestamp ASC")
     fun getMessagesBySession(sessionId: String): Flow<List<ChatMessageEntity>>
     
@@ -80,6 +97,13 @@ interface ChatDao {
     
     @Query("SELECT * FROM chat_messages WHERE imageUri IS NOT NULL ORDER BY timestamp DESC")
     fun getMessagesWithImages(): Flow<List<ChatMessageEntity>>
+    
+    // NEW: Video-related message queries
+    @Query("SELECT * FROM chat_messages WHERE videoExplanationId IS NOT NULL ORDER BY timestamp DESC")
+    fun getMessagesWithVideos(): Flow<List<ChatMessageEntity>>
+    
+    @Query("SELECT * FROM chat_messages WHERE sessionId = :sessionId AND videoExplanationId IS NOT NULL ORDER BY timestamp DESC")
+    fun getVideoMessagesBySession(sessionId: String): Flow<List<ChatMessageEntity>>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: ChatMessageEntity)
@@ -137,7 +161,7 @@ interface ChatDao {
     @Query("DELETE FROM image_math_problems WHERE id = :problemId")
     suspend fun deleteImageMathProblemById(problemId: String)
     
-    // Aggregate queries
+    // Aggregate queries (UPDATED for chapter-based structure)
     @Query("SELECT COUNT(*) FROM chat_messages WHERE sessionId = :sessionId")
     suspend fun getMessageCountBySession(sessionId: String): Int
     
@@ -149,4 +173,14 @@ interface ChatDao {
     
     @Query("SELECT COUNT(*) FROM image_math_problems WHERE processedAt > :timestamp")
     suspend fun getImageProblemsCountSince(timestamp: Long): Int
+    
+    // NEW: Chapter and user-specific aggregates
+    @Query("SELECT COUNT(*) FROM chat_sessions WHERE chapterId = :chapterId AND userId = :userId")
+    suspend fun getSessionCountByChapterAndUser(chapterId: String, userId: String): Int
+    
+    @Query("SELECT COUNT(*) FROM chat_messages WHERE sessionId IN (SELECT id FROM chat_sessions WHERE chapterId = :chapterId AND userId = :userId)")
+    suspend fun getMessageCountByChapterAndUser(chapterId: String, userId: String): Int
+    
+    @Query("SELECT COUNT(*) FROM chat_messages WHERE videoExplanationId IS NOT NULL AND sessionId IN (SELECT id FROM chat_sessions WHERE userId = :userId)")
+    suspend fun getVideoMessageCountByUser(userId: String): Int
 } 

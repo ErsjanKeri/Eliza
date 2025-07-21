@@ -18,14 +18,17 @@ package com.example.ai.edge.eliza.core.data.repository
 
 import com.example.ai.edge.eliza.core.model.Course
 import com.example.ai.edge.eliza.core.model.Exercise
-import com.example.ai.edge.eliza.core.model.Lesson
+import com.example.ai.edge.eliza.core.model.Chapter
 import com.example.ai.edge.eliza.core.model.Subject
 import com.example.ai.edge.eliza.core.model.Trial
+import com.example.ai.edge.eliza.core.model.VideoExplanation
+import com.example.ai.edge.eliza.core.model.ExerciseHelp
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository interface for course-related operations.
- * This interface defines all operations for managing courses, lessons, exercises, and trials.
+ * This interface defines all operations for managing courses, chapters, exercises, and trials.
+ * UPDATED: Renamed lesson references to chapter references and added video explanation support.
  * Similar to how Gallery manages model allowlists, this handles course content management.
  */
 interface CourseRepository {
@@ -40,19 +43,19 @@ interface CourseRepository {
     suspend fun deleteCourse(courseId: String)
     suspend fun downloadCourse(courseId: String): Flow<DownloadProgress>
     
-    // Lesson operations
-    fun getLessonsByCourse(courseId: String): Flow<List<Lesson>>
-    fun getLessonById(lessonId: String): Flow<Lesson?>
-    fun getLessonByNumber(courseId: String, lessonNumber: Int): Flow<Lesson?>
-    suspend fun insertLesson(lesson: Lesson)
-    suspend fun updateLesson(lesson: Lesson)
-    suspend fun deleteLesson(lessonId: String)
-    suspend fun markLessonCompleted(lessonId: String)
+    // Chapter operations (RENAMED from lesson operations)
+    fun getChaptersByCourse(courseId: String): Flow<List<Chapter>> // RENAMED
+    fun getChapterById(chapterId: String): Flow<Chapter?> // RENAMED
+    fun getChapterByNumber(courseId: String, chapterNumber: Int): Flow<Chapter?> // RENAMED
+    suspend fun insertChapter(chapter: Chapter) // RENAMED
+    suspend fun updateChapter(chapter: Chapter) // RENAMED
+    suspend fun deleteChapter(chapterId: String) // RENAMED
+    suspend fun markChapterCompleted(chapterId: String) // RENAMED
     
     // Exercise operations
-    fun getExercisesByLesson(lessonId: String): Flow<List<Exercise>>
+    fun getExercisesByChapter(chapterId: String): Flow<List<Exercise>> // UPDATED from lessonId
     fun getExerciseById(exerciseId: String): Flow<Exercise?>
-    fun getIncompleteExercises(lessonId: String): Flow<List<Exercise>>
+    fun getIncompleteExercises(chapterId: String): Flow<List<Exercise>> // UPDATED from lessonId
     suspend fun insertExercise(exercise: Exercise)
     suspend fun updateExercise(exercise: Exercise)
     suspend fun deleteExercise(exerciseId: String)
@@ -66,6 +69,19 @@ interface CourseRepository {
     suspend fun updateTrial(trial: Trial)
     suspend fun deleteTrial(trialId: String)
     suspend fun submitTrialAnswer(trialId: String, answerIndex: Int): TrialResult
+    
+    // NEW: Video explanation operations
+    fun getVideoExplanationsByUser(userId: String): Flow<List<VideoExplanation>>
+    fun getVideoExplanationsByChapter(chapterId: String, userId: String): Flow<List<VideoExplanation>>
+    fun getVideoExplanationsByExercise(exerciseId: String, userId: String): Flow<List<VideoExplanation>>
+    suspend fun insertVideoExplanation(videoExplanation: VideoExplanation)
+    suspend fun deleteVideoExplanation(videoId: String)
+    suspend fun updateVideoLastAccessed(videoId: String)
+    
+    // NEW: Exercise help operations
+    fun getExerciseHelpByExercise(exerciseId: String, userId: String): Flow<List<ExerciseHelp>>
+    suspend fun insertExerciseHelp(exerciseHelp: ExerciseHelp)
+    suspend fun updateExerciseHelpFeedback(helpId: String, wasHelpful: Boolean)
     
     // Aggregate operations
     suspend fun getCourseProgress(courseId: String): CourseProgress
@@ -124,11 +140,12 @@ data class TrialResult(
 
 /**
  * Course progress summary.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 data class CourseProgress(
     val courseId: String,
-    val completedLessons: Int,
-    val totalLessons: Int,
+    val completedChapters: Int, // RENAMED from completedLessons
+    val totalChapters: Int, // RENAMED from totalLessons
     val completedExercises: Int,
     val totalExercises: Int,
     val averageScore: Float,

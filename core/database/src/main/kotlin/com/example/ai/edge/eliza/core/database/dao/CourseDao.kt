@@ -24,12 +24,15 @@ import androidx.room.Query
 import androidx.room.Update
 import com.example.ai.edge.eliza.core.database.entity.CourseEntity
 import com.example.ai.edge.eliza.core.database.entity.ExerciseEntity
-import com.example.ai.edge.eliza.core.database.entity.LessonEntity
+import com.example.ai.edge.eliza.core.database.entity.ChapterEntity
 import com.example.ai.edge.eliza.core.database.entity.TrialEntity
+import com.example.ai.edge.eliza.core.database.entity.VideoExplanationEntity
+import com.example.ai.edge.eliza.core.database.entity.ExerciseHelpEntity
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Data Access Object for course-related operations.
+ * UPDATED: Now supports chapter-based operations and video explanation system.
  */
 @Dao
 interface CourseDao {
@@ -62,40 +65,40 @@ interface CourseDao {
     @Query("DELETE FROM courses WHERE id = :courseId")
     suspend fun deleteCourseById(courseId: String)
     
-    // Lesson operations
-    @Query("SELECT * FROM lessons WHERE courseId = :courseId ORDER BY lessonNumber ASC")
-    fun getLessonsByCourse(courseId: String): Flow<List<LessonEntity>>
+    // Chapter operations (RENAMED from lesson operations)
+    @Query("SELECT * FROM chapters WHERE courseId = :courseId ORDER BY chapterNumber ASC")
+    fun getChaptersByCourse(courseId: String): Flow<List<ChapterEntity>>
     
-    @Query("SELECT * FROM lessons WHERE id = :lessonId")
-    fun getLessonById(lessonId: String): Flow<LessonEntity?>
+    @Query("SELECT * FROM chapters WHERE id = :chapterId")
+    fun getChapterById(chapterId: String): Flow<ChapterEntity?>
     
-    @Query("SELECT * FROM lessons WHERE courseId = :courseId AND lessonNumber = :lessonNumber")
-    fun getLessonByNumber(courseId: String, lessonNumber: Int): Flow<LessonEntity?>
-    
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertLesson(lesson: LessonEntity)
+    @Query("SELECT * FROM chapters WHERE courseId = :courseId AND chapterNumber = :chapterNumber")
+    fun getChapterByNumber(courseId: String, chapterNumber: Int): Flow<ChapterEntity?>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertLessons(lessons: List<LessonEntity>)
+    suspend fun insertChapter(chapter: ChapterEntity)
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChapters(chapters: List<ChapterEntity>)
     
     @Update
-    suspend fun updateLesson(lesson: LessonEntity)
+    suspend fun updateChapter(chapter: ChapterEntity)
     
     @Delete
-    suspend fun deleteLesson(lesson: LessonEntity)
+    suspend fun deleteChapter(chapter: ChapterEntity)
     
-    @Query("DELETE FROM lessons WHERE id = :lessonId")
-    suspend fun deleteLessonById(lessonId: String)
+    @Query("DELETE FROM chapters WHERE id = :chapterId")
+    suspend fun deleteChapterById(chapterId: String)
     
-    // Exercise operations
-    @Query("SELECT * FROM exercises WHERE lessonId = :lessonId ORDER BY createdAt ASC")
-    fun getExercisesByLesson(lessonId: String): Flow<List<ExerciseEntity>>
+    // Exercise operations (UPDATED for chapter-based structure)
+    @Query("SELECT * FROM exercises WHERE chapterId = :chapterId ORDER BY createdAt ASC")
+    fun getExercisesByChapter(chapterId: String): Flow<List<ExerciseEntity>>
     
     @Query("SELECT * FROM exercises WHERE id = :exerciseId")
     fun getExerciseById(exerciseId: String): Flow<ExerciseEntity?>
     
-    @Query("SELECT * FROM exercises WHERE lessonId = :lessonId AND isCompleted = 0")
-    fun getIncompleteExercises(lessonId: String): Flow<List<ExerciseEntity>>
+    @Query("SELECT * FROM exercises WHERE chapterId = :chapterId AND isCompleted = 0")
+    fun getIncompleteExercises(chapterId: String): Flow<List<ExerciseEntity>>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExercise(exercise: ExerciseEntity)
@@ -137,13 +140,69 @@ interface CourseDao {
     @Query("DELETE FROM trials WHERE id = :trialId")
     suspend fun deleteTrialById(trialId: String)
     
-    // Aggregate queries
-    @Query("SELECT COUNT(*) FROM lessons WHERE courseId = :courseId")
-    suspend fun getLessonCountByCourse(courseId: String): Int
+    // NEW: Video explanation operations
+    @Query("SELECT * FROM video_explanations WHERE userId = :userId ORDER BY createdAt DESC")
+    fun getVideoExplanationsByUser(userId: String): Flow<List<VideoExplanationEntity>>
     
-    @Query("SELECT COUNT(*) FROM exercises WHERE lessonId = :lessonId")
-    suspend fun getExerciseCountByLesson(lessonId: String): Int
+    @Query("SELECT * FROM video_explanations WHERE chapterId = :chapterId AND userId = :userId ORDER BY createdAt DESC")
+    fun getVideoExplanationsByChapter(chapterId: String, userId: String): Flow<List<VideoExplanationEntity>>
     
-    @Query("SELECT COUNT(*) FROM exercises WHERE lessonId = :lessonId AND isCompleted = 1")
-    suspend fun getCompletedExerciseCount(lessonId: String): Int
+    @Query("SELECT * FROM video_explanations WHERE exerciseId = :exerciseId AND userId = :userId ORDER BY createdAt DESC")
+    fun getVideoExplanationsByExercise(exerciseId: String, userId: String): Flow<List<VideoExplanationEntity>>
+    
+    @Query("SELECT * FROM video_explanations WHERE id = :videoId")
+    fun getVideoExplanationById(videoId: String): Flow<VideoExplanationEntity?>
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertVideoExplanation(videoExplanation: VideoExplanationEntity)
+    
+    @Update
+    suspend fun updateVideoExplanation(videoExplanation: VideoExplanationEntity)
+    
+    @Delete
+    suspend fun deleteVideoExplanation(videoExplanation: VideoExplanationEntity)
+    
+    @Query("DELETE FROM video_explanations WHERE id = :videoId")
+    suspend fun deleteVideoExplanationById(videoId: String)
+    
+    @Query("UPDATE video_explanations SET lastAccessedAt = :timestamp WHERE id = :videoId")
+    suspend fun updateVideoLastAccessed(videoId: String, timestamp: Long)
+    
+    // NEW: Exercise help operations
+    @Query("SELECT * FROM exercise_help WHERE exerciseId = :exerciseId AND userId = :userId ORDER BY createdAt DESC")
+    fun getExerciseHelpByExercise(exerciseId: String, userId: String): Flow<List<ExerciseHelpEntity>>
+    
+    @Query("SELECT * FROM exercise_help WHERE id = :helpId")
+    fun getExerciseHelpById(helpId: String): Flow<ExerciseHelpEntity?>
+    
+    @Query("SELECT * FROM exercise_help WHERE userId = :userId ORDER BY createdAt DESC")
+    fun getExerciseHelpByUser(userId: String): Flow<List<ExerciseHelpEntity>>
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExerciseHelp(exerciseHelp: ExerciseHelpEntity)
+    
+    @Update
+    suspend fun updateExerciseHelp(exerciseHelp: ExerciseHelpEntity)
+    
+    @Delete
+    suspend fun deleteExerciseHelp(exerciseHelp: ExerciseHelpEntity)
+    
+    @Query("DELETE FROM exercise_help WHERE id = :helpId")
+    suspend fun deleteExerciseHelpById(helpId: String)
+    
+    @Query("UPDATE exercise_help SET wasHelpful = :wasHelpful WHERE id = :helpId")
+    suspend fun updateExerciseHelpFeedback(helpId: String, wasHelpful: Boolean)
+    
+    // Aggregate queries (UPDATED for chapters)
+    @Query("SELECT COUNT(*) FROM chapters WHERE courseId = :courseId")
+    suspend fun getChapterCountByCourse(courseId: String): Int
+    
+    @Query("SELECT COUNT(*) FROM exercises WHERE chapterId = :chapterId")
+    suspend fun getExerciseCountByChapter(chapterId: String): Int
+    
+    @Query("SELECT COUNT(*) FROM exercises WHERE chapterId = :chapterId AND isCompleted = 1")
+    suspend fun getCompletedExerciseCount(chapterId: String): Int
+    
+    @Query("SELECT COUNT(*) FROM video_explanations WHERE userId = :userId")
+    suspend fun getVideoExplanationCountByUser(userId: String): Int
 } 

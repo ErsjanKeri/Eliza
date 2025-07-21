@@ -20,13 +20,14 @@ import kotlinx.serialization.Serializable
 
 /**
  * Represents user progress for a specific course.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Serializable
 data class UserProgress(
     val id: String,
     val courseId: String,
-    val completedLessons: Int = 0,
-    val totalLessons: Int = 0,
+    val completedChapters: Int = 0, // RENAMED from completedLessons
+    val totalChapters: Int = 0, // RENAMED from totalLessons
     val completedExercises: Int = 0,
     val totalExercises: Int = 0,
     val correctAnswers: Int = 0,
@@ -38,19 +39,20 @@ data class UserProgress(
     val updatedAt: Long = System.currentTimeMillis()
 ) {
     val completionPercentage: Float
-        get() = if (totalLessons > 0) (completedLessons.toFloat() / totalLessons.toFloat()) * 100f else 0f
+        get() = if (totalChapters > 0) (completedChapters.toFloat() / totalChapters.toFloat()) * 100f else 0f
     
     val accuracyPercentage: Float
         get() = if (totalAnswers > 0) (correctAnswers.toFloat() / totalAnswers.toFloat()) * 100f else 0f
 }
 
 /**
- * Represents progress for a specific lesson.
+ * Represents progress for a specific chapter.
+ * UPDATED: Renamed from LessonProgress to ChapterProgress.
  */
 @Serializable
-data class LessonProgress(
+data class ChapterProgress(
     val id: String,
-    val lessonId: String,
+    val chapterId: String, // RENAMED from lessonId
     val userId: String,
     val isCompleted: Boolean = false,
     val completedExercises: Int = 0,
@@ -79,13 +81,14 @@ data class UserAnswer(
 
 /**
  * Represents a study session.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Serializable
 data class StudySession(
     val id: String,
     val userId: String,
     val courseId: String? = null,
-    val lessonId: String? = null,
+    val chapterId: String? = null, // RENAMED from lessonId
     val sessionType: SessionType,
     val durationMinutes: Long = 0,
     val exercisesCompleted: Int = 0,
@@ -97,10 +100,11 @@ data class StudySession(
 
 /**
  * Types of study sessions.
+ * UPDATED: Renamed lesson study to chapter study.
  */
 @Serializable
 enum class SessionType {
-    LESSON_STUDY,
+    CHAPTER_STUDY, // RENAMED from LESSON_STUDY
     PRACTICE_EXERCISES,
     AI_CHAT_TUTORING,
     IMAGE_PROBLEM_SOLVING,
@@ -135,10 +139,11 @@ data class AchievementRequirement(
 
 /**
  * Types of achievements.
+ * UPDATED: Renamed lessons to chapters in achievement types.
  */
 @Serializable
 enum class AchievementType {
-    LESSONS_COMPLETED,
+    CHAPTERS_COMPLETED, // RENAMED from LESSONS_COMPLETED
     EXERCISES_COMPLETED,
     CORRECT_ANSWERS,
     STREAK_DAYS,
@@ -146,17 +151,19 @@ enum class AchievementType {
     COURSE_COMPLETED,
     PERFECT_SCORE,
     CHAT_SESSIONS,
-    IMAGE_PROBLEMS_SOLVED
+    IMAGE_PROBLEMS_SOLVED,
+    VIDEO_EXPLANATIONS_REQUESTED // NEW: Achievement for video usage
 }
 
 /**
  * Represents user's overall learning statistics.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Serializable
 data class LearningStats(
     val userId: String,
     val totalTimeMinutes: Long = 0,
-    val totalLessonsCompleted: Int = 0,
+    val totalChaptersCompleted: Int = 0, // RENAMED from totalLessonsCompleted
     val totalExercisesCompleted: Int = 0,
     val totalCorrectAnswers: Int = 0,
     val totalQuestions: Int = 0,
@@ -166,6 +173,7 @@ data class LearningStats(
     val totalCourses: Int = 0,
     val chatSessionsCount: Int = 0,
     val imageProblemsCount: Int = 0,
+    val videoExplanationsCount: Int = 0, // NEW: Track video explanation usage
     val subjectStats: Map<Subject, SubjectStats> = emptyMap(),
     val weeklyProgress: List<WeeklyProgress> = emptyList(),
     val lastUpdated: Long = System.currentTimeMillis()
@@ -173,13 +181,14 @@ data class LearningStats(
 
 /**
  * Statistics for a specific subject.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Serializable
 data class SubjectStats(
     val subject: Subject,
     val timeSpentMinutes: Long = 0,
-    val lessonsCompleted: Int = 0,
-    val totalLessons: Int = 0,
+    val chaptersCompleted: Int = 0, // RENAMED from lessonsCompleted
+    val totalChapters: Int = 0, // RENAMED from totalLessons
     val exercisesCompleted: Int = 0,
     val correctAnswers: Int = 0,
     val totalAnswers: Int = 0,
@@ -190,13 +199,14 @@ data class SubjectStats(
 
 /**
  * Progress for a specific week.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Serializable
 data class WeeklyProgress(
     val weekStartDate: Long,
     val weekEndDate: Long,
     val minutesStudied: Long = 0,
-    val lessonsCompleted: Int = 0,
+    val chaptersCompleted: Int = 0, // RENAMED from lessonsCompleted
     val exercisesCompleted: Int = 0,
     val daysActive: Int = 0,
     val averageAccuracy: Float = 0f

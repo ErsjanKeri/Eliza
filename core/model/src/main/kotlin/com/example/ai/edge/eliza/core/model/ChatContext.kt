@@ -21,17 +21,19 @@ import kotlinx.serialization.Serializable
 /**
  * Base class for different types of chat contexts.
  * This defines the current context of the conversation for RAG enhancement.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Serializable
 sealed class ChatContext {
     /**
      * Context for reading and discussing chapter content.
-     * This is used when the user is reading a specific chapter/lesson.
+     * This is used when the user is reading a specific chapter.
+     * UPDATED: Renamed from lesson references to chapter references.
      */
     @Serializable
     data class ChapterReading(
         val courseId: String,
-        val lessonId: String,
+        val chapterId: String, // RENAMED from lessonId
         val chapterTitle: String,
         val currentSection: String? = null,
         val readingProgress: Float = 0f,
@@ -39,13 +41,14 @@ sealed class ChatContext {
     ) : ChatContext()
 
     /**
-     * Context for revision and practice after completing lessons.
+     * Context for revision and practice after completing chapters.
      * This is used when the user is reviewing previously learned content.
+     * UPDATED: Renamed lesson references to chapter references.
      */
     @Serializable
     data class Revision(
         val courseId: String,
-        val completedLessonIds: List<String>,
+        val completedChapterIds: List<String>, // RENAMED from completedLessonIds
         val topicsToRevise: List<String>,
         val weakAreas: List<String> = emptyList(),
         val lastRevisionTime: Long = System.currentTimeMillis()
@@ -53,7 +56,7 @@ sealed class ChatContext {
 
     /**
      * Context for general tutoring without specific course content.
-     * This is used for general math questions not tied to specific lessons.
+     * This is used for general math questions not tied to specific chapters.
      */
     @Serializable
     data class GeneralTutoring(
@@ -66,11 +69,12 @@ sealed class ChatContext {
     /**
      * Context for working on specific exercises or trials.
      * This is used when the user is actively solving problems.
+     * UPDATED: Renamed lesson references to chapter references.
      */
     @Serializable
     data class ExerciseSolving(
         val exerciseId: String,
-        val lessonId: String,
+        val chapterId: String, // RENAMED from lessonId
         val courseId: String,
         val difficulty: String,
         val attempts: Int = 0,

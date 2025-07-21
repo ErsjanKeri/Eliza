@@ -23,22 +23,36 @@ import com.example.ai.edge.eliza.core.database.converter.Converters
 
 /**
  * Room entity for chat sessions.
+ * UPDATED: Now chapter-centric with user-specific sessions.
  */
-@Entity(tableName = "chat_sessions")
+@Entity(
+    tableName = "chat_sessions",
+    foreignKeys = [
+        androidx.room.ForeignKey(
+            entity = ChapterEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["chapterId"],
+            onDelete = androidx.room.ForeignKey.CASCADE
+        )
+    ]
+)
 data class ChatSessionEntity(
     @PrimaryKey
     val id: String,
     val title: String,
-    val subject: String? = null,
-    val courseId: String? = null,
-    val lessonId: String? = null,
+    val chapterId: String, // REQUIRED: Always linked to a chapter
+    val courseId: String,
+    val userId: String, // NEW: User-specific sessions
     val createdAt: Long = System.currentTimeMillis(),
     val lastMessageAt: Long = System.currentTimeMillis(),
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val messageCount: Int = 0,
+    val videoCount: Int = 0 // NEW: Track videos in session
 )
 
 /**
  * Room entity for chat messages.
+ * UPDATED: Enhanced for video content support.
  */
 @Entity(
     tableName = "chat_messages",
@@ -48,6 +62,12 @@ data class ChatSessionEntity(
             parentColumns = ["id"],
             childColumns = ["sessionId"],
             onDelete = androidx.room.ForeignKey.CASCADE
+        ),
+        androidx.room.ForeignKey(
+            entity = VideoExplanationEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["videoExplanationId"],
+            onDelete = androidx.room.ForeignKey.SET_NULL
         )
     ]
 )
@@ -57,14 +77,15 @@ data class ChatMessageEntity(
     val id: String,
     val sessionId: String,
     val content: String,
-    val isUser: Boolean,
+    val isUser: Boolean, // Following Gallery's pattern (true = user, false = agent)
     val timestamp: Long = System.currentTimeMillis(),
+    val messageType: String, // MessageType enum as string
+    val videoExplanationId: String? = null, // NEW: FK to video explanations
     val imageUri: String? = null,
     val mathSteps: List<MathStepEntity> = emptyList(),
-    val messageType: String = "TEXT",
     val status: String = "SENT",
     val relatedExerciseId: String? = null,
-    val relatedTrialId: String? = null
+    val processingTimeMs: Long = 0L // NEW: Track AI response time
 )
 
 /**

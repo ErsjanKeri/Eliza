@@ -30,8 +30,8 @@ data class Course(
     val subject: Subject,
     val grade: String,
     val description: String,
-    val lessons: List<Lesson>,
-    val totalLessons: Int,
+    val chapters: List<Chapter>, // RENAMED from lessons
+    val totalChapters: Int, // RENAMED from totalLessons
     val estimatedHours: Int,
     val imageUrl: String? = null,
     val isDownloaded: Boolean = false,
@@ -43,13 +43,14 @@ data class Course(
 )
 
 /**
- * Represents a lesson/chapter within a course.
+ * Represents a chapter within a course.
+ * RENAMED from Lesson to Chapter to better reflect content organization.
  */
 @Serializable
-data class Lesson(
+data class Chapter(
     val id: String,
     val courseId: String,
-    val lessonNumber: Int,
+    val chapterNumber: Int, // RENAMED from lessonNumber
     val title: String,
     val markdownContent: String,
     val imageReferences: List<String> = emptyList(),
@@ -60,12 +61,12 @@ data class Lesson(
 )
 
 /**
- * Represents an exercise within a lesson.
+ * Represents an exercise within a chapter.
  */
 @Serializable
 data class Exercise(
     val id: String,
-    val lessonId: String,
+    val chapterId: String, // UPDATED from lessonId to chapterId
     val questionText: String,
     val options: List<String>,
     val correctAnswerIndex: Int,
@@ -94,6 +95,67 @@ data class Trial(
     val isCorrect: Boolean? = null,
     val generatedAt: Long = System.currentTimeMillis()
 )
+
+/**
+ * Represents a video explanation requested by a user.
+ * NEW: Core model for the video explanation system.
+ */
+@Serializable
+data class VideoExplanation(
+    val id: String,
+    val userId: String, // User-specific, no sharing between users
+    val chapterId: String? = null, // For chapter video explanations
+    val exerciseId: String? = null, // For exercise video explanations
+    val requestType: VideoRequestType,
+    val userQuestion: String,
+    val contextData: String, // JSON of chapter markdown or exercise data
+    val videoUrl: String, // Original API URL
+    val localFilePath: String, // Local storage path
+    val fileSizeBytes: Long,
+    val durationSeconds: Int,
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastAccessedAt: Long = System.currentTimeMillis()
+)
+
+/**
+ * Types of video explanation requests.
+ * NEW: Distinguishes between chapter and exercise video requests.
+ */
+@Serializable
+enum class VideoRequestType {
+    CHAPTER_EXPLANATION, // Videos for general chapter understanding
+    EXERCISE_HELP        // Videos for specific exercise wrong answers
+}
+
+/**
+ * Represents help provided for wrong exercise answers.
+ * NEW: Core model for the exercise help system.
+ */
+@Serializable
+data class ExerciseHelp(
+    val id: String,
+    val exerciseId: String,
+    val userId: String,
+    val incorrectAnswer: Int,
+    val correctAnswer: Int,
+    val userQuestion: String? = null,
+    val helpType: HelpType,
+    val explanation: String? = null, // For local AI explanations
+    val videoExplanation: VideoExplanation? = null, // For video explanations
+    val createdAt: Long = System.currentTimeMillis(),
+    val wasHelpful: Boolean? = null // User feedback
+)
+
+/**
+ * Types of help provided for exercises.
+ * NEW: Distinguishes between local AI and video explanations.
+ */
+@Serializable
+enum class HelpType {
+    LOCAL_AI,           // AI-generated explanation using local model
+    VIDEO_EXPLANATION,  // Video explanation from API
+    NEW_TRIAL          // Generated new trial question
+}
 
 /**
  * Represents different subjects available in the tutoring system.

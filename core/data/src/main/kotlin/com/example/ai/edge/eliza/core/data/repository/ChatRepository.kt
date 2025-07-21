@@ -22,32 +22,59 @@ import com.example.ai.edge.eliza.core.model.ImageMathProblem
 import com.example.ai.edge.eliza.core.model.MathStep
 import com.example.ai.edge.eliza.core.model.ModelState
 import com.example.ai.edge.eliza.core.model.Subject
+import com.example.ai.edge.eliza.core.model.VideoExplanation
+import com.example.ai.edge.eliza.core.model.VideoRequestResult
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository interface for chat-related operations.
  * This interface defines all operations for managing AI tutoring conversations,
- * image processing, and model state management.
+ * image processing, model state management, and video explanations.
+ * UPDATED: Now supports chapter-based chat organization with video integration.
  */
 interface ChatRepository {
     
-    // Chat Session operations
+    // Chat Session operations (UPDATED for chapter-based organization)
     fun getAllChatSessions(): Flow<List<ChatSession>>
     fun getChatSessionById(sessionId: String): Flow<ChatSession?>
     fun getActiveChatSessions(): Flow<List<ChatSession>>
-    fun getChatSessionsBySubject(subject: Subject): Flow<List<ChatSession>>
     fun getChatSessionsByCourse(courseId: String): Flow<List<ChatSession>>
-    suspend fun createChatSession(title: String, subject: Subject? = null, courseId: String? = null): ChatSession
+    
+    // NEW: Chapter-specific session operations
+    fun getChatSessionsByChapter(chapterId: String): Flow<List<ChatSession>>
+    fun getChatSessionsByChapterAndUser(chapterId: String, userId: String): Flow<List<ChatSession>>
+    fun getChatSessionsByUser(userId: String): Flow<List<ChatSession>>
+    fun getActiveSessionForChapterAndUser(chapterId: String, userId: String): Flow<ChatSession?>
+    
+    // UPDATED: Chapter-based session creation
+    suspend fun createChatSession(
+        title: String,
+        chapterId: String, // REQUIRED: Always linked to a chapter
+        courseId: String,
+        userId: String // REQUIRED: User-specific sessions
+    ): ChatSession
+    
     suspend fun updateChatSession(session: ChatSession)
     suspend fun deleteChatSession(sessionId: String)
     suspend fun deactivateChatSession(sessionId: String)
     
-    // Chat Message operations
+    // Chat Message operations (UPDATED with video support)
     fun getMessagesBySession(sessionId: String): Flow<List<ChatMessage>>
     fun getMessageById(messageId: String): Flow<ChatMessage?>
     fun getRecentMessages(sessionId: String, limit: Int): Flow<List<ChatMessage>>
+    fun getMessagesWithVideos(): Flow<List<ChatMessage>>
+    fun getVideoMessagesBySession(sessionId: String): Flow<List<ChatMessage>>
+    
     suspend fun sendMessage(sessionId: String, message: String, imageUri: String? = null): Flow<ChatResponse>
     suspend fun sendImageMessage(sessionId: String, imageUri: String, question: String? = null): Flow<ChatResponse>
+    
+    // NEW: Video explanation message operations
+    suspend fun requestVideoExplanation(
+        sessionId: String,
+        chapterId: String,
+        userQuestion: String
+    ): Flow<VideoRequestResult>
+    
     suspend fun insertMessage(message: ChatMessage)
     suspend fun updateMessage(message: ChatMessage)
     suspend fun deleteMessage(messageId: String)
@@ -75,6 +102,7 @@ interface ChatRepository {
 
 /**
  * Represents a chat response from the AI.
+ * UPDATED: Enhanced with video support and better metadata.
  */
 data class ChatResponse(
     val messageId: String,
@@ -84,6 +112,7 @@ data class ChatResponse(
     val status: ChatResponseStatus,
     val confidence: Float = 0f,
     val processingTime: Long = 0L,
+    val tokensGenerated: Int = 0, // NEW: Track token generation
     val error: String? = null
 )
 
@@ -140,7 +169,7 @@ data class AIResponse(
     val confidence: Float = 0f,
     val processingTime: Long = 0L,
     val tokensUsed: Int = 0,
-                val model: String = "Gemma-3n-E4B-it-int4"
+    val model: String = "Gemma-3n-E4B-it-int4"
 )
 
 /**
@@ -167,14 +196,18 @@ enum class ExportFormat {
 
 /**
  * Summary of a conversation.
+ * UPDATED: Enhanced with video-related metrics.
  */
 data class ConversationSummary(
     val sessionId: String,
     val messageCount: Int,
+    val videoCount: Int, // NEW: Count of video explanations
     val topicsDiscussed: List<String>,
     val problemsSolved: Int,
     val averageResponseTime: Long,
     val totalTokensUsed: Int,
     val difficulty: String,
-    val learningObjectives: List<String>
+    val learningObjectives: List<String>,
+    val chapterId: String? = null, // NEW: Chapter context
+    val courseId: String? = null // NEW: Course context
 ) 

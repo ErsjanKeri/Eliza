@@ -75,14 +75,14 @@ class ChapterRagProvider @Inject constructor(
         maxChunks: Int
     ): List<ContentChunk> {
         return if (context is ChatContext.ChapterReading) {
-            val lesson = courseRepository.getLessonById(context.lessonId).firstOrNull()
-            lesson?.let { 
+            val chapter = courseRepository.getChapterById(context.chapterId).firstOrNull()
+            chapter?.let { 
                 listOf(
                     ContentChunk(
-                        id = "chapter_${context.lessonId}",
+                        id = "chapter_${context.chapterId}",
                         title = context.chapterTitle,
-                        content = lesson.markdownContent,
-                        source = "Chapter ${lesson.lessonNumber}",
+                        content = chapter.markdownContent,
+                        source = "Chapter ${chapter.chapterNumber}",
                         relevanceScore = 0.9f,
                         chunkType = ContentChunkType.CHAPTER_SECTION
                     )
@@ -146,17 +146,17 @@ class RevisionRagProvider @Inject constructor(
         maxChunks: Int
     ): List<ContentChunk> {
         return if (context is ChatContext.Revision) {
-            // Get content from completed lessons for revision
+            // Get content from completed chapters for revision
             val chunks = mutableListOf<ContentChunk>()
-            context.completedLessonIds.take(maxChunks).forEach { lessonId ->
-                val lesson = courseRepository.getLessonById(lessonId).firstOrNull()
-                lesson?.let {
+            context.completedChapterIds.take(maxChunks).forEach { chapterId ->
+                val chapter = courseRepository.getChapterById(chapterId).firstOrNull()
+                chapter?.let {
                     chunks.add(
                         ContentChunk(
-                            id = "revision_$lessonId",
-                            title = lesson.title,
-                            content = lesson.markdownContent.take(300),
-                            source = "Lesson ${lesson.lessonNumber}",
+                            id = "revision_$chapterId",
+                            title = chapter.title,
+                            content = chapter.markdownContent.take(300),
+                            source = "Chapter ${chapter.chapterNumber}",
                             relevanceScore = 0.7f,
                             chunkType = ContentChunkType.CHAPTER_SECTION
                         )
@@ -283,14 +283,14 @@ class ExerciseRagProvider @Inject constructor(
         maxChunks: Int
     ): List<ContentChunk> {
         return if (context is ChatContext.ExerciseSolving) {
-            val lesson = courseRepository.getLessonById(context.lessonId).firstOrNull()
-            lesson?.let {
+            val chapter = courseRepository.getChapterById(context.chapterId).firstOrNull()
+            chapter?.let {
                 listOf(
                     ContentChunk(
                         id = "exercise_${context.exerciseId}",
                         title = "Exercise Context",
-                        content = lesson.markdownContent,
-                        source = "Exercise from ${lesson.title}",
+                        content = chapter.markdownContent,
+                        source = "Exercise from ${chapter.title}",
                         relevanceScore = 0.9f,
                         chunkType = ContentChunkType.PRACTICE_PROBLEM
                     )

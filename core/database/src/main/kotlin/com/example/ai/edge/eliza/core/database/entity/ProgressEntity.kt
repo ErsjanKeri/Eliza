@@ -21,6 +21,7 @@ import androidx.room.PrimaryKey
 
 /**
  * Room entity for user progress per course.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Entity(
     tableName = "user_progress",
@@ -37,8 +38,8 @@ data class UserProgressEntity(
     @PrimaryKey
     val id: String,
     val courseId: String,
-    val completedLessons: Int = 0,
-    val totalLessons: Int = 0,
+    val completedChapters: Int = 0, // RENAMED from completedLessons
+    val totalChapters: Int = 0, // RENAMED from totalLessons
     val completedExercises: Int = 0,
     val totalExercises: Int = 0,
     val correctAnswers: Int = 0,
@@ -51,23 +52,24 @@ data class UserProgressEntity(
 )
 
 /**
- * Room entity for lesson progress.
+ * Room entity for chapter progress.
+ * UPDATED: Renamed from LessonProgressEntity to ChapterProgressEntity.
  */
 @Entity(
-    tableName = "lesson_progress",
+    tableName = "chapter_progress", // RENAMED from "lesson_progress"
     foreignKeys = [
         androidx.room.ForeignKey(
-            entity = LessonEntity::class,
+            entity = ChapterEntity::class, // UPDATED from LessonEntity
             parentColumns = ["id"],
-            childColumns = ["lessonId"],
+            childColumns = ["chapterId"], // UPDATED from lessonId
             onDelete = androidx.room.ForeignKey.CASCADE
         )
     ]
 )
-data class LessonProgressEntity(
+data class ChapterProgressEntity(
     @PrimaryKey
     val id: String,
-    val lessonId: String,
+    val chapterId: String, // RENAMED from lessonId
     val userId: String,
     val isCompleted: Boolean = false,
     val completedExercises: Int = 0,
@@ -107,6 +109,7 @@ data class UserAnswerEntity(
 
 /**
  * Room entity for study sessions.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Entity(tableName = "study_sessions")
 data class StudySessionEntity(
@@ -114,7 +117,7 @@ data class StudySessionEntity(
     val id: String,
     val userId: String,
     val courseId: String? = null,
-    val lessonId: String? = null,
+    val chapterId: String? = null, // RENAMED from lessonId
     val sessionType: String,
     val durationMinutes: Long = 0,
     val exercisesCompleted: Int = 0,
@@ -145,13 +148,14 @@ data class AchievementEntity(
 
 /**
  * Room entity for learning statistics.
+ * UPDATED: Renamed lesson references to chapter references and added video tracking.
  */
 @Entity(tableName = "learning_stats")
 data class LearningStatsEntity(
     @PrimaryKey
     val userId: String,
     val totalTimeMinutes: Long = 0,
-    val totalLessonsCompleted: Int = 0,
+    val totalChaptersCompleted: Int = 0, // RENAMED from totalLessonsCompleted
     val totalExercisesCompleted: Int = 0,
     val totalCorrectAnswers: Int = 0,
     val totalQuestions: Int = 0,
@@ -161,11 +165,13 @@ data class LearningStatsEntity(
     val totalCourses: Int = 0,
     val chatSessionsCount: Int = 0,
     val imageProblemsCount: Int = 0,
+    val videoExplanationsCount: Int = 0, // NEW: Track video explanation usage
     val lastUpdated: Long = System.currentTimeMillis()
 )
 
 /**
  * Room entity for weekly progress.
+ * UPDATED: Renamed lesson references to chapter references.
  */
 @Entity(
     tableName = "weekly_progress",
@@ -185,7 +191,7 @@ data class WeeklyProgressEntity(
     val weekStartDate: Long,
     val weekEndDate: Long,
     val minutesStudied: Long = 0,
-    val lessonsCompleted: Int = 0,
+    val chaptersCompleted: Int = 0, // RENAMED from lessonsCompleted
     val exercisesCompleted: Int = 0,
     val daysActive: Int = 0,
     val averageAccuracy: Float = 0f

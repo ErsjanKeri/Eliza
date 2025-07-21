@@ -20,36 +20,40 @@ import kotlinx.serialization.Serializable
 
 /**
  * Represents a chat session with the AI tutor.
+ * UPDATED: Now chapter-centric with multiple sessions per chapter support.
  */
 @Serializable
 data class ChatSession(
     val id: String,
     val title: String,
-    val subject: Subject? = null,
-    val courseId: String? = null,
-    val lessonId: String? = null,
+    val chapterId: String, // REQUIRED: Always linked to a chapter
+    val courseId: String,
+    val userId: String, // NEW: User-specific sessions
     val createdAt: Long = System.currentTimeMillis(),
     val lastMessageAt: Long = System.currentTimeMillis(),
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val messageCount: Int = 0,
+    val videoCount: Int = 0 // NEW: Track videos in session
 )
 
 /**
  * Represents a message in a chat session.
- * Based on Gallery's chat message structure but enhanced for tutoring.
+ * UPDATED: Enhanced for video content and chapter context, based on Gallery's ChatMessage structure.
  */
 @Serializable
 data class ChatMessage(
     val id: String,
     val sessionId: String,
     val content: String,
-    val isUser: Boolean,
+    val isUser: Boolean, // Following Gallery's pattern (true = user, false = agent)
     val timestamp: Long = System.currentTimeMillis(),
+    val messageType: MessageType,
+    val videoExplanation: VideoExplanation? = null, // NEW: Embedded video content
     val imageUri: String? = null,
     val mathSteps: List<MathStep> = emptyList(),
-    val messageType: MessageType = MessageType.TEXT,
     val status: MessageStatus = MessageStatus.SENT,
     val relatedExerciseId: String? = null,
-    val relatedTrialId: String? = null
+    val processingTimeMs: Long = 0L // NEW: Track AI response time
 )
 
 /**
@@ -65,10 +69,12 @@ data class MathStep(
 
 /**
  * Types of messages in the chat.
+ * UPDATED: Added video message type for video explanations.
  */
 @Serializable
 enum class MessageType {
     TEXT,
+    VIDEO, // NEW: For video explanation messages
     IMAGE,
     MATH_PROBLEM,
     STEP_BY_STEP_SOLUTION,
@@ -77,6 +83,7 @@ enum class MessageType {
 
 /**
  * Status of a message.
+ * Following Gallery's message status pattern.
  */
 @Serializable
 enum class MessageStatus {
@@ -84,11 +91,12 @@ enum class MessageStatus {
     SENT,
     DELIVERED,
     FAILED,
-    STREAMING
+    STREAMING // For real-time AI responses
 }
 
 /**
  * Represents the state of AI model.
+ * Using Gallery's ModelState pattern but adapted for Eliza.
  */
 @Serializable
 data class ModelState(
@@ -103,6 +111,7 @@ data class ModelState(
 
 /**
  * Represents a math problem extracted from an image.
+ * Enhanced with better bounding box support.
  */
 @Serializable
 data class ImageMathProblem(
@@ -139,4 +148,49 @@ enum class ProblemType {
     GRAPH,
     WORD_PROBLEM,
     UNKNOWN
-} 
+}
+
+/**
+ * Chat UI state following Gallery's pattern.
+ * NEW: Manages multiple sessions and video content.
+ */
+@Serializable
+data class ChatUiState(
+    val inProgress: Boolean = false,
+    val isResettingSession: Boolean = false,
+    val preparing: Boolean = false,
+    val activeSessionId: String? = null,
+    val isOnline: Boolean = true, // NEW: Network state for video features
+    val videoRequestInProgress: Boolean = false // NEW: Video request state
+)
+
+/**
+ * Result of a video request operation.
+ * NEW: For tracking video request progress and results.
+ */
+@Serializable
+sealed class VideoRequestResult {
+    @Serializable
+    data object Loading : VideoRequestResult()
+    
+    @Serializable
+    data class Success(val videoExplanation: VideoExplanation) : VideoRequestResult()
+    
+    @Serializable
+    data class Error(val message: String, val canRetry: Boolean = true) : VideoRequestResult()
+    
+    @Serializable
+    data object Offline : VideoRequestResult()
+}
+
+/**
+ * Chat response from AI including processing metadata.
+ * NEW: Enhanced response model for better user experience.
+ */
+@Serializable
+data class ChatResponse(
+    val message: ChatMessage,
+    val processingTime: Long,
+    val tokensGenerated: Int,
+    val confidence: Float? = null
+) 

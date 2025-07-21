@@ -33,27 +33,34 @@ import com.example.ai.edge.eliza.core.database.entity.CourseEntity
 import com.example.ai.edge.eliza.core.database.entity.ExerciseEntity
 import com.example.ai.edge.eliza.core.database.entity.ImageMathProblemEntity
 import com.example.ai.edge.eliza.core.database.entity.LearningStatsEntity
-import com.example.ai.edge.eliza.core.database.entity.LessonEntity
-import com.example.ai.edge.eliza.core.database.entity.LessonProgressEntity
+import com.example.ai.edge.eliza.core.database.entity.ChapterEntity
+import com.example.ai.edge.eliza.core.database.entity.ChapterProgressEntity
 import com.example.ai.edge.eliza.core.database.entity.MathStepEntity
 import com.example.ai.edge.eliza.core.database.entity.StudySessionEntity
 import com.example.ai.edge.eliza.core.database.entity.TrialEntity
 import com.example.ai.edge.eliza.core.database.entity.UserAnswerEntity
 import com.example.ai.edge.eliza.core.database.entity.UserProgressEntity
 import com.example.ai.edge.eliza.core.database.entity.WeeklyProgressEntity
+import com.example.ai.edge.eliza.core.database.entity.VideoExplanationEntity
+import com.example.ai.edge.eliza.core.database.entity.ExerciseHelpEntity
 
 /**
  * Main Room database for the Eliza AI tutoring app.
- * This database stores all local data including courses, lessons, exercises,
- * chat sessions, user progress, and learning analytics.
+ * This database stores all local data including courses, chapters, exercises,
+ * chat sessions, user progress, learning analytics, and video explanations.
+ * UPDATED: Added support for chapter-based organization and video explanation system.
  */
 @Database(
     entities = [
         // Course-related entities
         CourseEntity::class,
-        LessonEntity::class,
+        ChapterEntity::class,
         ExerciseEntity::class,
         TrialEntity::class,
+        
+        // NEW: Video and help system entities
+        VideoExplanationEntity::class,
+        ExerciseHelpEntity::class,
         
         // Chat-related entities
         ChatSessionEntity::class,
@@ -64,14 +71,14 @@ import com.example.ai.edge.eliza.core.database.entity.WeeklyProgressEntity
         
         // Progress-related entities
         UserProgressEntity::class,
-        LessonProgressEntity::class,
+        ChapterProgressEntity::class,
         UserAnswerEntity::class,
         StudySessionEntity::class,
         AchievementEntity::class,
         LearningStatsEntity::class,
         WeeklyProgressEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -94,7 +101,7 @@ abstract class ElizaDatabase : RoomDatabase() {
                     ElizaDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .fallbackToDestructiveMigration() // For development only
+                    .fallbackToDestructiveMigration() // For development only - will recreate DB with new schema
                     .build()
                 INSTANCE = instance
                 instance

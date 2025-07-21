@@ -212,5 +212,9 @@
 - User-specific video explanation storage
 - Chapter-based chat session organization
 - Exercise help system data models
-- Network state management
 - Video metadata and file management
+
+### Existing Infrastructure Enhancement
+- Enhance existing SimpleNetworkMonitor (core:data) for actual connectivity detection
+- Utilize existing NetworkMonitor.isOnline Flow<Boolean> for video feature availability
+- Leverage existing ElizaAppState.isOffline for UI state management

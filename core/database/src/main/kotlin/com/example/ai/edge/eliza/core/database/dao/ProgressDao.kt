@@ -24,7 +24,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.example.ai.edge.eliza.core.database.entity.AchievementEntity
 import com.example.ai.edge.eliza.core.database.entity.LearningStatsEntity
-import com.example.ai.edge.eliza.core.database.entity.LessonProgressEntity
+import com.example.ai.edge.eliza.core.database.entity.ChapterProgressEntity // UPDATED from LessonProgressEntity
 import com.example.ai.edge.eliza.core.database.entity.StudySessionEntity
 import com.example.ai.edge.eliza.core.database.entity.UserAnswerEntity
 import com.example.ai.edge.eliza.core.database.entity.UserProgressEntity
@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Data Access Object for progress-related operations.
+ * UPDATED: Now supports chapter-based progress tracking instead of lesson-based.
  */
 @Dao
 interface ProgressDao {
@@ -56,24 +57,24 @@ interface ProgressDao {
     @Query("DELETE FROM user_progress WHERE courseId = :courseId")
     suspend fun deleteUserProgressByCourse(courseId: String)
     
-    // Lesson Progress operations
-    @Query("SELECT * FROM lesson_progress WHERE lessonId = :lessonId AND userId = :userId")
-    fun getLessonProgress(lessonId: String, userId: String): Flow<LessonProgressEntity?>
+    // Chapter Progress operations (RENAMED from lesson progress operations)
+    @Query("SELECT * FROM chapter_progress WHERE chapterId = :chapterId AND userId = :userId")
+    fun getChapterProgress(chapterId: String, userId: String): Flow<ChapterProgressEntity?>
     
-    @Query("SELECT * FROM lesson_progress WHERE userId = :userId ORDER BY lastAccessAt DESC")
-    fun getUserLessonProgress(userId: String): Flow<List<LessonProgressEntity>>
+    @Query("SELECT * FROM chapter_progress WHERE userId = :userId ORDER BY lastAccessAt DESC")
+    fun getUserChapterProgress(userId: String): Flow<List<ChapterProgressEntity>>
     
-    @Query("SELECT * FROM lesson_progress WHERE userId = :userId AND isCompleted = 1")
-    fun getCompletedLessons(userId: String): Flow<List<LessonProgressEntity>>
+    @Query("SELECT * FROM chapter_progress WHERE userId = :userId AND isCompleted = 1")
+    fun getCompletedChapters(userId: String): Flow<List<ChapterProgressEntity>>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertLessonProgress(progress: LessonProgressEntity)
+    suspend fun insertChapterProgress(progress: ChapterProgressEntity)
     
     @Update
-    suspend fun updateLessonProgress(progress: LessonProgressEntity)
+    suspend fun updateChapterProgress(progress: ChapterProgressEntity)
     
     @Delete
-    suspend fun deleteLessonProgress(progress: LessonProgressEntity)
+    suspend fun deleteChapterProgress(progress: ChapterProgressEntity)
     
     // User Answer operations
     @Query("SELECT * FROM user_answers WHERE exerciseId = :exerciseId AND userId = :userId")
@@ -94,12 +95,15 @@ interface ProgressDao {
     @Delete
     suspend fun deleteUserAnswer(answer: UserAnswerEntity)
     
-    // Study Session operations
+    // Study Session operations (UPDATED for chapters)
     @Query("SELECT * FROM study_sessions WHERE userId = :userId ORDER BY startedAt DESC")
     fun getStudySessionsByUser(userId: String): Flow<List<StudySessionEntity>>
     
     @Query("SELECT * FROM study_sessions WHERE userId = :userId AND courseId = :courseId ORDER BY startedAt DESC")
     fun getStudySessionsByCourse(userId: String, courseId: String): Flow<List<StudySessionEntity>>
+    
+    @Query("SELECT * FROM study_sessions WHERE userId = :userId AND chapterId = :chapterId ORDER BY startedAt DESC")
+    fun getStudySessionsByChapter(userId: String, chapterId: String): Flow<List<StudySessionEntity>>
     
     @Query("SELECT * FROM study_sessions WHERE userId = :userId AND sessionType = :sessionType ORDER BY startedAt DESC")
     fun getStudySessionsByType(userId: String, sessionType: String): Flow<List<StudySessionEntity>>
@@ -164,17 +168,17 @@ interface ProgressDao {
     @Delete
     suspend fun deleteWeeklyProgress(progress: WeeklyProgressEntity)
     
-    // Aggregate queries
+    // Aggregate queries (UPDATED for chapters)
     @Query("SELECT COUNT(*) FROM user_answers WHERE userId = :userId AND isCorrect = 1")
     suspend fun getCorrectAnswerCount(userId: String): Int
     
     @Query("SELECT COUNT(*) FROM user_answers WHERE userId = :userId")
     suspend fun getTotalAnswerCount(userId: String): Int
     
-    @Query("SELECT COUNT(*) FROM lesson_progress WHERE userId = :userId AND isCompleted = 1")
-    suspend fun getCompletedLessonCount(userId: String): Int
+    @Query("SELECT COUNT(*) FROM chapter_progress WHERE userId = :userId AND isCompleted = 1")
+    suspend fun getCompletedChapterCount(userId: String): Int
     
-    @Query("SELECT SUM(timeSpentMinutes) FROM lesson_progress WHERE userId = :userId")
+    @Query("SELECT SUM(timeSpentMinutes) FROM chapter_progress WHERE userId = :userId")
     suspend fun getTotalStudyTime(userId: String): Long
     
     @Query("SELECT COUNT(*) FROM achievements WHERE unlockedAt IS NOT NULL")

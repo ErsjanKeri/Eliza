@@ -313,11 +313,11 @@ constructor(
             when (chatContext) {
                 is ChatContext.ChapterReading -> {
                     append("CURRENT CHAPTER: ${chatContext.chapterTitle}\n")
-                    append("LESSON ID: ${chatContext.lessonId}\n")
+                    append("CHAPTER ID: ${chatContext.chapterId}\n")
                 }
                 is ChatContext.Revision -> {
                     append(
-                        "REVISION MODE: Reviewing ${chatContext.completedLessonIds.size} completed lessons\n"
+                        "REVISION MODE: Reviewing ${chatContext.completedChapterIds.size} completed chapters\n"
                     )
                 }
                 is ChatContext.ExerciseSolving -> {

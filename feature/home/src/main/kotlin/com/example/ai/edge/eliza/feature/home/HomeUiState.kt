@@ -101,6 +101,7 @@ enum class HomeTab(val displayName: String) {
 
 /**
  * Represents a course with its associated progress information.
+ * UPDATED: Now uses chapter-based terminology.
  */
 data class CourseWithProgress(
     val course: Course,
@@ -116,14 +117,14 @@ data class CourseWithProgress(
      * Whether this course has been started.
      */
     val isStarted: Boolean
-        get() = progress != null && progress.completedLessons > 0
+        get() = progress != null && progress.completedChapters > 0 // UPDATED: completedLessons → completedChapters
 
     /**
      * Display text for progress.
      */
     val progressText: String
         get() = if (progress != null) {
-            "${progress.completedLessons}/${progress.totalLessons} lessons"
+            "${progress.completedChapters}/${progress.totalChapters} chapters" // UPDATED: lessons → chapters
         } else {
             "Not started"
         }
@@ -141,11 +142,12 @@ data class CourseWithProgress(
 
 /**
  * Overall learning progress overview for the user.
+ * UPDATED: Now uses chapter-based terminology.
  */
 data class LearningOverview(
     val totalCoursesStarted: Int = 0,
     val totalCoursesCompleted: Int = 0,
-    val totalLessonsCompleted: Int = 0,
+    val totalChaptersCompleted: Int = 0, // UPDATED: totalLessonsCompleted → totalChaptersCompleted
     val totalTimeSpentMinutes: Long = 0,
     val currentStreak: Int = 0,
     val averageAccuracy: Float = 0f,

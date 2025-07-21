@@ -18,7 +18,7 @@ package com.example.ai.edge.eliza.core.data.repository
 
 import com.example.ai.edge.eliza.core.model.Achievement
 import com.example.ai.edge.eliza.core.model.LearningStats
-import com.example.ai.edge.eliza.core.model.LessonProgress
+import com.example.ai.edge.eliza.core.model.ChapterProgress
 import com.example.ai.edge.eliza.core.model.StudySession
 import com.example.ai.edge.eliza.core.model.Subject
 import com.example.ai.edge.eliza.core.model.UserAnswer
@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.Flow
  * Repository interface for progress-related operations.
  * This interface defines all operations for managing user progress,
  * learning analytics, achievements, and study sessions.
+ * UPDATED: Now uses chapter-based terminology throughout.
  */
 interface ProgressRepository {
     
@@ -37,18 +38,18 @@ interface ProgressRepository {
     fun getUserProgressByCourse(courseId: String): Flow<UserProgress?>
     fun getAllUserProgress(): Flow<List<UserProgress>>
     suspend fun updateUserProgress(progress: UserProgress)
-    suspend fun incrementLessonProgress(courseId: String, lessonId: String)
+    suspend fun incrementChapterProgress(courseId: String, chapterId: String) // UPDATED: lesson → chapter
     suspend fun incrementExerciseProgress(courseId: String, exerciseId: String, isCorrect: Boolean)
     suspend fun addStudyTime(courseId: String, minutes: Long)
     suspend fun updateStreak(courseId: String, days: Int)
     
-    // Lesson Progress operations
-    fun getLessonProgress(lessonId: String, userId: String): Flow<LessonProgress?>
-    fun getUserLessonProgress(userId: String): Flow<List<LessonProgress>>
-    fun getCompletedLessons(userId: String): Flow<List<LessonProgress>>
-    suspend fun startLesson(lessonId: String, userId: String)
-    suspend fun completeLesson(lessonId: String, userId: String, timeSpent: Long)
-    suspend fun updateLessonProgress(progress: LessonProgress)
+    // Chapter Progress operations (UPDATED: lesson → chapter)
+    fun getChapterProgress(chapterId: String, userId: String): Flow<ChapterProgress?>
+    fun getUserChapterProgress(userId: String): Flow<List<ChapterProgress>>
+    fun getCompletedChapters(userId: String): Flow<List<ChapterProgress>>
+    suspend fun startChapter(chapterId: String, userId: String)
+    suspend fun completeChapter(chapterId: String, userId: String, timeSpent: Long)
+    suspend fun updateChapterProgress(progress: ChapterProgress)
     
     // User Answer operations
     fun getUserAnswersByExercise(exerciseId: String, userId: String): Flow<List<UserAnswer>>
@@ -57,11 +58,11 @@ interface ProgressRepository {
     suspend fun recordAnswer(answer: UserAnswer)
     suspend fun getAnswerStats(userId: String): AnswerStats
     
-    // Study Session operations
+    // Study Session operations (UPDATED: lessonId → chapterId)
     fun getStudySessionsByUser(userId: String): Flow<List<StudySession>>
     fun getStudySessionsByCourse(userId: String, courseId: String): Flow<List<StudySession>>
     fun getActiveStudySession(userId: String): Flow<StudySession?>
-    suspend fun startStudySession(userId: String, courseId: String?, lessonId: String?, sessionType: String): StudySession
+    suspend fun startStudySession(userId: String, courseId: String?, chapterId: String?, sessionType: String): StudySession
     suspend fun endStudySession(sessionId: String, exercisesCompleted: Int, correctAnswers: Int)
     suspend fun updateStudySession(session: StudySession)
     
@@ -88,10 +89,10 @@ interface ProgressRepository {
     suspend fun getLearningVelocity(userId: String): LearningVelocity
     suspend fun getTimeDistribution(userId: String): TimeDistribution
     
-    // Recommendations
+    // Recommendations (UPDATED: lesson → chapter)
     suspend fun getPersonalizedRecommendations(userId: String): List<Recommendation>
     suspend fun getWeakAreaRecommendations(userId: String): List<WeakAreaRecommendation>
-    suspend fun getNextLessonRecommendation(userId: String, courseId: String): LessonRecommendation?
+    suspend fun getNextChapterRecommendation(userId: String, courseId: String): ChapterRecommendation?
 }
 
 /**
@@ -119,13 +120,14 @@ data class SubjectAnswerStats(
 
 /**
  * Weekly learning report.
+ * UPDATED: lesson → chapter terminology.
  */
 data class WeeklyReport(
     val userId: String,
     val weekStartDate: Long,
     val weekEndDate: Long,
     val totalStudyTime: Long,
-    val lessonsCompleted: Int,
+    val chaptersCompleted: Int, // UPDATED: lessonsCompleted → chaptersCompleted
     val exercisesCompleted: Int,
     val averageAccuracy: Float,
     val streakDays: Int,
@@ -137,13 +139,14 @@ data class WeeklyReport(
 
 /**
  * Monthly learning report.
+ * UPDATED: lesson → chapter terminology.
  */
 data class MonthlyReport(
     val userId: String,
     val monthStartDate: Long,
     val monthEndDate: Long,
     val totalStudyTime: Long,
-    val lessonsCompleted: Int,
+    val chaptersCompleted: Int, // UPDATED: lessonsCompleted → chaptersCompleted
     val exercisesCompleted: Int,
     val averageAccuracy: Float,
     val longestStreak: Int,
@@ -198,11 +201,12 @@ data class StreakAnalysis(
 
 /**
  * Learning velocity metrics.
+ * UPDATED: lesson → chapter terminology.
  */
 data class LearningVelocity(
-    val lessonsPerWeek: Float,
+    val chaptersPerWeek: Float, // UPDATED: lessonsPerWeek → chaptersPerWeek
     val exercisesPerSession: Float,
-    val timePerLesson: Long,
+    val timePerChapter: Long, // UPDATED: timePerLesson → timePerChapter
     val difficultyProgression: Float,
     val velocityTrend: VelocityTrend, // speeding up, slowing down, stable
     val optimizedSchedule: List<StudyTimeRecommendation>
@@ -247,10 +251,11 @@ data class WeakAreaRecommendation(
 )
 
 /**
- * Lesson recommendation.
+ * Chapter recommendation.
+ * UPDATED: LessonRecommendation → ChapterRecommendation, lessonId → chapterId.
  */
-data class LessonRecommendation(
-    val lessonId: String,
+data class ChapterRecommendation(
+    val chapterId: String, // UPDATED: lessonId → chapterId
     val title: String,
     val reason: String,
     val confidence: Float,

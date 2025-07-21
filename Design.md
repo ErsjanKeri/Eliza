@@ -352,20 +352,8 @@ enum class HelpType {
     NEW_TRIAL
 }
 
-// NEW: Network State Management
-data class NetworkState(
-    val isOnline: Boolean,
-    val connectionType: ConnectionType,
-    val lastOnlineAt: Long = 0L,
-    val videoRequestsEnabled: Boolean = false
-)
-
-enum class ConnectionType {
-    NONE,
-    WIFI,
-    CELLULAR,
-    UNKNOWN
-}
+// Note: Network connectivity is handled by existing NetworkMonitor interface in core:data
+// Use networkMonitor.isOnline Flow<Boolean> for video feature availability
 ```
 
 ### Database Schema Updates (Room)
@@ -428,16 +416,6 @@ data class ExerciseHelpEntity(
     val videoExplanationId: String?, // FK to video_explanations
     val createdAt: Long,
     val wasHelpful: Boolean?
-)
-
-@Entity(tableName = "network_state") // NEW
-data class NetworkStateEntity(
-    @PrimaryKey val userId: String,
-    val isOnline: Boolean,
-    val connectionType: String,
-    val lastOnlineAt: Long,
-    val videoRequestsEnabled: Boolean,
-    val lastUpdated: Long
 )
 ```
 
@@ -514,6 +492,32 @@ data class StorageInfo(
     val availableSpaceBytes: Long,
     val oldestVideoDate: Long
 )
+
+### Existing Network Monitor (Already Implemented)
+```kotlin
+// EXISTING interface in core:data - DO NOT recreate
+interface NetworkMonitor {
+    val isOnline: Flow<Boolean>
+}
+
+// EXISTING implementation - ENHANCE this for video features
+@Singleton
+class SimpleNetworkMonitor @Inject constructor() : NetworkMonitor {
+    override val isOnline: Flow<Boolean> = flowOf(true) // TODO: Enhance for actual detection
+}
+
+// EXISTING integration in ElizaAppState
+class ElizaAppState(
+    val navController: NavHostController,
+    coroutineScope: CoroutineScope,
+    networkMonitor: NetworkMonitor, // Already injected
+) {
+    val isOffline = networkMonitor.isOnline  // Already exposed
+        .map(Boolean::not)
+        .stateIn(...)
+}
+
+// For video features, use existing NetworkMonitor.isOnline Flow<Boolean>
 ```
 
 ## Component Architecture
@@ -526,7 +530,7 @@ class ChapterChatService @Inject constructor(
     private val aiService: ElizaChatService,
     private val videoService: VideoExplanationService,
     private val videoManager: VideoManager,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor // Use existing NetworkMonitor interface
 ) {
     
     suspend fun sendTextMessage(
@@ -585,10 +589,11 @@ fun VideoRequestButton(
     isLoading: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val networkState by networkMonitor.networkState.collectAsState()
+    // Use existing NetworkMonitor.isOnline Flow<Boolean>
+    val isOnline by networkMonitor.isOnline.collectAsState(initial = false)
     
     when {
-        !networkState.isOnline -> {
+        !isOnline -> {
             Button(
                 onClick = { },
                 enabled = false,

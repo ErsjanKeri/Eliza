@@ -38,19 +38,20 @@
 **Dependencies**: Day 1 completion  
 
 **Subtasks**:
-- [ ] Create NetworkMonitor service for online/offline detection
+- [ ] Enhance existing SimpleNetworkMonitor (core:data) for actual connectivity detection
 - [ ] Implement VideoExplanationService with Retrofit
 - [ ] Create API request/response models for chapter and exercise videos
 - [ ] Add video download functionality with progress tracking
 - [ ] Implement local video storage management
 - [ ] Create VideoManager for file operations
-- [ ] Add network state repository and data models
+- [ ] Integrate video features with existing NetworkMonitor.isOnline Flow<Boolean>
 
 **Acceptance Criteria**:
-- Network connectivity properly detected
+- Existing SimpleNetworkMonitor enhanced with real connectivity detection
 - Video API endpoints functional with proper error handling
 - Local video storage and retrieval working
 - Video download progress tracking implemented
+- Video features properly integrate with existing NetworkMonitor.isOnline Flow
 
 ### Day 3: Database Implementation for Video System
 **Task**: Implement Room DAOs and entities for video features  
@@ -62,7 +63,6 @@
 - [ ] Create VideoExplanationDao with CRUD operations
 - [ ] Create ExerciseHelpDao for help system
 - [ ] Update ChatSessionDao for chapter-based sessions
-- [ ] Create NetworkStateDao for connectivity tracking
 - [ ] Implement database migrations from current schema
 - [ ] Create repository implementations for video features
 - [ ] Add proper database indexing for performance

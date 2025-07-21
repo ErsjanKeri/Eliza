@@ -58,7 +58,7 @@ class HomeViewModel @Inject constructor(
             // Separate courses into continuing vs new
             val continuingCourses = courses
                 .filter { course -> 
-                    progressMap[course.id]?.let { it.completedLessons > 0 } == true 
+                    progressMap[course.id]?.let { it.completedChapters > 0 } == true 
                 }
                 .map { course ->
                     CourseWithProgress(
@@ -70,7 +70,7 @@ class HomeViewModel @Inject constructor(
 
             val newCourses = courses
                 .filter { course -> 
-                    progressMap[course.id]?.completedLessons ?: 0 == 0 
+                    progressMap[course.id]?.completedChapters ?: 0 == 0 
                 }
                 .sortedBy { it.title }
 
@@ -102,11 +102,11 @@ class HomeViewModel @Inject constructor(
             // Create learning overview from available data
             val learningOverview = learningStats?.let { stats ->
                 LearningOverview(
-                    totalCoursesStarted = progressMap.values.count { it.completedLessons > 0 },
+                    totalCoursesStarted = progressMap.values.count { it.completedChapters > 0 },
                     totalCoursesCompleted = progressMap.values.count { 
-                        it.totalLessons > 0 && it.completedLessons >= it.totalLessons 
+                        it.totalChapters > 0 && it.completedChapters >= it.totalChapters 
                     },
-                    totalLessonsCompleted = progressMap.values.sumOf { it.completedLessons },
+                    totalChaptersCompleted = progressMap.values.sumOf { it.completedChapters },
                     totalTimeSpentMinutes = progressMap.values.sumOf { it.timeSpentMinutes },
                     currentStreak = progressMap.values.maxOfOrNull { it.streakDays } ?: 0,
                     averageAccuracy = if (progressMap.values.sumOf { it.totalAnswers } > 0) {
@@ -115,11 +115,11 @@ class HomeViewModel @Inject constructor(
                     } else 0f,
                 )
             } ?: LearningOverview(
-                totalCoursesStarted = progressMap.values.count { it.completedLessons > 0 },
+                totalCoursesStarted = progressMap.values.count { it.completedChapters > 0 },
                 totalCoursesCompleted = progressMap.values.count { 
-                    it.totalLessons > 0 && it.completedLessons >= it.totalLessons 
+                    it.totalChapters > 0 && it.completedChapters >= it.totalChapters 
                 },
-                totalLessonsCompleted = progressMap.values.sumOf { it.completedLessons },
+                totalChaptersCompleted = progressMap.values.sumOf { it.completedChapters },
                 totalTimeSpentMinutes = progressMap.values.sumOf { it.timeSpentMinutes },
                 currentStreak = progressMap.values.maxOfOrNull { it.streakDays } ?: 0,
                 averageAccuracy = if (progressMap.values.sumOf { it.totalAnswers } > 0) {
