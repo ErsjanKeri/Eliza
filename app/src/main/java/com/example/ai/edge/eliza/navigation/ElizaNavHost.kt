@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import com.example.ai.edge.eliza.feature.home.navigation.HOME_BASE_ROUTE
 import com.example.ai.edge.eliza.feature.home.navigation.homeSection
+import com.example.ai.edge.eliza.feature.courseprogress.navigation.courseProgressScreen
+import com.example.ai.edge.eliza.feature.courseprogress.navigation.navigateToCourseProgress
 import com.example.ai.edge.eliza.ui.ElizaAppState
 
 /**
@@ -44,9 +46,14 @@ fun ElizaNavHost(
     ) {
         homeSection(
             onCourseClick = { courseId ->
-                // TODO: Navigate to course detail screen when implemented
-                // For now, just log the course ID
-                println("Course clicked: $courseId")
+                // Navigate to course progress screen
+                navController.navigateToCourseProgress(courseId)
+            }
+        )
+        
+        courseProgressScreen(
+            onBackClick = {
+                navController.popBackStack()
             }
         )
         

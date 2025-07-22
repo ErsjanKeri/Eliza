@@ -43,6 +43,7 @@ include(":ai:service")
 // Feature modules (UI layer) - only include existing modules
 include(":feature:home")
 include(":feature:chat")
+include(":feature:course-progress")
 
 // Check Java version compatibility
 check(JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {

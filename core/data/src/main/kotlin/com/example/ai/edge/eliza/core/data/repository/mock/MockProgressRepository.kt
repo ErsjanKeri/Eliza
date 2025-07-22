@@ -172,6 +172,20 @@ class MockProgressRepository @Inject constructor() : ProgressRepository {
             completedAt = System.currentTimeMillis() - 259200000 // 3 days ago
         )
 
+        // NEW: Add 3rd chapter for algebra course (NOT completed - this is why we show 2/3)
+        mockChapterProgress["chapter_polynomials"] = ChapterProgress(
+            id = "chapterProgress_polynomials",
+            chapterId = "chapter_polynomials",
+            userId = "user_default",
+            isCompleted = false, // This chapter is NOT completed
+            completedExercises = 0,
+            totalExercises = 4,
+            timeSpentMinutes = 0,
+            firstAccessAt = 0L, // Not started yet (use 0 instead of null)
+            lastAccessAt = 0L,
+            completedAt = null
+        )
+
         // NEW: Add chapter progress for calculus course (showing 3 completed out of 5)
         mockChapterProgress["chapter_calc_limits"] = ChapterProgress(
             id = "chapterProgress_calc_limits",
@@ -210,6 +224,60 @@ class MockProgressRepository @Inject constructor() : ProgressRepository {
             firstAccessAt = System.currentTimeMillis() - 604800000, // 1 week ago
             lastAccessAt = System.currentTimeMillis() - 7200000, // 2 hours ago
             completedAt = System.currentTimeMillis() - 259200000 // 3 days ago
+        )
+
+        // MISSING: Add chapter progress for geometry course (showing 1 completed out of 2)
+        mockChapterProgress["chapter_geo_shapes"] = ChapterProgress(
+            id = "chapterProgress_geo_shapes",
+            chapterId = "chapter_geo_shapes",
+            userId = "user_default",
+            isCompleted = true, // User completed first geometry chapter
+            completedExercises = 3,
+            totalExercises = 3,
+            timeSpentMinutes = 45,
+            firstAccessAt = System.currentTimeMillis() - 1209600000, // 2 weeks ago
+            lastAccessAt = System.currentTimeMillis() - 259200000, // 3 days ago
+            completedAt = System.currentTimeMillis() - 259200000
+        )
+
+        mockChapterProgress["chapter_geo_angles"] = ChapterProgress(
+            id = "chapterProgress_geo_angles",
+            chapterId = "chapter_geo_angles",
+            userId = "user_default",
+            isCompleted = false, // Second geometry chapter NOT completed
+            completedExercises = 0,
+            totalExercises = 4,
+            timeSpentMinutes = 0,
+            firstAccessAt = 0L, // Not started yet
+            lastAccessAt = 0L,
+            completedAt = null
+        )
+
+        // MISSING: Add progress for the remaining calculus chapters (NOT completed)
+        mockChapterProgress["chapter_calc_integrals"] = ChapterProgress(
+            id = "chapterProgress_calc_integrals",
+            chapterId = "chapter_calc_integrals",
+            userId = "user_default",
+            isCompleted = false, // 4th calculus chapter NOT completed
+            completedExercises = 0,
+            totalExercises = 5,
+            timeSpentMinutes = 0,
+            firstAccessAt = 0L, // Not started yet
+            lastAccessAt = 0L,
+            completedAt = null
+        )
+
+        mockChapterProgress["chapter_calc_real_world"] = ChapterProgress(
+            id = "chapterProgress_calc_real_world",
+            chapterId = "chapter_calc_real_world",
+            userId = "user_default",
+            isCompleted = false, // 5th calculus chapter NOT completed
+            completedExercises = 0,
+            totalExercises = 6,
+            timeSpentMinutes = 0,
+            firstAccessAt = 0L, // Not started yet
+            lastAccessAt = 0L,
+            completedAt = null
         )
 
         // Create mock achievements
