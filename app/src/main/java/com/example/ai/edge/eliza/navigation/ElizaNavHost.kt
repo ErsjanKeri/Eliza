@@ -24,7 +24,11 @@ import com.example.ai.edge.eliza.feature.home.navigation.homeSection
 import com.example.ai.edge.eliza.feature.courseprogress.navigation.courseProgressScreen
 import com.example.ai.edge.eliza.feature.courseprogress.navigation.navigateToCourseProgress
 import com.example.ai.edge.eliza.feature.chapter.navigation.chapterScreen
+import com.example.ai.edge.eliza.feature.chapter.navigation.chapterTestScreen
+import com.example.ai.edge.eliza.feature.chapter.navigation.chapterTestResultScreen
 import com.example.ai.edge.eliza.feature.chapter.navigation.navigateToChapter
+import com.example.ai.edge.eliza.feature.chapter.navigation.navigateToChapterTest
+import com.example.ai.edge.eliza.feature.chapter.navigation.navigateToChapterTestResult
 import com.example.ai.edge.eliza.ui.ElizaAppState
 
 /**
@@ -64,6 +68,34 @@ fun ElizaNavHost(
         
         chapterScreen(
             onBackClick = {
+                navController.popBackStack()
+            },
+            onNavigateToTest = { chapterId ->
+                navController.navigateToChapterTest(chapterId)
+            }
+        )
+        
+        chapterTestScreen(
+            onBackClick = {
+                navController.popBackStack()
+            },
+            onNavigateToResults = { chapterId, score, correct, total ->
+                navController.navigateToChapterTestResult(chapterId, score, correct, total)
+            }
+        )
+        
+        chapterTestResultScreen(
+            onBackClick = {
+                navController.popBackStack()
+            },
+            onNavigateToChapter = { chapterId ->
+                navController.navigateToChapter(chapterId)
+            },
+            onNavigateToTest = { chapterId ->
+                navController.navigateToChapterTest(chapterId)
+            },
+            onContinueLearning = {
+                // TODO: Navigate to next chapter or course list
                 navController.popBackStack()
             }
         )

@@ -54,9 +54,12 @@ data class Chapter(
     val title: String,
     val markdownContent: String,
     val imageReferences: List<String> = emptyList(),
-    val exercises: List<Exercise> = emptyList(),
+    val exercises: List<Exercise> = emptyList(), // Exactly 5 exercises = test questions
     val estimatedReadingTime: Int, // in minutes
-    val isCompleted: Boolean = false,
+    val isCompleted: Boolean = false, // TRUE only when test score = 100%
+    val testScore: Int? = null, // Latest test score (0-100)
+    val testAttempts: Int = 0, // Number of test attempts
+    val lastTestAttempt: Long? = null, // Timestamp of last test
     val createdAt: Long = System.currentTimeMillis()
 )
 

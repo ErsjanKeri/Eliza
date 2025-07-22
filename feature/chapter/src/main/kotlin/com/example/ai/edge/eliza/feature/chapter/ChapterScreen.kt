@@ -31,6 +31,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.example.ai.edge.eliza.core.designsystem.icon.ElizaIcons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,6 +66,7 @@ import com.example.ai.edge.eliza.feature.chapter.component.ElizaMarkdownRenderer
 fun ChapterScreen(
     chapterId: String,
     onBackClick: () -> Unit,
+    onNavigateToTest: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ChapterViewModel = hiltViewModel()
 ) {
@@ -110,13 +114,15 @@ fun ChapterScreen(
                         ChapterLayoutState.FullScreen -> {
                             FullScreenContent(
                                 chapter = uiState.chapter!!,
-                                onImageClick = viewModel::onImageClick
+                                onImageClick = viewModel::onImageClick,
+                                onTakeTestClick = onNavigateToTest
                             )
                         }
                         ChapterLayoutState.SplitScreen -> {
                             SplitScreenContent(
                                 chapter = uiState.chapter!!,
                                 onImageClick = viewModel::onImageClick,
+                                onTakeTestClick = onNavigateToTest,
                                 onCloseChatClick = { viewModel.hideChat() }
                             )
                         }
@@ -189,6 +195,7 @@ private fun ChapterTopAppBar(
 private fun FullScreenContent(
     chapter: com.example.ai.edge.eliza.core.model.Chapter,
     onImageClick: (String) -> Unit,
+    onTakeTestClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -204,6 +211,15 @@ private fun FullScreenContent(
             modifier = Modifier.fillMaxWidth()
         )
         
+        // Test button - shown at the bottom of chapter content
+        ChapterTestButton(
+            chapter = chapter,
+            onTakeTestClick = onTakeTestClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+        )
+        
         // Add some bottom padding for better scrolling experience
         Spacer(modifier = Modifier.height(32.dp))
     }
@@ -216,6 +232,7 @@ private fun FullScreenContent(
 private fun SplitScreenContent(
     chapter: com.example.ai.edge.eliza.core.model.Chapter,
     onImageClick: (String) -> Unit,
+    onTakeTestClick: () -> Unit,
     onCloseChatClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -235,6 +252,15 @@ private fun SplitScreenContent(
                 content = chapter.markdownContent,
                 onImageClick = onImageClick,
                 modifier = Modifier.fillMaxWidth()
+            )
+            
+            // Test button - shown at the bottom of chapter content
+            ChapterTestButton(
+                chapter = chapter,
+                onTakeTestClick = onTakeTestClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
             )
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -363,5 +389,96 @@ private fun EmptyState(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+/**
+ * Test button component that shows different states based on chapter completion.
+ */
+@Composable
+private fun ChapterTestButton(
+    chapter: com.example.ai.edge.eliza.core.model.Chapter,
+    onTakeTestClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val buttonText = if (chapter.isCompleted) {
+        "Retake Test (Score: ${chapter.testScore ?: 0}%)"
+    } else {
+        "Take Test (${chapter.exercises.size} Questions)"
+    }
+    
+    val buttonIcon = if (chapter.isCompleted) {
+        Icons.Default.Refresh // Retake icon
+    } else {
+        Icons.Default.Edit // Take test icon
+    }
+    
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Completion status indicator
+        if (chapter.isCompleted) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Chapter Complete",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Chapter Complete",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        
+        // Main test button
+        ElizaButton(
+            onClick = onTakeTestClick,
+            text = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = buttonIcon,
+                        contentDescription = if (chapter.isCompleted) "Retake Test" else "Take Test",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Column {
+                        Text(
+                            text = buttonText,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                        Text(
+                            text = if (chapter.isCompleted) {
+                                "Try again for 100% completion"
+                            } else {
+                                "Test your understanding!"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Additional info for incomplete chapters
+        if (!chapter.isCompleted && chapter.testAttempts > 0) {
+            Text(
+                text = "Attempts: ${chapter.testAttempts}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 } 

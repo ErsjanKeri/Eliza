@@ -161,6 +161,8 @@ class ChapterViewModel @Inject constructor(
         }
     }
 
+
+
     /**
      * Handle image click events.
      */

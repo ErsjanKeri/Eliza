@@ -16,6 +16,7 @@
 
 package com.example.ai.edge.eliza.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -78,8 +79,11 @@ import com.example.ai.edge.eliza.core.database.entity.ExerciseHelpEntity
         LearningStatsEntity::class,
         WeeklyProgressEntity::class
     ],
-    version = 2,
-    exportSchema = true
+    version = 3,
+    exportSchema = true,
+    autoMigrations = [
+        AutoMigration(from = 2, to = 3)
+    ]
 )
 @TypeConverters(Converters::class)
 abstract class ElizaDatabase : RoomDatabase() {

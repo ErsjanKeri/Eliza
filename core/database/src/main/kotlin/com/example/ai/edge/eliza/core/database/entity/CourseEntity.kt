@@ -16,6 +16,7 @@
 
 package com.example.ai.edge.eliza.core.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
@@ -69,7 +70,11 @@ data class ChapterEntity(
     val markdownContent: String,
     val imageReferences: List<String> = emptyList(),
     val estimatedReadingTime: Int,
-    val isCompleted: Boolean = false,
+    val isCompleted: Boolean = false, // TRUE only when test score = 100%
+    val testScore: Int? = null, // Latest test score (0-100)
+    @ColumnInfo(defaultValue = "0")
+    val testAttempts: Int = 0, // Number of test attempts
+    val lastTestAttempt: Long? = null, // Timestamp of last test
     val createdAt: Long = System.currentTimeMillis()
 )
 

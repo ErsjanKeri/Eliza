@@ -126,11 +126,15 @@ fun ElizaTheme(
     // Tint theme for icons and accents
     val tintTheme = ElizaTintTheme
     
+    // Test colors for educational interfaces
+    val testColors = ElizaTestColors
+    
     // Provide all theme values through composition locals
     CompositionLocalProvider(
         LocalGradientColors provides gradientColors,
         LocalBackgroundTheme provides backgroundTheme,
         LocalTintTheme provides tintTheme,
+        LocalTestColors provides testColors,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

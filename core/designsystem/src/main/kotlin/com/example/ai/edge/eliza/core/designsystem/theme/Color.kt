@@ -78,4 +78,27 @@ internal val StudyBlue = Blue50               // Primary learning color
 internal val ProgressBlue = LightBlue50       // Progress indicators
 internal val InteractiveBlue = Blue60         // Interactive elements
 internal val BackgroundBlue = Blue95          // Light backgrounds
-internal val SurfaceBlue = Blue99             // Card surfaces 
+internal val SurfaceBlue = Blue99             // Card surfaces
+
+// Test option colors - comprehensive palette for up to 20 alternatives
+// Designed to be accessible and distinguishable while maintaining educational appeal
+internal val TestOption01 = Color(0xFFE21B23) // Red (Classic Kahoot)
+internal val TestOption02 = Color(0xFF1368CE) // Blue (Classic Kahoot)
+internal val TestOption03 = Color(0xFFD89E00) // Orange (Classic Kahoot)
+internal val TestOption04 = Color(0xFF26890C) // Green (Classic Kahoot)
+internal val TestOption05 = Color(0xFF7B2CBF) // Purple
+internal val TestOption06 = Color(0xFFE91E63) // Pink
+internal val TestOption07 = Color(0xFF00BCD4) // Cyan
+internal val TestOption08 = Color(0xFF795548) // Brown
+internal val TestOption09 = Color(0xFF607D8B) // Blue Gray
+internal val TestOption10 = Color(0xFF9C27B0) // Deep Purple
+internal val TestOption11 = Color(0xFF3F51B5) // Indigo
+internal val TestOption12 = Color(0xFF009688) // Teal
+internal val TestOption13 = Color(0xFF8BC34A) // Light Green
+internal val TestOption14 = Color(0xFFCDDC39) // Lime
+internal val TestOption15 = Color(0xFFFFC107) // Amber
+internal val TestOption16 = Color(0xFFFF9800) // Deep Orange
+internal val TestOption17 = Color(0xFFFF5722) // Red Orange
+internal val TestOption18 = Color(0xFF9E9E9E) // Gray
+internal val TestOption19 = Color(0xFF673AB7) // Deep Purple Alt
+internal val TestOption20 = Color(0xFF2196F3) // Blue Alt 

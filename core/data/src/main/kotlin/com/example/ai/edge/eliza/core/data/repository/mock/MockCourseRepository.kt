@@ -415,6 +415,189 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
         courses.addAll(listOf(algebraCourse, geometryCourse, calculusCourse, trigonometryCourse, statisticsCourse, algebraAdvancedCourse))
         
         // Create mock chapters
+        // Create exercises first so they can be included in chapters
+        // Linear Equations Chapter Exercises
+        val linearExercises = listOf(
+            Exercise(
+                id = "exercise_linear_1",
+                chapterId = "chapter_linear_eq",
+                questionText = "Solve for x: 2x + 7 = 19",
+                options = listOf("x = 5", "x = 6", "x = 7", "x = 8"),
+                correctAnswerIndex = 1,
+                explanation = "Subtract 7 from both sides: 2x = 12. Then divide by 2: x = 6.",
+                difficulty = Difficulty.EASY
+            ),
+            Exercise(
+                id = "exercise_linear_2",
+                chapterId = "chapter_linear_eq",
+                questionText = "What is the slope of the line 3x + 4y = 12?",
+                options = listOf("-3/4", "3/4", "-4/3", "4/3"),
+                correctAnswerIndex = 0,
+                explanation = "Rewrite in slope-intercept form: y = -3/4 x + 3. The slope is -3/4.",
+                difficulty = Difficulty.MEDIUM
+            ),
+            Exercise(
+                id = "exercise_linear_3",
+                chapterId = "chapter_linear_eq",
+                questionText = "Which equation represents a line with slope 2 and y-intercept -3?",
+                options = listOf("y = 2x - 3", "y = -3x + 2", "y = 2x + 3", "y = 3x - 2"),
+                correctAnswerIndex = 0,
+                explanation = "The slope-intercept form is y = mx + b, where m is slope and b is y-intercept.",
+                difficulty = Difficulty.EASY
+            ),
+            Exercise(
+                id = "exercise_linear_4",
+                chapterId = "chapter_linear_eq",
+                questionText = "Find the x-intercept of the line 2x - 3y = 6",
+                options = listOf("x = 2", "x = 3", "x = -2", "x = -3"),
+                correctAnswerIndex = 1,
+                explanation = "Set y = 0: 2x - 3(0) = 6, so 2x = 6, therefore x = 3.",
+                difficulty = Difficulty.MEDIUM
+            )
+        )
+        
+        // Quadratic Equations Chapter Exercises
+        val quadraticExercises = listOf(
+            Exercise(
+                id = "exercise_quad_1",
+                chapterId = "chapter_quadratics",
+                questionText = "What are the solutions to x² - 5x + 6 = 0?",
+                options = listOf("x = 2, 3", "x = 1, 6", "x = -2, -3", "x = 2, -3"),
+                correctAnswerIndex = 0,
+                explanation = "Factor: (x - 2)(x - 3) = 0, so x = 2 or x = 3.",
+                difficulty = Difficulty.MEDIUM
+            ),
+            Exercise(
+                id = "exercise_quad_2",
+                chapterId = "chapter_quadratics",
+                questionText = "Using the quadratic formula, solve x² + 2x - 3 = 0",
+                options = listOf("x = 1, -3", "x = -1, 3", "x = 1, 3", "x = -1, -3"),
+                correctAnswerIndex = 0,
+                explanation = "x = (-2 ± √(4 + 12))/2 = (-2 ± 4)/2, so x = 1 or x = -3.",
+                difficulty = Difficulty.HARD
+            ),
+            Exercise(
+                id = "exercise_quad_3",
+                chapterId = "chapter_quadratics",
+                questionText = "What is the vertex of the parabola y = x² - 4x + 3?",
+                options = listOf("(2, -1)", "(2, 1)", "(-2, -1)", "(-2, 1)"),
+                correctAnswerIndex = 0,
+                explanation = "Complete the square: y = (x - 2)² - 1. Vertex is (2, -1).",
+                difficulty = Difficulty.HARD
+            )
+        )
+        
+        // Polynomials Chapter Exercises
+        val polynomialExercises = listOf(
+            Exercise(
+                id = "exercise_poly_1",
+                chapterId = "chapter_polynomials",
+                questionText = "What is the degree of the polynomial 3x⁴ - 2x² + 7x - 1?",
+                options = listOf("3", "4", "2", "1"),
+                correctAnswerIndex = 1,
+                explanation = "The degree is the highest power of x, which is 4.",
+                difficulty = Difficulty.EASY
+            ),
+            Exercise(
+                id = "exercise_poly_2",
+                chapterId = "chapter_polynomials",
+                questionText = "Factor completely: x² - 9",
+                options = listOf("(x - 3)(x + 3)", "(x - 9)(x + 1)", "(x - 3)²", "Cannot be factored"),
+                correctAnswerIndex = 0,
+                explanation = "This is a difference of squares: a² - b² = (a - b)(a + b).",
+                difficulty = Difficulty.MEDIUM
+            ),
+            Exercise(
+                id = "exercise_poly_3",
+                chapterId = "chapter_polynomials",
+                questionText = "Add: (2x² + 3x - 1) + (x² - 2x + 4)",
+                options = listOf("3x² + x + 3", "3x² + 5x + 3", "x² + x + 3", "3x² + x - 3"),
+                correctAnswerIndex = 0,
+                explanation = "Combine like terms: (2x² + x²) + (3x - 2x) + (-1 + 4) = 3x² + x + 3.",
+                difficulty = Difficulty.EASY
+            ),
+            Exercise(
+                id = "exercise_poly_4",
+                chapterId = "chapter_polynomials",
+                questionText = "What are the roots of x³ - 6x² + 11x - 6 = 0?",
+                options = listOf("x = 1, 2, 3", "x = 0, 2, 3", "x = 1, 1, 6", "x = -1, -2, -3"),
+                correctAnswerIndex = 0,
+                explanation = "Factor: (x - 1)(x - 2)(x - 3) = 0, so x = 1, 2, or 3.",
+                difficulty = Difficulty.HARD
+            )
+        )
+        
+        // Geometry - Basic Shapes Exercises
+        val shapesExercises = listOf(
+            Exercise(
+                id = "exercise_shapes_1",
+                chapterId = "chapter_geo_shapes",
+                questionText = "What is the area of a rectangle with length 8 and width 5?",
+                options = listOf("40", "26", "13", "20"),
+                correctAnswerIndex = 0,
+                explanation = "Area of rectangle = length × width = 8 × 5 = 40.",
+                difficulty = Difficulty.EASY
+            ),
+            Exercise(
+                id = "exercise_shapes_2",
+                chapterId = "chapter_geo_shapes",
+                questionText = "What is the circumference of a circle with radius 3?",
+                options = listOf("6π", "9π", "3π", "12π"),
+                correctAnswerIndex = 0,
+                explanation = "Circumference = 2πr = 2π(3) = 6π.",
+                difficulty = Difficulty.MEDIUM
+            ),
+            Exercise(
+                id = "exercise_shapes_3",
+                chapterId = "chapter_geo_shapes",
+                questionText = "In a triangle, if all three sides are equal, what type of triangle is it?",
+                options = listOf("Equilateral", "Isosceles", "Scalene", "Right"),
+                correctAnswerIndex = 0,
+                explanation = "A triangle with all three sides equal is called equilateral.",
+                difficulty = Difficulty.EASY
+            )
+        )
+        
+        // Geometry - Angles Exercises
+        val angleExercises = listOf(
+            Exercise(
+                id = "exercise_angles_1",
+                chapterId = "chapter_geo_angles",
+                questionText = "What is the complement of a 35° angle?",
+                options = listOf("55°", "145°", "65°", "125°"),
+                correctAnswerIndex = 0,
+                explanation = "Complementary angles sum to 90°: 90° - 35° = 55°.",
+                difficulty = Difficulty.EASY
+            ),
+            Exercise(
+                id = "exercise_angles_2",
+                chapterId = "chapter_geo_angles",
+                questionText = "In a triangle, what is the sum of all interior angles?",
+                options = listOf("180°", "360°", "90°", "270°"),
+                correctAnswerIndex = 0,
+                explanation = "The sum of interior angles in any triangle is always 180°.",
+                difficulty = Difficulty.EASY
+            ),
+            Exercise(
+                id = "exercise_angles_3",
+                chapterId = "chapter_geo_angles",
+                questionText = "If two parallel lines are cut by a transversal, what can you say about corresponding angles?",
+                options = listOf("They are equal", "They are supplementary", "They are complementary", "They sum to 270°"),
+                correctAnswerIndex = 0,
+                explanation = "Corresponding angles are equal when parallel lines are cut by a transversal.",
+                difficulty = Difficulty.MEDIUM
+            ),
+            Exercise(
+                id = "exercise_angles_4",
+                chapterId = "chapter_geo_angles",
+                questionText = "What type of angle measures exactly 90°?",
+                options = listOf("Right angle", "Acute angle", "Obtuse angle", "Straight angle"),
+                correctAnswerIndex = 0,
+                explanation = "An angle that measures exactly 90° is called a right angle.",
+                difficulty = Difficulty.EASY
+            )
+        )
+
         val linearEquationsChapter = Chapter(
             id = "chapter_linear_eq",
             courseId = "course_algebra_1",
@@ -437,6 +620,7 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
                    - Add 7 to both sides: 3x = 15
                    - Divide by 3: x = 5
             """.trimIndent(),
+            exercises = linearExercises,
             estimatedReadingTime = 15,
             isCompleted = false
         )
@@ -459,6 +643,7 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
                 2. Quadratic Formula
                 3. Completing the Square
             """.trimIndent(),
+            exercises = quadraticExercises,
             estimatedReadingTime = 20,
             isCompleted = false
         )
@@ -492,6 +677,7 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
                 1. Add: (2x² + 3x + 1) + (x² - x + 4) = 3x² + 2x + 5
                 2. Factor: x² - 5x + 6 = (x - 2)(x - 3)
             """.trimIndent(),
+            exercises = polynomialExercises,
             estimatedReadingTime = 25,
             isCompleted = false
         )
@@ -601,6 +787,7 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
                 - Area: Space inside a shape
                 - Angle: Measure of rotation between two lines
             """.trimIndent(),
+            exercises = shapesExercises,
             estimatedReadingTime = 20,
             isCompleted = false
         )
@@ -631,6 +818,7 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
                 - Parallel lines and transversals
                 - Circle angle theorems
             """.trimIndent(),
+            exercises = angleExercises,
             estimatedReadingTime = 25,
             isCompleted = false
         )
@@ -1375,28 +1563,12 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
             advPolynomialsChapter, rationalFunctionsChapter, exponentialChapter, systemsChapter, conicsChapter, sequencesChapter, probabilityChapter
         ))
         
-        // Create mock exercises
-        val linearExercise1 = Exercise(
-            id = "exercise_linear_1",
-            chapterId = "chapter_linear_eq",
-            questionText = "Solve for x: 2x + 7 = 19",
-            options = listOf("x = 5", "x = 6", "x = 7", "x = 8"),
-            correctAnswerIndex = 1, // x = 6
-            explanation = "Subtract 7 from both sides: 2x = 12. Then divide by 2: x = 6.",
-            difficulty = Difficulty.EASY
-        )
-        
-        val linearExercise2 = Exercise(
-            id = "exercise_linear_2",
-            chapterId = "chapter_linear_eq",
-            questionText = "What is the slope of the line 3x + 4y = 12?",
-            options = listOf("-3/4", "3/4", "-4/3", "4/3"),
-            correctAnswerIndex = 0, // -3/4
-            explanation = "Rewrite in slope-intercept form: y = -3/4 x + 3. The slope is -3/4.",
-            difficulty = Difficulty.MEDIUM
-        )
-        
-        exercises.addAll(listOf(linearExercise1, linearExercise2))
+        // Add all exercises to the main collection (they're already included in chapters above)
+        exercises.addAll(linearExercises)
+        exercises.addAll(quadraticExercises)
+        exercises.addAll(polynomialExercises)
+        exercises.addAll(shapesExercises)
+        exercises.addAll(angleExercises)
         
         // Create mock video explanations
         val mockVideo1 = VideoExplanation(
