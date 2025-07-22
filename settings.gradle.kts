@@ -44,6 +44,7 @@ include(":ai:service")
 include(":feature:home")
 include(":feature:chat")
 include(":feature:course-progress")
+include(":feature:chapter")
 
 // Check Java version compatibility
 check(JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {

@@ -45,6 +45,7 @@ dependencies {
     // Feature modules
     implementation(project(":feature:home"))
     implementation(project(":feature:course-progress"))
+    implementation(project(":feature:chapter"))
     // TODO: Add other features as they're implemented
     // implementation(project(":feature:chat"))
     // implementation(project(":feature:courses"))

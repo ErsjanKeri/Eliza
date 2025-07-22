@@ -23,6 +23,8 @@ import com.example.ai.edge.eliza.feature.home.navigation.HOME_BASE_ROUTE
 import com.example.ai.edge.eliza.feature.home.navigation.homeSection
 import com.example.ai.edge.eliza.feature.courseprogress.navigation.courseProgressScreen
 import com.example.ai.edge.eliza.feature.courseprogress.navigation.navigateToCourseProgress
+import com.example.ai.edge.eliza.feature.chapter.navigation.chapterScreen
+import com.example.ai.edge.eliza.feature.chapter.navigation.navigateToChapter
 import com.example.ai.edge.eliza.ui.ElizaAppState
 
 /**
@@ -52,6 +54,15 @@ fun ElizaNavHost(
         )
         
         courseProgressScreen(
+            onBackClick = {
+                navController.popBackStack()
+            },
+            onChapterClick = { chapterId ->
+                navController.navigateToChapter(chapterId)
+            }
+        )
+        
+        chapterScreen(
             onBackClick = {
                 navController.popBackStack()
             }

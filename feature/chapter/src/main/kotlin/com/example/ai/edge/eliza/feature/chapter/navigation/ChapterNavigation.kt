@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.ai.edge.eliza.feature.courseprogress.navigation
+package com.example.ai.edge.eliza.feature.chapter.navigation
 
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -22,39 +22,41 @@ import androidx.navigation.NavOptions
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.ai.edge.eliza.feature.courseprogress.CourseProgressScreen
+import com.example.ai.edge.eliza.feature.chapter.ChapterScreen
 
-const val COURSE_PROGRESS_ROUTE = "course_progress_route"
-const val COURSE_ID_ARG = "courseId"
-
-fun NavController.navigateToCourseProgress(
-    courseId: String,
-    navOptions: NavOptions? = null
-) = navigate("$COURSE_PROGRESS_ROUTE/$courseId", navOptions)
+const val CHAPTER_ROUTE = "chapter_route"
+const val CHAPTER_ID_ARG = "chapterId"
 
 /**
- * Course Progress screen that shows Duolingo-style chapter progression for a specific course.
- *
- * @param onBackClick - Called when the back button is clicked
- * @param onChapterClick - Called when a chapter node is clicked
+ * Navigate to the chapter screen.
  */
-fun NavGraphBuilder.courseProgressScreen(
+fun NavController.navigateToChapter(
+    chapterId: String,
+    navOptions: NavOptions? = null
+) = navigate("$CHAPTER_ROUTE/$chapterId", navOptions)
+
+/**
+ * Chapter screen composable for the navigation graph.
+ * 
+ * Shows markdown content with full-screen and split-screen chat functionality.
+ * 
+ * @param onBackClick - Called when the back button is clicked
+ */
+fun NavGraphBuilder.chapterScreen(
     onBackClick: () -> Unit,
-    onChapterClick: (String) -> Unit,
 ) {
     composable(
-        route = "$COURSE_PROGRESS_ROUTE/{$COURSE_ID_ARG}",
+        route = "$CHAPTER_ROUTE/{$CHAPTER_ID_ARG}",
         arguments = listOf(
-            navArgument(COURSE_ID_ARG) {
+            navArgument(CHAPTER_ID_ARG) {
                 type = NavType.StringType
             }
         )
     ) { backStackEntry ->
-        val courseId = backStackEntry.arguments?.getString(COURSE_ID_ARG) ?: ""
-        CourseProgressScreen(
-            courseId = courseId,
-            onBackClick = onBackClick,
-            onChapterClick = onChapterClick
+        val chapterId = backStackEntry.arguments?.getString(CHAPTER_ID_ARG) ?: ""
+        ChapterScreen(
+            chapterId = chapterId,
+            onBackClick = onBackClick
         )
     }
 } 

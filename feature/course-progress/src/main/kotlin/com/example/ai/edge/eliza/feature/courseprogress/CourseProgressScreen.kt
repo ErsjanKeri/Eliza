@@ -51,6 +51,7 @@ import com.example.ai.edge.eliza.core.designsystem.component.CourseHeader
 fun CourseProgressScreen(
     courseId: String,
     onBackClick: () -> Unit,
+    onChapterClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CourseProgressViewModel = hiltViewModel()
 ) {
@@ -145,9 +146,7 @@ fun CourseProgressScreen(
                         // Chapter path
                         ChapterPath(
                             chapters = uiState.chapterNodes,
-                            onChapterClick = { chapterId ->
-                                viewModel.onChapterClick(chapterId)
-                            },
+                            onChapterClick = onChapterClick,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
