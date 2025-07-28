@@ -181,14 +181,16 @@ class ModelDownloadRepositoryImpl @Inject constructor(
                     
                     WorkInfo.State.CANCELLED -> {
                         Log.d(TAG, "Model '${model.name}' download cancelled")
-                        onProgress(ModelDownloadProgress(
-                            progress = 0f,
-                            status = ModelDownloadStatus.PENDING,
-                            bytesDownloaded = 0L,
-                            totalBytes = model.sizeInBytes,
-                            downloadSpeed = 0L,
-                            error = null
-                        ))
+                        onProgress(
+                            ModelDownloadProgress(
+                                progress = 0f,
+                                status = ModelDownloadStatus.CANCELLED,
+                                bytesDownloaded = 0L,
+                                totalBytes = model.sizeInBytes,
+                                downloadSpeed = 0L,
+                                error = null
+                            )
+                        )
                     }
                     
                     else -> {
