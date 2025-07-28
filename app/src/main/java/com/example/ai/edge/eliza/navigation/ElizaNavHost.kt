@@ -85,8 +85,9 @@ fun ElizaNavHost(
         )
         
         chapterTestResultScreen(
-            onBackClick = {
-                navController.popBackStack()
+            onBackClick = { chapterId ->
+                // Navigate directly to chapter content to avoid navigation loops
+                navController.navigateToChapter(chapterId)
             },
             onNavigateToChapter = { chapterId ->
                 navController.navigateToChapter(chapterId)
@@ -97,6 +98,13 @@ fun ElizaNavHost(
             onContinueLearning = {
                 // TODO: Navigate to next chapter or course list
                 navController.popBackStack()
+            },
+            onNavigateToHome = {
+                // Navigate to main home page
+                navController.navigate(HOME_BASE_ROUTE) {
+                    popUpTo(HOME_BASE_ROUTE) { inclusive = false }
+                    launchSingleTop = true
+                }
             }
         )
         

@@ -21,19 +21,69 @@
 - WHEN the model initialization fails THE SYSTEM SHALL display error message and retry option
 - WHEN the model is ready THE SYSTEM SHALL enable the chat interface within 10 seconds
 
-#### Story 1.2: Chapter-Based Chat Interface
+#### Story 1.2: Enhanced Full-Screen Chat Interface with Context Awareness ✨ **UPDATED**
 **As a** student  
-**I want** to ask the AI tutor questions about specific chapters with organized chat sessions  
-**So that** I can have focused conversations about particular topics
+**I want** to access a powerful, full-screen chat interface with intelligent context organization  
+**So that** I can have focused, context-aware conversations with proper RAG support
 
 **Acceptance Criteria:**
-- WHEN a user opens a chapter THE SYSTEM SHALL display content on left and chat interface on right (Gallery-style layout)
-- WHEN a user creates a new chat session THE SYSTEM SHALL allow naming and organizing multiple conversations per chapter
-- WHEN a user types a question THE SYSTEM SHALL respond using local Gemma-3n inference within 3 seconds
-- WHEN a user switches between chat sessions THE SYSTEM SHALL preserve all conversation history
-- WHEN the AI cannot answer a question THE SYSTEM SHALL suggest requesting a video explanation
+- WHEN a user activates chat THE SYSTEM SHALL open a full-screen widget filling 99% of the screen
+- WHEN chat opens THE SYSTEM SHALL completely hide chapter content and provide top-right return button
+- WHEN a user selects text in chapter markdown THE SYSTEM SHALL provide "Ask Chat" option that starts prompt with quoted text
+- WHEN a user creates chats THE SYSTEM SHALL organize them hierarchically: Course > Chapter > (General Chapter Chat + Question-Specific Chats)
+- WHEN in general chat navigation THE SYSTEM SHALL show all chats across all courses/chapters
+- WHEN in chapter-specific view THE SYSTEM SHALL only show chats within that chapter (others disabled)
+- WHEN a user types a question THE SYSTEM SHALL respond using shared Gemma model with RAG context injection
+- WHEN switching between chats THE SYSTEM SHALL preserve all conversation history with no limits
+- WHEN AI responds THE SYSTEM SHALL automatically inject relevant chapter/course/question context via RAG
 
-#### Story 1.3: Video Explanation System (NEW FEATURE)
+#### Story 1.3: Chapter Test System with "Best Attempt" Progress ✨ **IMPLEMENTED**
+**As a** student  
+**I want** to take chapter tests with persistent progress tracking that remembers my best performance  
+**So that** I can practice questions multiple times without losing progress on questions I've already mastered
+
+**Acceptance Criteria:**
+- WHEN a user completes a chapter test THE SYSTEM SHALL save all individual answers as UserAnswer records for detailed tracking
+- WHEN a user answers a question correctly THE SYSTEM SHALL mark it as permanently completed (Exercise.isCompleted = true)
+- WHEN a user retakes a test THE SYSTEM SHALL show fresh questions (no pre-filling) but track best attempt progress separately
+- WHEN a user completes a test THE SYSTEM SHALL display real user answers from saved data (not "No answer provided")
+- WHEN a user navigates to test results THE SYSTEM SHALL reconstruct results from UserAnswer records if navigation data is lost
+- WHEN a user gets 100% on a test THE SYSTEM SHALL mark the chapter as completed and unlock next chapter
+- WHEN a user gets less than 100% THE SYSTEM SHALL allow unlimited retakes while preserving individual question progress
+- WHEN a user views test results THE SYSTEM SHALL show both current test score AND permanent progress indicators
+
+**Data Persistence Requirements:**
+- WHEN a test is submitted THE SYSTEM SHALL save UserAnswer records for each question attempt
+- WHEN a question is answered correctly THE SYSTEM SHALL update Exercise.isCompleted = true permanently
+- WHEN calculating chapter completion THE SYSTEM SHALL use permanent progress (count of Exercise.isCompleted)
+- WHEN loading test results THE SYSTEM SHALL reconstruct from saved UserAnswer data if ViewModel state is lost
+
+#### Story 1.4: Enhanced Navigation System ✨ **IMPLEMENTED** 
+**As a** student  
+**I want** reliable navigation between test results and other screens without getting stuck  
+**So that** I can smoothly move through the learning experience
+
+**Acceptance Criteria:**
+- WHEN a user clicks back button from test results THE SYSTEM SHALL navigate directly to chapter content (not create navigation loops)
+- WHEN a user completes a test THE SYSTEM SHALL provide clear navigation options to chapter content and main home page
+- WHEN a user wants to return to main app THE SYSTEM SHALL provide "Main Home" button that navigates to HOME_BASE_ROUTE
+- WHEN navigation occurs THE SYSTEM SHALL maintain test result data without losing user answers or scores
+
+#### Story 1.5: Intelligent Text Selection and Chat Integration ✨ **NEW**
+**As a** student  
+**I want** to select any text in chapter content and instantly ask questions about it  
+**So that** I can get immediate explanations for specific concepts while reading
+
+**Acceptance Criteria:**
+- WHEN a user selects text in chapter markdown THE SYSTEM SHALL highlight the selection
+- WHEN text is selected THE SYSTEM SHALL show "Ask Chat" contextual option
+- WHEN user clicks "Ask Chat" THE SYSTEM SHALL open full-screen chat interface
+- WHEN chat opens from text selection THE SYSTEM SHALL pre-fill prompt with quoted selected text
+- WHEN chat starts from selection THE SYSTEM SHALL automatically tag conversation with chapter/course context
+- WHEN user asks about selected text THE SYSTEM SHALL inject relevant section context via RAG
+- WHEN returning to chapter THE SYSTEM SHALL preserve text selection state
+
+#### Story 1.6: Video Explanation System (NEW FEATURE)
 **As a** student  
 **I want** to request video explanations for chapter concepts I don't understand  
 **So that** I can get visual and auditory learning support beyond text responses
@@ -55,29 +105,36 @@
 }
 ```
 
-#### Story 1.4: Image-Based Problem Solving
+#### Story 1.7: Gallery Model Integration and Shared AI Infrastructure ✨ **NEW**
 **As a** student  
-**I want** to take photos of math problems and get explanations  
-**So that** I can understand problems from textbooks or assignments
+**I want** a unified AI model system that powers both testing and chat with optimal performance  
+**So that** I can have consistent, high-quality AI interactions across all features
 
 **Acceptance Criteria:**
-- WHEN a user uploads an image with math content THE SYSTEM SHALL analyze the image using Gemma-3n vision capabilities
-- WHEN the image contains a math problem THE SYSTEM SHALL provide step-by-step solution
-- WHEN the image is unclear or contains no math THE SYSTEM SHALL ask for a clearer image
-- WHEN processing an image THE SYSTEM SHALL show loading indicator
+- WHEN the app initializes THE SYSTEM SHALL load the shared Gemma model from gallery integration
+- WHEN using chat or test features THE SYSTEM SHALL utilize the same model instance for consistency
+- WHEN model is loaded THE SYSTEM SHALL optimize memory management for shared usage
+- WHEN switching between test and chat THE SYSTEM SHALL maintain model state efficiently
+- WHEN model processes requests THE SYSTEM SHALL provide consistent response quality across features
 
-#### Story 1.5: Exercise Testing and Help System (NEW FEATURE)
+**Technical Questions for Implementation:**
+- Which specific Gemma model variant should be utilized for optimal performance?
+- How should memory management handle shared model usage between test and chat systems?
+- What are the performance implications of model sharing vs separate instances?
+
+#### Story 1.8: Exercise Help System with Enhanced Chat Integration ✨ **UPDATED**
 **As a** student  
-**I want** to test myself on chapter content and get help with wrong answers  
-**So that** I can identify and address my knowledge gaps
+**I want** to get help with wrong answers from tests and individual exercises  
+**So that** I can understand my mistakes and improve my performance
 
 **Acceptance Criteria:**
-- WHEN a user completes an exercise incorrectly THE SYSTEM SHALL provide two options: "Generate New Trial" or "Ask for Explanation"
-- WHEN user selects "Generate New Trial" THE SYSTEM SHALL create a new similar question using AI
-- WHEN user selects "Ask for Explanation" THE SYSTEM SHALL offer local AI explanation or video explanation (if online)
-- WHEN requesting exercise video explanation THE SYSTEM SHALL send POST with exercise, options, correct/incorrect choices, and user question
-- WHEN explanation is received THE SYSTEM SHALL display in separate Exercise Help section
-- WHEN user accesses Exercise Help THE SYSTEM SHALL show history of all explanations for that exercise
+- WHEN a user completes an exercise incorrectly in a test THE SYSTEM SHALL provide help options in test results screen
+- WHEN user selects "Generate New Trial" THE SYSTEM SHALL create a new similar question using shared AI model
+- WHEN user selects "Ask for Explanation" THE SYSTEM SHALL open full-screen chat interface with question context
+- WHEN requesting explanation THE SYSTEM SHALL create question-specific chat tagged with exercise/chapter/course context
+- WHEN explanation is received THE SYSTEM SHALL display as chat message (text or video) in unified interface
+- WHEN user accesses help THE SYSTEM SHALL show all previous explanations in organized chat history
+- WHEN video explanations are provided THE SYSTEM SHALL integrate them as video messages in chat interface
 
 **Exercise Video API Payload:**
 ```json
@@ -91,28 +148,59 @@
 }
 ```
 
-#### Story 1.6: Course Content System with Chapter Organization
+#### Story 1.9: Advanced RAG Context System ✨ **NEW**
+**As a** student  
+**I want** the AI to automatically understand the context of my learning and provide relevant responses  
+**So that** I get personalized, contextually appropriate explanations without manual setup
+
+**Acceptance Criteria:**
+- WHEN a user chats within a chapter THE SYSTEM SHALL automatically inject chapter content as RAG context
+- WHEN discussing a specific question THE SYSTEM SHALL include question, exercise, and related material in context
+- WHEN user asks follow-up questions THE SYSTEM SHALL maintain conversation context across chat history
+- WHEN switching between different chapter chats THE SYSTEM SHALL update RAG context appropriately
+- WHEN providing responses THE SYSTEM SHALL reference specific sections, examples, or concepts from chapter content
+- WHEN context is ambiguous THE SYSTEM SHALL ask clarifying questions to better target assistance
+
+**Technical Questions for Implementation:**
+- How granular should RAG context be? (entire chapter vs specific sections vs question-only)
+- What is the optimal context window size for effective RAG responses?
+- How should the system handle context conflicts when discussing multiple topics?
+- Should RAG context include previous chat history, test attempts, or user progress data?
+
+#### Story 1.10: Image-Based Problem Solving
+**As a** student  
+**I want** to take photos of math problems and get explanations  
+**So that** I can understand problems from textbooks or assignments
+
+**Acceptance Criteria:**
+- WHEN a user uploads an image with math content THE SYSTEM SHALL analyze the image using Gemma-3n vision capabilities
+- WHEN the image contains a math problem THE SYSTEM SHALL provide step-by-step solution
+- WHEN the image is unclear or contains no math THE SYSTEM SHALL ask for a clearer image
+- WHEN processing an image THE SYSTEM SHALL show loading indicator
+
+#### Story 1.11: Course Content System with Chapter Organization
 **As a** student  
 **I want** to access structured math courses organized by chapters  
-**So that** I can learn topics systematically with chat support
+**So that** I can learn topics systematically with test and chat support
 
 **Acceptance Criteria:**
 - WHEN a user opens the courses section THE SYSTEM SHALL display available math topics (Algebra, Geometry, etc.)
 - WHEN a user selects a course THE SYSTEM SHALL show chapters with progress indicators
-- WHEN a user opens a chapter THE SYSTEM SHALL display content with chat interface sidebar
-- WHEN a user completes reading a chapter THE SYSTEM SHALL mark it as complete and unlock next chapter
-- WHEN a user returns to a chapter THE SYSTEM SHALL restore all previous chat sessions
+- WHEN a user opens a chapter THE SYSTEM SHALL display content with test and chat interface options
+- WHEN a user completes a chapter test with 100% THE SYSTEM SHALL mark chapter as complete and unlock next chapter
+- WHEN a user returns to a chapter THE SYSTEM SHALL restore all previous progress, test results, and chat sessions
 
-#### Story 1.7: Enhanced Progress Tracking
+#### Story 1.12: Enhanced Progress Tracking with Test History ✨ **UPDATED**
 **As a** student  
-**I want** to see my learning progress including chat activity and video requests  
-**So that** I can track my improvement and learning patterns
+**I want** to see my learning progress including test attempts, best scores, and permanent question progress  
+**So that** I can track my improvement and understand my learning patterns
 
 **Acceptance Criteria:**
-- WHEN a user completes activities THE SYSTEM SHALL save progress locally including chat sessions and video requests
-- WHEN a user opens the progress screen THE SYSTEM SHALL show chapters covered, time spent, videos requested, and chat activity
-- WHEN a user has no progress data THE SYSTEM SHALL display welcome message with getting started tips
-- WHEN the app is reopened THE SYSTEM SHALL restore previous progress, conversation history, and locally stored videos
+- WHEN a user completes test attempts THE SYSTEM SHALL save detailed UserAnswer records for each question
+- WHEN a user opens the progress screen THE SYSTEM SHALL show chapters covered, test scores, attempt history, and permanent question progress
+- WHEN a user views chapter progress THE SYSTEM SHALL display both latest test score and permanent completion status
+- WHEN a user has multiple test attempts THE SYSTEM SHALL show score progression and improvement trends
+- WHEN the app is reopened THE SYSTEM SHALL restore all progress, test history, and conversation data from persistent storage
 
 ### Epic 2: Performance and Reliability
 
@@ -172,6 +260,9 @@
 - Memory usage: < 6GB peak
 - App startup time: < 3 seconds
 - Video storage efficiency: < 2MB per video
+- **Test submission time: < 2 seconds** ✨ **NEW**
+- **Test results load time: < 1 second** ✨ **NEW**
+- **Navigation transition time: < 500ms** ✨ **NEW**
 
 ### User Experience
 - Successfully solve uploaded math problems: 80% accuracy
@@ -179,11 +270,21 @@
 - Successfully request and view video explanations: 85% success rate
 - Navigate between screens without crashes: 99% reliability
 - Demonstrate core features including video system in 5-minute demo: 100% completion
+- **Complete chapter test without data loss: 100% success rate** ✨ **NEW**
+- **View accurate test results showing real answers: 100% success rate** ✨ **NEW**
+- **Navigate from test results without getting stuck: 100% success rate** ✨ **NEW**
+- **Retake tests while preserving question progress: 100% success rate** ✨ **NEW**
 
 ### Network Management
 - Proper online/offline detection: 99% accuracy
 - Graceful handling of network transitions: 100% success rate
 - Video download success rate: 90% when online
+
+### Test System Performance ✨ **NEW**
+- **Test data persistence success rate: 100%**
+- **UserAnswer record accuracy: 100%**
+- **Exercise progress preservation: 100%**
+- **Navigation data reconstruction: 100% success rate**
 
 ## Out of Scope for MVP
 
@@ -199,7 +300,15 @@
 - Video caching between users
 - Advanced video features (playback speed, annotations)
 
-## New Technical Requirements
+## Technical Requirements
+
+### Chapter Test System ✨ **NEW - IMPLEMENTED**
+- **UserAnswer Entity**: Detailed tracking of every test attempt with exerciseId, userId, selectedAnswer, isCorrect, timestamp
+- **Exercise Progress Persistence**: Exercise.isCompleted field for permanent "best attempt" progress
+- **Test Result Reconstruction**: Load test results from UserAnswer records when navigation data is lost
+- **Navigation Flow Management**: Direct navigation to chapter content, avoid back stack loops
+- **Multi-attempt Support**: Fresh questions each test, but permanent progress tracking
+- **Chapter Completion Logic**: 100% test score required, based on permanent Exercise.isCompleted status
 
 ### Video API Integration
 - REST API endpoint for chapter video requests
@@ -209,12 +318,25 @@
 - Network detection and management
 
 ### Data Storage Extensions
-- User-specific video explanation storage
-- Chapter-based chat session organization
-- Exercise help system data models
-- Video metadata and file management
+- **User-specific video explanation storage**
+- **Chapter-based chat session organization**
+- **Exercise help system data models**
+- **Video metadata and file management**
+- **UserAnswer tracking for detailed test attempt history** ✨ **NEW**
+- **Exercise completion state persistence** ✨ **NEW**
+- **Test result data reconstruction capabilities** ✨ **NEW**
+
+### Navigation Architecture ✨ **NEW - IMPLEMENTED**
+- **Direct chapter navigation from test results**
+- **Main home page navigation option**
+- **Navigation loop prevention**
+- **State preservation during navigation transitions**
+- **Multiple navigation paths: Chapter content, Main home, Test retake**
 
 ### Existing Infrastructure Enhancement
 - Enhance existing SimpleNetworkMonitor (core:data) for actual connectivity detection
 - Utilize existing NetworkMonitor.isOnline Flow<Boolean> for video feature availability
 - Leverage existing ElizaAppState.isOffline for UI state management
+- **Enhance ChapterTestViewModel for robust test data handling** ✨ **NEW**
+- **Implement loadChapterForResults for navigation data recovery** ✨ **NEW**
+- **Integrate ProgressRepository.recordAnswer for UserAnswer persistence** ✨ **NEW**

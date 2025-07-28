@@ -30,6 +30,8 @@ import com.example.ai.edge.eliza.core.model.ChapterTest
 import com.example.ai.edge.eliza.core.model.TestResult
 import com.example.ai.edge.eliza.core.model.TestState
 import com.example.ai.edge.eliza.core.model.Exercise
+import com.example.ai.edge.eliza.core.model.UserAnswer
+import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -89,17 +91,26 @@ class ChapterTestViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Create test state with variable number of exercises
-                val chapterTest = ChapterTest(
-                    chapterId = chapterId,
-                    chapterTitle = chapter.title,
-                    exercises = exercisesToUse,
-                    currentQuestionIndex = 0,
-                    userAnswers = List(exercisesToUse.size) { null }
-                )
+                // ENHANCED: Check if user has any progress (any userAnswer is not null)
+                val hasProgress = exercisesToUse.any { it.userAnswer != null }
+                
+                if (hasProgress) {
+                    // User has progress - go directly to results screen
+                    val testResult = calculateCurrentTestResult(chapterId, chapter.title, exercisesToUse)
+                    _testState.value = TestState.Completed(testResult)
+                } else {
+                    // No progress - start fresh test
+                    val chapterTest = ChapterTest(
+                        chapterId = chapterId,
+                        chapterTitle = chapter.title,
+                        exercises = exercisesToUse,
+                        currentQuestionIndex = 0,
+                        userAnswers = List(exercisesToUse.size) { null }
+                    )
 
-                testStartTime = System.currentTimeMillis()
-                _testState.value = TestState.InProgress(chapterTest)
+                    testStartTime = System.currentTimeMillis()
+                    _testState.value = TestState.InProgress(chapterTest)
+                }
 
             } catch (e: Exception) {
                 _errorMessage.value = e.message
@@ -112,16 +123,29 @@ class ChapterTestViewModel @Inject constructor(
 
     /**
      * Select an answer for the current question.
+     * Enhanced: Immediately submit to repository for real-time progress saving.
      */
     fun selectAnswer(answerIndex: Int) {
         val currentState = _testState.value
         if (currentState is TestState.InProgress) {
             val currentTest = currentState.test
+            val currentExercise = currentTest.exercises[currentTest.currentQuestionIndex]
+            
+            // Update UI state first
             val updatedAnswers = currentTest.userAnswers.toMutableList()
             updatedAnswers[currentTest.currentQuestionIndex] = answerIndex
-
             val updatedTest = currentTest.copy(userAnswers = updatedAnswers)
             _testState.value = TestState.InProgress(updatedTest)
+            
+            // Submit answer to repository immediately for progress saving
+            viewModelScope.launch {
+                try {
+                    courseRepository.submitExerciseAnswer(currentExercise.id, answerIndex)
+                } catch (e: Exception) {
+                    // Don't show error to user for this background save, but log it
+                    // The answer is still saved in UI state
+                }
+            }
         }
     }
 
@@ -254,38 +278,71 @@ class ChapterTestViewModel @Inject constructor(
 
     /**
      * Submit test results to the repository and update chapter completion.
+     * Implements comprehensive progress tracking with "best attempt" logic.
      */
     private suspend fun submitTestResults(testResult: TestResult) {
         try {
-            // Update chapter with test results first (simplified approach)
+            // Step 1: Save individual UserAnswer records for detailed tracking
+            testResult.exercises.forEachIndexed { index, exercise ->
+                val userAnswer = testResult.userAnswers.getOrElse(index) { -1 }
+                val isCorrect = userAnswer == exercise.correctAnswerIndex
+                
+                // Create UserAnswer record for this test attempt
+                val answerRecord = UserAnswer(
+                    id = UUID.randomUUID().toString(),
+                    exerciseId = exercise.id,
+                    trialId = null, // This is a test attempt, not a trial
+                    userId = defaultUserId,
+                    selectedAnswer = userAnswer,
+                    isCorrect = isCorrect,
+                    timeSpentSeconds = testResult.timeSpentSeconds / testResult.exercises.size, // Distribute time evenly
+                    hintsUsed = 0,
+                    answeredAt = testResult.completedAt
+                )
+                
+                // Save UserAnswer record
+                progressRepository.recordAnswer(answerRecord)
+            }
+            
+            // Step 2: Update Exercise entities with "best attempt" logic
+            testResult.exercises.forEachIndexed { index, exercise ->
+                val userAnswer = testResult.userAnswers.getOrElse(index) { -1 }
+                val isCorrect = userAnswer == exercise.correctAnswerIndex
+                
+                // KEY: "Best attempt" logic - once correct, stays correct!
+                val updatedExercise = exercise.copy(
+                    userAnswer = userAnswer,
+                    isCorrect = isCorrect,
+                    isCompleted = isCorrect || exercise.isCompleted // Once true, stays true!
+                )
+                
+                courseRepository.updateExercise(updatedExercise)
+            }
+            
+            // Step 3: Update Chapter with test results and permanent progress
             val chapter = courseRepository.getChapterById(testResult.chapterId).firstOrNull()
             if (chapter != null) {
+                // Calculate permanent progress based on updated Exercise.isCompleted status
+                val permanentlyCompletedCount = testResult.exercises.count { exercise ->
+                    val userAnswer = testResult.userAnswers.getOrElse(testResult.exercises.indexOf(exercise)) { -1 }
+                    val isCorrect = userAnswer == exercise.correctAnswerIndex
+                    isCorrect || exercise.isCompleted // Either just solved OR was already completed
+                }
+                val isPermanentlyComplete = permanentlyCompletedCount == testResult.exercises.size
+                
                 val updatedChapter = chapter.copy(
-                    isCompleted = testResult.isPassing,
-                    testScore = testResult.score,
+                    isCompleted = isPermanentlyComplete, // Based on permanent progress
+                    testScore = testResult.score, // Current test attempt score
                     testAttempts = chapter.testAttempts + 1,
                     lastTestAttempt = System.currentTimeMillis()
                 )
+                
                 courseRepository.updateChapter(updatedChapter)
             }
-
-            // Update exercise results for wrong exercises only (simplified)
-            testResult.wrongExercises.forEach { exercise ->
-                val userAnswerIndex = testResult.userAnswers.getOrElse(
-                    testResult.exercises.indexOf(exercise)
-                ) { -1 }
-                
-                val updatedExercise = exercise.copy(
-                    userAnswer = userAnswerIndex,
-                    isCorrect = false,
-                    isCompleted = true
-                )
-                courseRepository.updateExercise(updatedExercise)
-            }
-
+            
         } catch (e: Exception) {
-            // Log error but don't fail the entire submission
-            _errorMessage.value = "Warning: Some progress data may not have been saved"
+            // Don't fail the entire test submission if some saves fail
+            _errorMessage.value = "Test completed but some progress may not have been saved"
             // Continue with test completion
         }
     }
@@ -322,5 +379,111 @@ class ChapterTestViewModel @Inject constructor(
      */
     fun clearError() {
         _errorMessage.value = null
+    }
+    
+    /**
+     * Load chapter data for results screen when coming from navigation.
+     * This recreates the test result with full exercise data and real user answers.
+     */
+    suspend fun loadChapterForResults(chapterId: String) {
+        try {
+            _isLoading.value = true
+            val chapter = courseRepository.getChapterById(chapterId).firstOrNull()
+            if (chapter != null) {
+                val exercises = chapter.exercises
+                
+                // Load real user answers from saved UserAnswer records
+                val realUserAnswers = mutableListOf<Int>()
+                val wrongExercises = mutableListOf<Exercise>()
+                var correctAnswers = 0
+                
+                // For each exercise, get the latest UserAnswer record
+                exercises.forEach { exercise ->
+                    val userAnswerRecords = progressRepository.getUserAnswersByExercise(exercise.id, defaultUserId).firstOrNull()
+                    val latestAnswer = userAnswerRecords?.lastOrNull() // Get most recent attempt
+                    
+                    val userAnswer = latestAnswer?.selectedAnswer ?: -1
+                    realUserAnswers.add(userAnswer)
+                    
+                    // Calculate correct vs wrong
+                    if (userAnswer == exercise.correctAnswerIndex) {
+                        correctAnswers++
+                    } else {
+                        wrongExercises.add(exercise)
+                    }
+                }
+                
+                // Calculate score based on real answers
+                val score = if (exercises.isNotEmpty()) {
+                    (correctAnswers * 100) / exercises.size
+                } else {
+                    0
+                }
+                
+                val testResult = TestResult(
+                    chapterId = chapterId,
+                    chapterTitle = chapter.title,
+                    score = score, // Calculated from real answers
+                    correctAnswers = correctAnswers, // Calculated from real answers
+                    totalQuestions = exercises.size,
+                    wrongExercises = wrongExercises, // Calculated from real answers
+                    userAnswers = realUserAnswers, // Real user answers from database!
+                    timeSpentSeconds = 0L, // Historical time not tracked
+                    exercises = exercises // All exercises for reference
+                )
+                
+                _testState.value = TestState.Completed(testResult)
+            }
+        } catch (e: Exception) {
+            _errorMessage.value = "Failed to load chapter data: ${e.message}"
+        } finally {
+            _isLoading.value = false
+        }
+    }
+    
+    /**
+     * Calculate test result from current exercise progress.
+     * Used when user has existing progress and we go directly to results.
+     */
+    private fun calculateCurrentTestResult(chapterId: String, chapterTitle: String, exercises: List<Exercise>): TestResult {
+        val solvedCount = exercises.count { it.isCompleted }  // Count "permanently solved" exercises
+        val score = if (exercises.isNotEmpty()) (solvedCount * 100) / exercises.size else 0
+        val wrongExercises = exercises.filter { it.userAnswer != null && !it.isCompleted }
+        val userAnswers = exercises.map { it.userAnswer ?: -1 }
+        
+        return TestResult(
+            chapterId = chapterId,
+            chapterTitle = chapterTitle,
+            score = score,
+            correctAnswers = solvedCount,
+            totalQuestions = exercises.size,
+            wrongExercises = wrongExercises,
+            userAnswers = userAnswers,
+            timeSpentSeconds = 0L, // We don't track historical time
+            exercises = exercises  // All exercises with current state
+        )
+    }
+    
+    /**
+     * Reset all progress for this chapter and start fresh test.
+     * Called when user clicks "Retake Test" button.
+     */
+    fun retakeTest(chapterId: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                
+                // Reset all exercises for this chapter
+                courseRepository.resetChapterProgress(chapterId)
+                
+                // Start fresh test
+                startTest(chapterId)
+                
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to reset test: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 } 

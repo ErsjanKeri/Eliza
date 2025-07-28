@@ -104,10 +104,10 @@ data class TestResult(
      */
     val message: String
         get() = when {
-            score == 100 -> "Perfect! Chapter complete! 🎉"
+            score == 100 -> "Perfect! Chapter complete!"
             score >= 80 -> "Great work! Try again for 100% to complete the chapter."
             score >= 60 -> "Good effort! Review the material and try again."
-            else -> "Keep studying! You can do this! 💪"
+            else -> "Keep studying! You can do this!"
         }
 }
 

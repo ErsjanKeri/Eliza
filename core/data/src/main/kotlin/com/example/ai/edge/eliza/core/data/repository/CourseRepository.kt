@@ -60,6 +60,7 @@ interface CourseRepository {
     suspend fun updateExercise(exercise: Exercise)
     suspend fun deleteExercise(exerciseId: String)
     suspend fun submitExerciseAnswer(exerciseId: String, answerIndex: Int): ExerciseResult
+    suspend fun resetChapterProgress(chapterId: String) // NEW: Reset all exercises for retake
     
     // Trial operations (AI-generated practice questions)
     fun getTrialsByExercise(exerciseId: String): Flow<List<Trial>>

@@ -16,9 +16,13 @@
 
 package com.example.ai.edge.eliza.feature.chapter.test
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,9 +60,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -79,9 +87,13 @@ import com.example.ai.edge.eliza.core.model.Difficulty
 fun ChapterTestResultScreen(
     testResult: TestResult,
     onRetakeTest: () -> Unit,
-    onRequestHelp: (Exercise) -> Unit,
+    onRequestLocalHelp: (Exercise) -> Unit,
+    onRequestVideoHelp: (Exercise) -> Unit,
+    onRetakeQuestion: (Exercise) -> Unit,
     onBackToChapter: () -> Unit,
     onContinueLearning: () -> Unit,
+    onNavigateToHome: () -> Unit = {},
+    isOnline: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     ElizaBackground(modifier = modifier) {
@@ -89,7 +101,7 @@ fun ChapterTestResultScreen(
             topBar = {
                 TestResultTopBar(
                     chapterTitle = testResult.chapterTitle,
-                    onBackClick = onBackToChapter
+                    onBackClick = { onBackToChapter() }
                 )
             }
         ) { paddingValues ->
@@ -105,15 +117,15 @@ fun ChapterTestResultScreen(
                 // Score display
                 ScoreDisplay(testResult = testResult)
                 
-                // Completion status
-                CompletionStatus(testResult = testResult)
-                
-                // Wrong questions breakdown (if any)
-                if (testResult.wrongExercises.isNotEmpty()) {
-                    WrongQuestionsSection(
-                        wrongExercises = testResult.wrongExercises,
+                // All questions breakdown
+                if (testResult.exercises.isNotEmpty()) {
+                    AllQuestionsSection(
+                        exercises = testResult.exercises,
                         userAnswers = testResult.userAnswers,
-                        onRequestHelp = onRequestHelp
+                        onRequestLocalHelp = onRequestLocalHelp,
+                        onRequestVideoHelp = onRequestVideoHelp,
+                        onRetakeQuestion = onRetakeQuestion,
+                        isOnline = isOnline
                     )
                 }
                 
@@ -124,8 +136,12 @@ fun ChapterTestResultScreen(
                     testResult = testResult,
                     onRetakeTest = onRetakeTest,
                     onBackToChapter = onBackToChapter,
-                    onContinueLearning = onContinueLearning
+                    onContinueLearning = onContinueLearning,
+                    onNavigateToHome = onNavigateToHome
                 )
+                
+                // Bottom spacing for visual balance
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -194,53 +210,44 @@ private fun ScoreDisplay(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(32.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Score emoji based on performance
-            val scoreEmoji = when {
-                testResult.score == 100 -> "🎉"
-                testResult.score >= 80 -> "😊"
-                testResult.score >= 60 -> "🙂"
-                else -> "😔"
-            }
-            
-            Text(
-                text = scoreEmoji,
-                style = MaterialTheme.typography.displayLarge
-            )
-            
-            // Circular progress with score
+            // Centered circular progress with score
             Box(
+                modifier = Modifier.padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
                     progress = { animatedScore },
-                    modifier = Modifier.size(120.dp),
+                    modifier = Modifier.size(140.dp),
                     color = when {
                         testResult.score == 100 -> Color(0xFF26890C) // Green
                         testResult.score >= 80 -> MaterialTheme.colorScheme.primary // Blue
                         testResult.score >= 60 -> Color(0xFFD89E00) // Orange
                         else -> Color(0xFFE21B23) // Red
                     },
-                    strokeWidth = 8.dp,
+                    strokeWidth = 10.dp,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
                 
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
                         text = "${testResult.score}%",
-                        style = MaterialTheme.typography.headlineMedium.copy(
+                        style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Bold
                         ),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = testResult.letterGrade,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -249,80 +256,15 @@ private fun ScoreDisplay(
             Text(
                 text = "${testResult.correctAnswers} out of ${testResult.totalQuestions} correct",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
             )
             
-            Text(
-                text = testResult.message,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-/**
- * Completion status indicator.
- */
-@Composable
-private fun CompletionStatus(
-    testResult: TestResult,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (testResult.isPassing) {
-                Color(0xFF26890C).copy(alpha = 0.1f) // Light green
-            } else {
-                Color(0xFFE21B23).copy(alpha = 0.1f) // Light red
-            }
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = if (testResult.isPassing) Icons.Filled.Check else Icons.Filled.Close,
-                contentDescription = if (testResult.isPassing) "Passed" else "Not passed",
-                tint = if (testResult.isPassing) Color(0xFF26890C) else Color(0xFFE21B23),
-                modifier = Modifier.size(24.dp)
-            )
-            
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = if (testResult.isPassing) Icons.Default.CheckCircle else Icons.Default.Clear,
-                        contentDescription = if (testResult.isPassing) "Complete" else "Incomplete",
-                        tint = if (testResult.isPassing) Color(0xFF26890C) else Color(0xFFE21B23)
-                    )
-                    Text(
-                        text = if (testResult.isPassing) "Chapter Complete!" else "Chapter Not Complete",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = if (testResult.isPassing) Color(0xFF26890C) else Color(0xFFE21B23)
-                    )
-                }
-                
+            if (testResult.message.isNotEmpty()) {
                 Text(
-                    text = if (testResult.isPassing) {
-                        "Congratulations! You can proceed to the next chapter."
-                    } else {
-                        "You need 100% to complete this chapter. Try again!"
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = testResult.message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -330,52 +272,82 @@ private fun CompletionStatus(
     }
 }
 
+
+
 /**
- * Section showing wrong questions and help options.
+ * Section showing all questions with their results and help options.
  */
 @Composable
-private fun WrongQuestionsSection(
-    wrongExercises: List<Exercise>,
+private fun AllQuestionsSection(
+    exercises: List<Exercise>,
     userAnswers: List<Int>,
-    onRequestHelp: (Exercise) -> Unit,
+    onRequestLocalHelp: (Exercise) -> Unit,
+    onRequestVideoHelp: (Exercise) -> Unit,
+    onRetakeQuestion: (Exercise) -> Unit,
+    isOnline: Boolean,
     modifier: Modifier = Modifier
 ) {
+    // State for accordion behavior - track which question is expanded
+    var expandedQuestionIndex by remember { mutableStateOf(-1) }
+    
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "📝 Questions to Review",
+            text = "Question Results",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
             color = MaterialTheme.colorScheme.onSurface
         )
         
-        wrongExercises.forEach { exercise ->
-            WrongQuestionCard(
+        exercises.forEachIndexed { index, exercise ->
+            val userAnswer = userAnswers.getOrNull(index) ?: -1
+            val isCorrect = userAnswer == exercise.correctAnswerIndex
+            val isExpanded = expandedQuestionIndex == index
+            
+            QuestionResultCard(
+                questionNumber = index + 1,
                 exercise = exercise,
-                userAnswer = userAnswers.getOrNull(
-                    // Find the original index of this exercise
-                    // This is a simplification - in real app, you'd track indices properly
-                    wrongExercises.indexOf(exercise)
-                ) ?: -1,
-                onRequestHelp = { onRequestHelp(exercise) }
+                userAnswer = userAnswer,
+                isCorrect = isCorrect,
+                isExpanded = isExpanded,
+                onCardClick = { 
+                    expandedQuestionIndex = if (isExpanded) -1 else index
+                },
+                onRequestLocalHelp = { onRequestLocalHelp(exercise) },
+                onRequestVideoHelp = { onRequestVideoHelp(exercise) },
+                onRetakeQuestion = { onRetakeQuestion(exercise) },
+                isOnline = isOnline
             )
         }
     }
 }
 
 /**
- * Card showing a wrong question with help options.
+ * Card showing a question result with status indicator and expandable details.
  */
 @Composable
-private fun WrongQuestionCard(
+private fun QuestionResultCard(
+    questionNumber: Int,
     exercise: Exercise,
     userAnswer: Int,
-    onRequestHelp: () -> Unit,
+    isCorrect: Boolean,
+    isExpanded: Boolean,
+    onCardClick: () -> Unit,
+    onRequestLocalHelp: () -> Unit,
+    onRequestVideoHelp: () -> Unit,
+    onRetakeQuestion: () -> Unit,
+    isOnline: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isExpanded) -90f else 0f,
+        animationSpec = tween(300),
+        label = "arrow_rotation"
+    )
+    
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -384,67 +356,280 @@ private fun WrongQuestionCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Compact header showing question number and status - clickable
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onCardClick() }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Status icon
+                Icon(
+                    imageVector = if (isCorrect) Icons.Filled.Check else Icons.Filled.Close,
+                    contentDescription = if (isCorrect) "Correct" else "Incorrect",
+                    tint = if (isCorrect) Color(0xFF26890C) else Color(0xFFE21B23),
+                    modifier = Modifier.size(24.dp)
+                )
+                
+                // Question number and brief text
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Question $questionNumber",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = if (isCorrect) "Correct" else "Incorrect",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isCorrect) Color(0xFF26890C) else Color(0xFFE21B23)
+                    )
+                }
+                
+                // Animated expand/collapse arrow
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = if (isExpanded) "Collapse details" else "Expand details",
+                    modifier = Modifier
+                        .size(20.dp)
+                        .rotate(arrowRotation),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            // Animated expandable content
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(animationSpec = tween(300)),
+                exit = shrinkVertically(animationSpec = tween(300))
+            ) {
+                QuestionExpandedContent(
+                    exercise = exercise,
+                    userAnswer = userAnswer,
+                    isCorrect = isCorrect,
+                    onRequestLocalHelp = onRequestLocalHelp,
+                    onRequestVideoHelp = onRequestVideoHelp,
+                    onRetakeQuestion = onRetakeQuestion,
+                    isOnline = isOnline
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Expanded content showing full question details and help options.
+ */
+@Composable
+private fun QuestionExpandedContent(
+    exercise: Exercise,
+    userAnswer: Int,
+    isCorrect: Boolean,
+    onRequestLocalHelp: () -> Unit,
+    onRequestVideoHelp: () -> Unit,
+    onRetakeQuestion: () -> Unit,
+    isOnline: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Divider line to separate from header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        )
+        
+        // Full question text with improved styling
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Text(
                 text = exercise.questionText,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Medium
-                )
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(12.dp)
             )
-            
-            // Show user's wrong answer and correct answer
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+        }
+        
+        // Answer comparison section
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column {
-                    Text(
-                        text = "Your answer:",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                // Your answer
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isCorrect) Icons.Filled.Check else Icons.Filled.Close,
+                        contentDescription = null,
+                        tint = if (isCorrect) Color(0xFF26890C) else Color(0xFFE21B23),
+                        modifier = Modifier.size(16.dp)
                     )
-                    Text(
-                        text = if (userAnswer >= 0 && userAnswer < exercise.options.size) {
-                            exercise.options[userAnswer]
-                        } else {
-                            "No answer"
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFFE21B23) // Red for wrong answer
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Your answer:",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = if (userAnswer >= 0 && userAnswer < exercise.options.size) {
+                                exercise.options[userAnswer]
+                            } else {
+                                "No answer provided"
+                            },
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = if (isCorrect) Color(0xFF26890C) else Color(0xFFE21B23)
+                        )
+                    }
                 }
                 
-                Column {
-                    Text(
-                        text = "Correct answer:",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                // Correct answer (only show if user was wrong)
+                if (!isCorrect) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = Color(0xFF26890C),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Correct answer:",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = exercise.options[exercise.correctAnswerIndex],
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = Color(0xFF26890C)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Help options with network-aware dual buttons
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Get help with this question:",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            // Explanation options
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Request explanation:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Local AI Explanation - always available
+                    ElizaOutlinedButton(
+                        onClick = onRequestLocalHelp,
+                        text = { Text("Local AI Explanation") },
+                        modifier = Modifier.weight(1f)
                     )
-                    Text(
-                        text = exercise.options[exercise.correctAnswerIndex],
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF26890C) // Green for correct answer
+                    
+                    // Video Explanation - network dependent
+                    ElizaOutlinedButton(
+                        onClick = { if (isOnline) onRequestVideoHelp() },
+                        text = { 
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (!isOnline) {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear,
+                                        contentDescription = "Offline",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Text(
+                                    text = if (isOnline) "Video Explanation" else "Video (Offline)",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        },
+                        enabled = isOnline,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
             
-            // Help options
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Practice option
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                ElizaOutlinedButton(
-                    onClick = onRequestHelp,
-                    text = { Text("❓ Request Explanation") },
-                    modifier = Modifier.weight(1f)
+                Text(
+                    text = "Practice more:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                ElizaOutlinedButton(
-                    onClick = onRequestHelp, // Could be different action for trials
-                    text = { Text("🔄 Generate New Trial") },
-                    modifier = Modifier.weight(1f)
+                ElizaButton(
+                    onClick = onRetakeQuestion,
+                    text = { 
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Retake",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text("Retake Question")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -460,6 +645,7 @@ private fun ActionButtons(
     onRetakeTest: () -> Unit,
     onBackToChapter: () -> Unit,
     onContinueLearning: () -> Unit,
+    onNavigateToHome: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -507,22 +693,40 @@ private fun ActionButtons(
                 },
                 modifier = Modifier.fillMaxWidth()
             )
-        } else {
-            // Failed - show retake option
-            ElizaButton(
-                onClick = onRetakeTest,
-                text = {
+            
+            // Add main home button
+            ElizaOutlinedButton(
+                onClick = onNavigateToHome,
+                text = { 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Retake Test",
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Go to Main Page"
+                        )
+                        Text("Main Home")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            // Failed - show back to chapter option (individual question help available above)
+            ElizaButton(
+                onClick = onBackToChapter,
+                text = { 
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Back to Chapter",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                         Text(
-                            "Retake Test",
+                            "Back to Chapter",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -532,8 +736,9 @@ private fun ActionButtons(
                 modifier = Modifier.fillMaxWidth()
             )
             
+            // Add main home button for failed case too
             ElizaOutlinedButton(
-                onClick = onBackToChapter,
+                onClick = onNavigateToHome,
                 text = { 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -541,9 +746,9 @@ private fun ActionButtons(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Home,
-                            contentDescription = "Back to Chapter"
+                            contentDescription = "Go to Main Page"
                         )
-                        Text("Back to Chapter")
+                        Text("Main Home")
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -584,9 +789,13 @@ private fun ChapterTestResultScreenPreview() {
         ChapterTestResultScreen(
             testResult = testResult,
             onRetakeTest = { },
-            onRequestHelp = { },
+            onRequestLocalHelp = { },
+            onRequestVideoHelp = { },
+            onRetakeQuestion = { },
             onBackToChapter = { },
-            onContinueLearning = { }
+            onContinueLearning = { },
+            onNavigateToHome = { },
+            isOnline = true
         )
     }
 } 

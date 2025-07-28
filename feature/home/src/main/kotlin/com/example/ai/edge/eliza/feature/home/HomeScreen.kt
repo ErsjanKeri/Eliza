@@ -305,7 +305,7 @@ private fun LazyStaggeredGridScope.startNewCourseContent(
             if (courseFeedState.newCourses.isEmpty()) {
                 item(span = StaggeredGridItemSpan.FullLine) {
                     EmptyState(
-                        message = "🎉 Amazing! You've started all available courses!\nKeep up the great work in 'Continue Learning'.",
+                        message = "Amazing! You've started all available courses!\nKeep up the great work in 'Continue Learning'.",
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

@@ -172,11 +172,12 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
         
         val isCorrect = answerIndex == exercise.correctAnswerIndex
         
-        // Update exercise with user's answer
+        // Enhanced logic: isCompleted becomes true only when correct OR was already completed
+        // This implements "permanently solved" - once solved, stays solved!
         updateExercise(exercise.copy(
             userAnswer = answerIndex,
             isCorrect = isCorrect,
-            isCompleted = true
+            isCompleted = isCorrect || exercise.isCompleted  // KEY: Once solved, stays solved
         ))
         
         return ExerciseResult(
@@ -188,6 +189,17 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
             timeSpent = 30000L, // Mock 30 seconds
             hintsUsed = 0
         )
+    }
+    
+    override suspend fun resetChapterProgress(chapterId: String) {
+        // Reset all exercises for this chapter - clear user progress
+        exercises.filter { it.chapterId == chapterId }.forEach { exercise ->
+            updateExercise(exercise.copy(
+                userAnswer = null,
+                isCorrect = null,
+                isCompleted = false  // Reset "solved" state
+            ))
+        }
     }
     
     // Trial operations
@@ -239,11 +251,20 @@ class MockCourseRepository @Inject constructor() : CourseRepository {
         
         val isCorrect = answerIndex == trial.correctAnswerIndex
         
+        // Update trial with answer
         updateTrial(trial.copy(
             userAnswer = answerIndex,
             isCorrect = isCorrect,
             isCompleted = true
         ))
+        
+        // Enhanced logic: If trial is correct, mark original exercise as solved too!
+        if (isCorrect) {
+            val originalExercise = exercises.find { it.id == trial.originalExerciseId }
+            if (originalExercise != null) {
+                updateExercise(originalExercise.copy(isCompleted = true))
+            }
+        }
         
         return TrialResult(
             trialId = trialId,

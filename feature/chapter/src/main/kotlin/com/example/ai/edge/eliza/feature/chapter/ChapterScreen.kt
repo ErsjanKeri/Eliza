@@ -401,16 +401,19 @@ private fun ChapterTestButton(
     onTakeTestClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val buttonText = if (chapter.isCompleted) {
-        "Retake Test (Score: ${chapter.testScore ?: 0}%)"
-    } else {
-        "Take Test (${chapter.exercises.size} Questions)"
+    // Enhanced logic: Check for partial progress
+    val hasProgress = chapter.exercises.any { it.userAnswer != null }
+    
+    val buttonText = when {
+        chapter.isCompleted -> "Retake Test (Score: ${chapter.testScore ?: 0}%)"
+        hasProgress -> "Continue Test (${chapter.exercises.count { it.isCompleted }}/${chapter.exercises.size} complete)"
+        else -> "Take Test (${chapter.exercises.size} Questions)"
     }
     
-    val buttonIcon = if (chapter.isCompleted) {
-        Icons.Default.Refresh // Retake icon
-    } else {
-        Icons.Default.Edit // Take test icon
+    val buttonIcon = when {
+        chapter.isCompleted -> Icons.Default.Refresh // Retake icon
+        hasProgress -> Icons.Default.Edit // Continue icon (reuse edit icon)
+        else -> Icons.Default.Edit // Take test icon
     }
     
     Column(
@@ -447,7 +450,11 @@ private fun ChapterTestButton(
                 ) {
                     Icon(
                         imageVector = buttonIcon,
-                        contentDescription = if (chapter.isCompleted) "Retake Test" else "Take Test",
+                        contentDescription = when {
+                    chapter.isCompleted -> "Retake Test"
+                    hasProgress -> "Continue Test"
+                    else -> "Take Test"
+                },
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                     Column {

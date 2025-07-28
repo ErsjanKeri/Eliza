@@ -221,10 +221,11 @@ fun NavGraphBuilder.chapterTestScreen(
  * @param onContinueLearning - Called when continuing to next chapter
  */
 fun NavGraphBuilder.chapterTestResultScreen(
-    onBackClick: () -> Unit,
+    onBackClick: (String) -> Unit,
     onNavigateToChapter: (String) -> Unit,
     onNavigateToTest: (String) -> Unit,
     onContinueLearning: () -> Unit,
+    onNavigateToHome: () -> Unit,
 ) {
     composable(
         route = "$CHAPTER_TEST_RESULT_ROUTE/{$CHAPTER_ID_ARG}/{$TEST_SCORE_ARG}/{$TEST_CORRECT_ARG}/{$TEST_TOTAL_ARG}",
@@ -248,26 +249,49 @@ fun NavGraphBuilder.chapterTestResultScreen(
         val correctAnswers = backStackEntry.arguments?.getInt(TEST_CORRECT_ARG) ?: 0
         val totalQuestions = backStackEntry.arguments?.getInt(TEST_TOTAL_ARG) ?: 0
         
-        // Create a simple test result from navigation args
-        val testResult = TestResult(
-            chapterId = chapterId,
-            chapterTitle = "Chapter Test",
-            score = testScore,
-            correctAnswers = correctAnswers,
-            totalQuestions = totalQuestions,
-            wrongExercises = emptyList(), // We'll load these from repository if needed
-            userAnswers = emptyList(),
-            timeSpentSeconds = 0L
-        )
+        // Get ViewModel to access full test data
+        val viewModel: ChapterTestViewModel = hiltViewModel()
+        val testState by viewModel.testState.collectAsState()
+        
+        // Try to get the full test result from ViewModel if available
+        val testResult = when (testState) {
+            is TestState.Completed -> (testState as TestState.Completed).result
+            else -> {
+                // Fallback: Create minimal result and trigger data loading
+                androidx.compose.runtime.LaunchedEffect(chapterId) {
+                    viewModel.loadChapterForResults(chapterId)
+                }
+                
+                TestResult(
+                    chapterId = chapterId,
+                    chapterTitle = "Chapter Test",
+                    score = testScore,
+                    correctAnswers = correctAnswers,
+                    totalQuestions = totalQuestions,
+                    wrongExercises = emptyList(),
+                    userAnswers = emptyList(),
+                    timeSpentSeconds = 0L,
+                    exercises = emptyList() // Will be loaded by ViewModel
+                )
+            }
+        }
         
         ChapterTestResultScreen(
             testResult = testResult,
-            onRetakeTest = { onNavigateToTest(chapterId) },
-            onRequestHelp = { exercise ->
-                // TODO: Integrate with ExerciseHelp system
+            onRetakeTest = { viewModel.retakeTest(chapterId) },
+            onRequestLocalHelp = { exercise ->
+                // TODO: Integrate with ExerciseHelp system - Local AI
+            },
+            onRequestVideoHelp = { exercise ->
+                // TODO: Integrate with ExerciseHelp system - Video
+            },
+            onRetakeQuestion = { exercise ->
+                // TODO: Navigate to single question test
             },
             onBackToChapter = { onNavigateToChapter(chapterId) },
-            onContinueLearning = onContinueLearning
+            onContinueLearning = onContinueLearning,
+            onNavigateToHome = onNavigateToHome,
+            isOnline = true // TODO: Get from NetworkMonitor
         )
     }
 } 
