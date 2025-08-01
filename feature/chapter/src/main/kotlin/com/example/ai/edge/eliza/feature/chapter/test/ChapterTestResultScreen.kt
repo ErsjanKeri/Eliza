@@ -22,6 +22,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,15 +41,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+// Using existing icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -87,13 +92,12 @@ import com.example.ai.edge.eliza.core.model.Difficulty
 fun ChapterTestResultScreen(
     testResult: TestResult,
     onRetakeTest: () -> Unit,
-    onRequestLocalHelp: (Exercise) -> Unit,
-    onRequestVideoHelp: (Exercise) -> Unit,
     onRetakeQuestion: (Exercise) -> Unit,
     onBackToChapter: () -> Unit,
     onContinueLearning: () -> Unit,
     onNavigateToHome: () -> Unit = {},
-    isOnline: Boolean = true,
+    onRequestLocalHelp: (Exercise) -> Unit = {},
+    onRequestVideoHelp: (Exercise) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     ElizaBackground(modifier = modifier) {
@@ -122,10 +126,9 @@ fun ChapterTestResultScreen(
                     AllQuestionsSection(
                         exercises = testResult.exercises,
                         userAnswers = testResult.userAnswers,
-                        onRequestLocalHelp = onRequestLocalHelp,
-                        onRequestVideoHelp = onRequestVideoHelp,
                         onRetakeQuestion = onRetakeQuestion,
-                        isOnline = isOnline
+                        onRequestLocalHelp = onRequestLocalHelp,
+                        onRequestVideoHelp = onRequestVideoHelp
                     )
                 }
                 
@@ -281,10 +284,9 @@ private fun ScoreDisplay(
 private fun AllQuestionsSection(
     exercises: List<Exercise>,
     userAnswers: List<Int>,
-    onRequestLocalHelp: (Exercise) -> Unit,
-    onRequestVideoHelp: (Exercise) -> Unit,
     onRetakeQuestion: (Exercise) -> Unit,
-    isOnline: Boolean,
+    onRequestLocalHelp: (Exercise) -> Unit = {},
+    onRequestVideoHelp: (Exercise) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // State for accordion behavior - track which question is expanded
@@ -316,10 +318,9 @@ private fun AllQuestionsSection(
                 onCardClick = { 
                     expandedQuestionIndex = if (isExpanded) -1 else index
                 },
-                onRequestLocalHelp = { onRequestLocalHelp(exercise) },
-                onRequestVideoHelp = { onRequestVideoHelp(exercise) },
                 onRetakeQuestion = { onRetakeQuestion(exercise) },
-                isOnline = isOnline
+                onRequestLocalHelp = onRequestLocalHelp,
+                onRequestVideoHelp = onRequestVideoHelp
             )
         }
     }
@@ -336,10 +337,9 @@ private fun QuestionResultCard(
     isCorrect: Boolean,
     isExpanded: Boolean,
     onCardClick: () -> Unit,
-    onRequestLocalHelp: () -> Unit,
-    onRequestVideoHelp: () -> Unit,
     onRetakeQuestion: () -> Unit,
-    isOnline: Boolean,
+    onRequestLocalHelp: (Exercise) -> Unit = {},
+    onRequestVideoHelp: (Exercise) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val arrowRotation by animateFloatAsState(
@@ -414,10 +414,9 @@ private fun QuestionResultCard(
                     exercise = exercise,
                     userAnswer = userAnswer,
                     isCorrect = isCorrect,
-                    onRequestLocalHelp = onRequestLocalHelp,
-                    onRequestVideoHelp = onRequestVideoHelp,
                     onRetakeQuestion = onRetakeQuestion,
-                    isOnline = isOnline
+                    onRequestLocalHelp = onRequestLocalHelp,
+                    onRequestVideoHelp = onRequestVideoHelp
                 )
             }
         }
@@ -432,10 +431,9 @@ private fun QuestionExpandedContent(
     exercise: Exercise,
     userAnswer: Int,
     isCorrect: Boolean,
-    onRequestLocalHelp: () -> Unit,
-    onRequestVideoHelp: () -> Unit,
     onRetakeQuestion: () -> Unit,
-    isOnline: Boolean,
+    onRequestLocalHelp: (Exercise) -> Unit = {},
+    onRequestVideoHelp: (Exercise) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -545,23 +543,14 @@ private fun QuestionExpandedContent(
             }
         }
         
-        // Help options with network-aware dual buttons
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Get help with this question:",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            // Explanation options
+        // Exercise help section (only for wrong answers)
+        if (!isCorrect) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Request explanation:",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = "Get help with this question:",
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
@@ -569,39 +558,62 @@ private fun QuestionExpandedContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Local AI Explanation - always available
-                    ElizaOutlinedButton(
-                        onClick = onRequestLocalHelp,
-                        text = { Text("Local AI Explanation") },
-                        modifier = Modifier.weight(1f)
-                    )
+                    // Local AI Help button
+                    OutlinedButton(
+                        onClick = { onRequestLocalHelp(exercise) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = "Local AI Help",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text("Local AI Help", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
                     
-                    // Video Explanation - network dependent
-                    ElizaOutlinedButton(
-                        onClick = { if (isOnline) onRequestVideoHelp() },
-                        text = { 
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                if (!isOnline) {
-                                    Icon(
-                                        imageVector = Icons.Default.Clear,
-                                        contentDescription = "Offline",
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                                Text(
-                                    text = if (isOnline) "Video Explanation" else "Video (Offline)",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        },
-                        enabled = isOnline,
-                        modifier = Modifier.weight(1f)
-                    )
+                    // Video Help button  
+                    OutlinedButton(
+                        onClick = { onRequestVideoHelp(exercise) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.secondary
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = "Video Help",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text("Video Help", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
                 }
             }
+        }
+        
+        // Help options with network-aware dual buttons
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Practice with this question:",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             
             // Practice option
             Column(
@@ -662,7 +674,7 @@ private fun ActionButtons(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = "Continue",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
@@ -672,6 +684,23 @@ private fun ActionButtons(
                                 fontWeight = FontWeight.SemiBold
                             )
                         )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            ElizaOutlinedButton(
+                onClick = onRetakeTest,
+                text = { 
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Retake Test"
+                        )
+                        Text("Retake Test")
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -712,8 +741,31 @@ private fun ActionButtons(
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
-            // Failed - show back to chapter option (individual question help available above)
+            // Failed - show retake test as primary action
             ElizaButton(
+                onClick = onRetakeTest,
+                text = { 
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Retake Test",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text(
+                            "Retake Test",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            ElizaOutlinedButton(
                 onClick = onBackToChapter,
                 text = { 
                     Row(
@@ -722,15 +774,9 @@ private fun ActionButtons(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Home,
-                            contentDescription = "Back to Chapter",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            contentDescription = "Back to Chapter"
                         )
-                        Text(
-                            "Back to Chapter",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        )
+                        Text("Back to Chapter")
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -789,13 +835,12 @@ private fun ChapterTestResultScreenPreview() {
         ChapterTestResultScreen(
             testResult = testResult,
             onRetakeTest = { },
-            onRequestLocalHelp = { },
-            onRequestVideoHelp = { },
             onRetakeQuestion = { },
             onBackToChapter = { },
             onContinueLearning = { },
             onNavigateToHome = { },
-            isOnline = true
+            onRequestLocalHelp = { },
+            onRequestVideoHelp = { }
         )
     }
 } 

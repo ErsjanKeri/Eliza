@@ -46,8 +46,8 @@ dependencies {
     implementation(project(":feature:home"))
     implementation(project(":feature:course-progress"))
     implementation(project(":feature:chapter"))
+    implementation(project(":feature:chat"))
     // TODO: Add other features as they're implemented
-    // implementation(project(":feature:chat"))
     // implementation(project(":feature:courses"))
     // implementation(project(":feature:settings"))
     
@@ -61,6 +61,7 @@ dependencies {
     implementation(project(":ai:modelmanager"))
     implementation(project(":ai:inference"))
     implementation(project(":ai:rag"))
+    implementation(project(":ai:service"))
 
     // Android Core
     implementation(libs.androidx.core.ktx)

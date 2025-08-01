@@ -27,10 +27,10 @@ import kotlinx.coroutines.launch
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 import com.example.ai.edge.eliza.core.data.repository.ProgressRepository
 import com.example.ai.edge.eliza.core.model.ChapterTest
+import com.example.ai.edge.eliza.core.model.UserAnswer
 import com.example.ai.edge.eliza.core.model.TestResult
 import com.example.ai.edge.eliza.core.model.TestState
 import com.example.ai.edge.eliza.core.model.Exercise
-import com.example.ai.edge.eliza.core.model.UserAnswer
 import java.util.UUID
 import javax.inject.Inject
 
@@ -54,8 +54,17 @@ class ChapterTestViewModel @Inject constructor(
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     // Constants
-    private val defaultUserId = "default_user" // TODO: Get from user session
+    private val defaultUserId = "user_default" // TODO: Get from user session
     private var testStartTime: Long = 0L
+
+    /**
+     * Show test results for the given chapter (load from saved data).
+     */
+    fun showResults(chapterId: String) {
+        viewModelScope.launch {
+            loadChapterForResults(chapterId)
+        }
+    }
 
     /**
      * Start a test for the given chapter.
@@ -91,26 +100,18 @@ class ChapterTestViewModel @Inject constructor(
                     return@launch
                 }
 
-                // ENHANCED: Check if user has any progress (any userAnswer is not null)
-                val hasProgress = exercisesToUse.any { it.userAnswer != null }
-                
-                if (hasProgress) {
-                    // User has progress - go directly to results screen
-                    val testResult = calculateCurrentTestResult(chapterId, chapter.title, exercisesToUse)
-                    _testState.value = TestState.Completed(testResult)
-                } else {
-                    // No progress - start fresh test
-                    val chapterTest = ChapterTest(
-                        chapterId = chapterId,
-                        chapterTitle = chapter.title,
-                        exercises = exercisesToUse,
-                        currentQuestionIndex = 0,
-                        userAnswers = List(exercisesToUse.size) { null }
-                    )
+                // ALWAYS start a fresh test when startTest() is called
+                // The UI button determines whether to start test or show results
+                val chapterTest = ChapterTest(
+                    chapterId = chapterId,
+                    chapterTitle = chapter.title,
+                    exercises = exercisesToUse,
+                    currentQuestionIndex = 0,
+                    userAnswers = List(exercisesToUse.size) { null }
+                )
 
-                    testStartTime = System.currentTimeMillis()
-                    _testState.value = TestState.InProgress(chapterTest)
-                }
+                testStartTime = System.currentTimeMillis()
+                _testState.value = TestState.InProgress(chapterTest)
 
             } catch (e: Exception) {
                 _errorMessage.value = e.message
@@ -123,29 +124,18 @@ class ChapterTestViewModel @Inject constructor(
 
     /**
      * Select an answer for the current question.
-     * Enhanced: Immediately submit to repository for real-time progress saving.
+     * During test taking, answers are only stored in UI state until test submission.
      */
     fun selectAnswer(answerIndex: Int) {
         val currentState = _testState.value
         if (currentState is TestState.InProgress) {
             val currentTest = currentState.test
-            val currentExercise = currentTest.exercises[currentTest.currentQuestionIndex]
             
-            // Update UI state first
+            // Update UI state only - don't save to database until test is submitted
             val updatedAnswers = currentTest.userAnswers.toMutableList()
             updatedAnswers[currentTest.currentQuestionIndex] = answerIndex
             val updatedTest = currentTest.copy(userAnswers = updatedAnswers)
             _testState.value = TestState.InProgress(updatedTest)
-            
-            // Submit answer to repository immediately for progress saving
-            viewModelScope.launch {
-                try {
-                    courseRepository.submitExerciseAnswer(currentExercise.id, answerIndex)
-                } catch (e: Exception) {
-                    // Don't show error to user for this background save, but log it
-                    // The answer is still saved in UI state
-                }
-            }
         }
     }
 
@@ -397,18 +387,20 @@ class ChapterTestViewModel @Inject constructor(
                 val wrongExercises = mutableListOf<Exercise>()
                 var correctAnswers = 0
                 
-                // For each exercise, get the latest UserAnswer record
+                // For each exercise, get the latest TEST answer (not trial)
                 exercises.forEach { exercise ->
                     val userAnswerRecords = progressRepository.getUserAnswersByExercise(exercise.id, defaultUserId).firstOrNull()
-                    val latestAnswer = userAnswerRecords?.lastOrNull() // Get most recent attempt
+                    // Filter for test attempts only (trialId == null) and get the latest one
+                    val testAnswers = userAnswerRecords?.filter { it.trialId == null }
+                    val latestTestAnswer = testAnswers?.maxByOrNull { it.answeredAt }
                     
-                    val userAnswer = latestAnswer?.selectedAnswer ?: -1
+                    val userAnswer = latestTestAnswer?.selectedAnswer ?: -1
                     realUserAnswers.add(userAnswer)
                     
-                    // Calculate correct vs wrong
-                    if (userAnswer == exercise.correctAnswerIndex) {
+                    // Calculate correct vs wrong based on actual saved answers
+                    if (userAnswer >= 0 && userAnswer == exercise.correctAnswerIndex) {
                         correctAnswers++
-                    } else {
+                    } else if (userAnswer >= 0) {
                         wrongExercises.add(exercise)
                     }
                 }

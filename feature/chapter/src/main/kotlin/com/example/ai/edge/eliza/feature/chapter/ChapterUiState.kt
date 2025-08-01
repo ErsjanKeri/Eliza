@@ -43,31 +43,15 @@ sealed interface ChapterContentUiState {
 }
 
 /**
- * A sealed hierarchy describing the chapter screen layout state.
- */
-sealed interface ChapterLayoutState {
-    /**
-     * Full screen markdown reading mode.
-     */
-    data object FullScreen : ChapterLayoutState
-    
-    /**
-     * Split screen with chat interface.
-     */
-    data object SplitScreen : ChapterLayoutState
-}
-
-/**
- * Combined UI state for the entire chapter screen.
- * This represents the complete state following NowInAndroid patterns.
+ * UI state for the chapter screen.
+ * Simplified to remove split screen layout since we now use full-screen chat navigation.
  */
 data class ChapterScreenUiState(
     val contentState: ChapterContentUiState = ChapterContentUiState.Loading,
-    val layoutState: ChapterLayoutState = ChapterLayoutState.FullScreen,
     val isLoading: Boolean = false,
 ) {
     /**
-     * True if any data is currently loading.
+     * True if chapter content is loaded successfully.
      */
     val hasContent: Boolean
         get() = contentState is ChapterContentUiState.Success
@@ -77,12 +61,6 @@ data class ChapterScreenUiState(
      */
     val hasError: Boolean
         get() = contentState is ChapterContentUiState.LoadFailed
-        
-    /**
-     * True if chat is currently visible.
-     */
-    val isChatVisible: Boolean
-        get() = layoutState is ChapterLayoutState.SplitScreen
         
     /**
      * Get the chapter if available.

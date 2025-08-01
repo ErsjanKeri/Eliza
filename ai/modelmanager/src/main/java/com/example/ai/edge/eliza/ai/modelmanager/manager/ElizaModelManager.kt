@@ -16,32 +16,35 @@
 
 package com.example.ai.edge.eliza.ai.modelmanager.manager
 
-import android.app.ActivityManager
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
+import androidx.lifecycle.viewModelScope
+import com.example.ai.edge.eliza.ai.modelmanager.LlmChatModelHelper
+import com.example.ai.edge.eliza.ai.modelmanager.data.ELIZA_TASKS
+import com.example.ai.edge.eliza.ai.modelmanager.data.Model
+import com.example.ai.edge.eliza.ai.modelmanager.data.ModelDownloadStatus
+import com.example.ai.edge.eliza.ai.modelmanager.data.ModelDownloadStatusType
+import com.example.ai.edge.eliza.ai.modelmanager.data.Task
+import com.example.ai.edge.eliza.ai.modelmanager.data.TaskType
+import com.example.ai.edge.eliza.ai.modelmanager.data.processTasks
+import com.example.ai.edge.eliza.ai.modelmanager.data.createLlmChatConfigs
+import com.example.ai.edge.eliza.ai.modelmanager.data.Accelerator
 import com.example.ai.edge.eliza.ai.modelmanager.download.ModelDownloadRepository
-import com.example.ai.edge.eliza.core.data.repository.ModelDownloadProgress
-import com.example.ai.edge.eliza.core.data.repository.ModelDownloadStatus
-import com.example.ai.edge.eliza.core.model.DeviceCapabilities
-import com.example.ai.edge.eliza.core.model.Model
-import com.example.ai.edge.eliza.core.model.ModelInitializationResult
-import com.example.ai.edge.eliza.core.model.ModelPerformance
-import com.example.ai.edge.eliza.core.model.ModelSwitchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.io.File
 
 private const val TAG = "ElizaModelManager"
 
-/** Model initialization status types. */
+/** Model initialization status types - copied from Gallery. */
 enum class ModelInitializationStatusType {
     NOT_INITIALIZED,
     INITIALIZING,
@@ -49,284 +52,259 @@ enum class ModelInitializationStatusType {
     ERROR,
 }
 
-/** Model initialization status with error information. */
+/** Model initialization status with error information - copied from Gallery. */
 data class ModelInitializationStatus(
     val status: ModelInitializationStatusType,
     val error: String = "",
 )
 
-/** UI state for the model manager. */
+// ModelDownloadStatus and ModelDownloadStatusType are now imported from data package
+
+/** UI state for the model manager - adapted from Gallery. */
 data class ModelManagerUiState(
-    val isReady: Boolean = false,
-    val memoryUsage: Long = 0L,
-    val currentVariant: String? = null,
-    val downloadProgress: ModelDownloadProgress? = null
+    val tasks: List<Task> = emptyList(),
+    val selectedModel: Model? = null,
+    val modelDownloadStatus: Map<String, ModelDownloadStatus> = emptyMap(),
+    val modelInitializationStatus: Map<String, ModelInitializationStatus> = emptyMap(),
+    val textInputHistory: List<String> = emptyList(),
 )
 
 /**
- * Eliza Model Manager - handles Gemma 3N model lifecycle with variant support. Adapted from
- * Gallery's ModelManagerViewModel for educational AI use cases. Now supports MatFormer architecture
- * with E4B/E2B variant switching.
+ * Eliza Model Manager - Copied from Gallery's ModelManagerViewModel
+ * Simplified for Eliza's needs but following Gallery's proven patterns
  */
 @HiltViewModel
 class ElizaModelManager
 @Inject
 constructor(
     @ApplicationContext private val context: Context,
-    private val downloadRepository: ModelDownloadRepository,
-    private val inferenceHelper: ElizaInferenceHelper,
-    private val modelRegistry: ElizaModelRegistry
+    private val modelDownloadRepository: ModelDownloadRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ModelManagerUiState())
+    private val _uiState = MutableStateFlow(createUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val externalFilesDir = context.getExternalFilesDir(null)
-
     init {
-        // Configure model registry with defaults
-        modelRegistry.configureWithDefaults()
-
-        // Initialize UI state with registry information
-        _uiState.value = _uiState.value.copy(currentVariant = modelRegistry.getRecommendedVariant())
-
-        // Check if model is already downloaded
-        checkModelStatus()
+        // Process tasks and models like Gallery does
+        processTasks()
+        
+        // Add Gemma model to tasks (simplified version)
+        addGemmaModel()
     }
 
-    /** Gets the current active model from the registry. */
-    private val activeModel: Model
-        get() =
-            modelRegistry.getCurrentModel()
-                ?: throw IllegalStateException("No model available in registry")
+    private fun addGemmaModel() {
+        // Create EXACT Gemma-3n-E4B-it-int4 model from Gallery's allowlist
+        // This matches Gallery's model configuration exactly
+        val modelId = "google/gemma-3n-E4B-it-litert-preview"
+        val modelFile = "gemma-3n-E4B-it-int4.task"
+        val downloadUrl = "https://huggingface.co/$modelId/resolve/main/$modelFile?download=true"
+        
+        // Gallery's exact configuration for this model
+        val configs = createLlmChatConfigs(
+            defaultMaxToken = 4096, // From Gallery allowlist
+            defaultTopK = 64,       // From Gallery allowlist
+            defaultTopP = 0.95f,    // From Gallery allowlist
+            defaultTemperature = 1.0f, // From Gallery allowlist
+            accelerators = listOf(Accelerator.CPU, Accelerator.GPU) // "cpu,gpu" from allowlist
+        )
+        
+        val gemmaModel = Model(
+            name = "Gemma-3n-E4B-it-int4", // Exact name from Gallery
+            version = "20250520", // Exact version from Gallery
+            downloadFileName = modelFile,
+            downloadUrl = downloadUrl,
+            sizeInBytes = 4405655031L, // Exact size from Gallery
+            estimatedPeakMemoryInBytes = 6979321856L, // Exact memory from Gallery
+            description = "Preview version of [Gemma 3n E4B](https://ai.google.dev/gemma/docs/gemma-3n) ready for deployment on Android using the [MediaPipe LLM Inference API](https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference). The current checkpoint only supports text and vision input, with 4096 context length.",
+            configs = configs,
+            llmSupportImage = true, // From Gallery allowlist
+            llmSupportAudio = false, // Not specified in Gallery allowlist
+            showRunAgainButton = false, // Gallery sets this to false for LLM models
+            showBenchmarkButton = false, // Gallery sets this to false for LLM models
+        )
+        
+        // Add to both ELIZA tasks (both use the same model)
+        ELIZA_TASKS.forEach { task ->
+            task.models.add(gemmaModel)
+        }
+        
+        // Pre-process the model (Gallery's pattern)
+        gemmaModel.preProcess()
+        
+        // Set as selected model
+        _uiState.update { currentState ->
+            currentState.copy(selectedModel = gemmaModel)
+        }
+        
+        Log.d(TAG, "Added exact Gallery Gemma-3n-E4B-it-int4 model to tasks")
+    }
 
-    /**
-     * Initialize the model with variant-specific optimizations. This uses our intelligent variant
-     * switching system that optimizes MediaPipe session configuration for different MatFormer-style
-     * variants.
-     */
-    suspend fun initializeModel(variant: String? = null): Flow<ModelInitializationResult> = flow {
-        val targetVariant = variant ?: modelRegistry.getRecommendedVariant()
+    fun initializeModel(context: Context, task: Task, model: Model, force: Boolean = false) {
+        viewModelScope.launch(Dispatchers.Default) {
+            // Skip if initialized already.
+            if (
+                !force &&
+                uiState.value.modelInitializationStatus[model.name]?.status ==
+                ModelInitializationStatusType.INITIALIZED
+            ) {
+                Log.d(TAG, "Model '${model.name}' has been initialized. Skipping.")
+                return@launch
+            }
 
+            // Skip if initialization is in progress.
+            if (model.initializing) {
+                model.cleanUpAfterInit = false
+                Log.d(TAG, "Model '${model.name}' is being initialized. Skipping.")
+                return@launch
+            }
+
+            // Clean up.
+            cleanupModel(task = task, model = model)
+
+            // Start initialization.
+            Log.d(TAG, "Initializing model '${model.name}'...")
+            model.initializing = true
+
+            // Show initializing status after a delay.
+            launch {
+                delay(500)
+                if (model.instance == null && model.initializing) {
+                    updateModelInitializationStatus(
+                        model = model,
+                        status = ModelInitializationStatusType.INITIALIZING,
+                    )
+                }
+            }
+
+            val onDone: (error: String) -> Unit = { error ->
+                model.initializing = false
+                if (model.instance != null) {
+                    Log.d(TAG, "Model '${model.name}' initialized successfully")
+                    updateModelInitializationStatus(
+                        model = model,
+                        status = ModelInitializationStatusType.INITIALIZED,
+                    )
+                    if (model.cleanUpAfterInit) {
+                        Log.d(TAG, "Model '${model.name}' needs cleaning up after init.")
+                        cleanupModel(task = task, model = model)
+                    }
+                } else if (error.isNotEmpty()) {
+                    Log.d(TAG, "Model '${model.name}' failed to initialize")
+                    updateModelInitializationStatus(
+                        model = model,
+                        status = ModelInitializationStatusType.ERROR,
+                        error = error,
+                    )
+                }
+            }
+            
+            // Use LlmChatModelHelper for all Eliza tasks
+            when (task.type) {
+                TaskType.ELIZA_CHAT,
+                TaskType.ELIZA_EXERCISE_HELP ->
+                    LlmChatModelHelper.initialize(context = context, model = model, onDone = onDone)
+            }
+        }
+    }
+
+    fun cleanupModel(task: Task, model: Model) {
         try {
-            emit(ModelInitializationResult.Loading("Initializing $targetVariant variant..."))
-
-            val model = modelRegistry.getCurrentModel()
-            if (model == null) {
-                emit(ModelInitializationResult.Error("No model available in registry"))
-                return@flow
-            }
-
-            // Check if model file exists
-            if (!model.isDownloaded(context)) {
-                emit(ModelInitializationResult.Error("Model not downloaded. Please download first."))
-                return@flow
-            }
-
-            // Initialize inference helper with variant-specific optimizations
-            val initResult = CompletableDeferred<String>()
-            inferenceHelper.initialize(context, model, targetVariant) { error ->
-                initResult.complete(error)
-            }
-
-            val error = initResult.await()
-            if (error.isNotEmpty()) {
-                emit(ModelInitializationResult.Error(error))
-                return@flow
-            }
-
-            // Update current variant
-            _uiState.update { it.copy(currentVariant = targetVariant) }
-
-            Log.d(TAG, "Model initialized successfully with variant: $targetVariant")
-            emit(ModelInitializationResult.Success("Model ready with $targetVariant optimization"))
+            Log.d(TAG, "Cleaning up model '${model.name}'")
+            LlmChatModelHelper.cleanUp(model)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to initialize model with variant: $targetVariant", e)
-            emit(ModelInitializationResult.Error("Initialization failed: ${e.message}"))
+            Log.e(TAG, "Failed to clean up model '${model.name}'", e)
         }
     }
-
+    
     /**
-     * Switch to a different variant with optimized parameters. This is our implementation of
-     * "MatFormer-style" switching within MediaPipe constraints.
+     * Download a model - Gallery's exact WorkManager approach
      */
-    suspend fun switchToVariant(targetVariant: String): Flow<ModelSwitchResult> = flow {
-        try {
-            emit(ModelSwitchResult.Loading("Switching to $targetVariant..."))
-
-            val currentVariant = getCurrentVariant()
-            if (currentVariant == targetVariant) {
-                emit(ModelSwitchResult.Success("Already using $targetVariant"))
-                return@flow
+    fun downloadModel(context: Context, task: Task, model: Model) {
+        Log.d(TAG, "Starting download for model '${model.name}' using Gallery WorkManager pattern")
+        
+        // Use real ModelDownloadRepository like Gallery
+        modelDownloadRepository.downloadModel(
+            model = model,
+            onStatusUpdated = { downloadModel, status ->
+                Log.d(TAG, "Download progress for '${downloadModel.name}': ${status.status}")
+                setDownloadStatus(downloadModel, status)
             }
-
-            val model = getCurrentModel()
-            if (model == null) {
-                emit(ModelSwitchResult.Error("No model available to switch"))
-                return@flow
-            }
-
-            // Use the inference helper to perform the actual variant switching
-            val switchResult = CompletableDeferred<String>()
-            inferenceHelper.switchVariant(model, targetVariant) { error ->
-                switchResult.complete(error)
-            }
-
-            val error = switchResult.await()
-            if (error.isNotEmpty()) {
-                emit(ModelSwitchResult.Error(error))
-                return@flow
-            }
-
-            // Update UI state
-            _uiState.update { it.copy(currentVariant = targetVariant) }
-
-            Log.d(TAG, "Successfully switched to variant: $targetVariant")
-            emit(ModelSwitchResult.Success("Switched to $targetVariant"))
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to switch to variant: $targetVariant", e)
-            emit(ModelSwitchResult.Error("Variant switching failed: ${e.message}"))
-        }
-    }
-
-    /** Get the current variant being used. */
-    fun getCurrentVariant(): String? {
-        return inferenceHelper.getCurrentVariant(activeModel)
-    }
-
-    /** Get the current active model. */
-    fun getCurrentModel(): Model? {
-        return try {
-            activeModel
-        } catch (e: IllegalStateException) {
-            null
-        }
-    }
-
-    /** Get performance characteristics for the current variant. */
-    fun getCurrentVariantPerformance(): ModelPerformance? {
-        val currentVariant = getCurrentVariant()
-        return if (currentVariant != null) {
-            modelRegistry.getVariantPerformance(currentVariant)
-        } else {
-            null
-        }
-    }
-
-    /** Get the recommended variant for the current device. */
-    fun getRecommendedVariant(): String {
-        return modelRegistry.getRecommendedVariant()
-    }
-
-    /** Check if a variant is available for switching. */
-    fun isVariantAvailable(variant: String): Boolean {
-        val model = modelRegistry.getCurrentModel() ?: return false
-        return model.isDownloaded(context)
-    }
-
-    /**
-     * Switch to optimal variant based on current device state. This implements automatic variant
-     * switching based on memory pressure, battery level, and performance requirements.
-     */
-    suspend fun switchToOptimalVariant(): Flow<ModelSwitchResult> = flow {
-        try {
-            emit(ModelSwitchResult.Loading("Analyzing device state..."))
-
-            val deviceCapabilities = getDeviceCapabilities()
-            val recommendedVariant = modelRegistry.getRecommendedVariant(deviceCapabilities)
-
-            if (recommendedVariant == _uiState.value.currentVariant) {
-                emit(ModelSwitchResult.Success("Already using optimal variant"))
-                return@flow
-            }
-
-            // Switch to recommended variant
-            switchToVariant(recommendedVariant).collect { result -> emit(result) }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to switch to optimal variant", e)
-            emit(ModelSwitchResult.Error("Optimal variant switching failed: ${e.message}"))
-        }
-    }
-
-    /** Get current device capabilities for variant selection. */
-    private fun getDeviceCapabilities(): DeviceCapabilities {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val memoryInfo = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(memoryInfo)
-
-        val availableMemoryGB = memoryInfo.availMem / (1024 * 1024 * 1024)
-        val isLowMemory = memoryInfo.lowMemory
-
-        return DeviceCapabilities(
-            availableMemoryGB = availableMemoryGB,
-            isLowMemory = isLowMemory,
-            preferPerformance = availableMemoryGB > 6 && !isLowMemory
         )
     }
-
-    /** Downloads the model if not already present. */
-    fun downloadModel() {
-        val model = modelRegistry.getCurrentModel() ?: return
-
-        if (model.isDownloaded(context)) {
-            Log.d(TAG, "Model '${model.name}' already downloaded")
-            return
+    
+    /**
+     * Set download status - Gallery's exact pattern
+     */
+    private fun setDownloadStatus(curModel: Model, status: ModelDownloadStatus) {
+        // Update model download progress - Gallery's exact implementation
+        val curModelDownloadStatus = _uiState.value.modelDownloadStatus.toMutableMap()
+        curModelDownloadStatus[curModel.name] = status
+        val newUiState = _uiState.value.copy(modelDownloadStatus = curModelDownloadStatus)
+        
+        // Delete downloaded file if status is failed or not_downloaded (Gallery pattern)
+        if (status.status == ModelDownloadStatusType.FAILED ||
+            status.status == ModelDownloadStatusType.NOT_DOWNLOADED) {
+            // TODO: Implement file deletion like Gallery
+            Log.d(TAG, "Would delete file for ${curModel.downloadFileName}")
         }
-
-        Log.d(TAG, "Starting download for model '${model.name}'")
-
-        downloadRepository.downloadModel(model) { progress ->
-            _uiState.update { it.copy(downloadProgress = progress) }
-
-            if (progress.status == ModelDownloadStatus.COMPLETED) {
-                Log.d(TAG, "Model '${model.name}' download completed")
-                checkModelStatus()
-            } else if (progress.status == ModelDownloadStatus.FAILED) {
-                Log.e(TAG, "Model '${model.name}' download failed: ${progress.error}")
-            }
-        }
+        
+        _uiState.update { newUiState }
     }
 
-    /** Checks if the model is downloaded and updates UI state. */
-    private fun checkModelStatus() {
-        val model = modelRegistry.getCurrentModel() ?: return
-        val isDownloaded = model.isDownloaded(context)
+    private fun updateModelInitializationStatus(
+        model: Model,
+        status: ModelInitializationStatusType,
+        error: String = "",
+    ) {
+        val newUiState = _uiState.value.copy()
+        val newStatus = newUiState.modelInitializationStatus.toMutableMap()
+        newStatus[model.name] = ModelInitializationStatus(status = status, error = error)
+        _uiState.update { newUiState.copy(modelInitializationStatus = newStatus) }
+    }
 
-        _uiState.update {
-            it.copy(
-                isReady = isDownloaded,
-                memoryUsage = if (isDownloaded) model.estimatedPeakMemoryInBytes ?: 0L else 0L
+    private fun getModelDownloadStatus(model: Model): ModelDownloadStatus {
+        // Check if model file exists
+        val modelPath = model.getPath(context)
+        val modelFile = File(modelPath)
+        
+        return if (modelFile.exists() && modelFile.length() > 0) {
+            ModelDownloadStatus(
+                status = ModelDownloadStatusType.SUCCEEDED,
+                receivedBytes = modelFile.length(),
+                totalBytes = model.sizeInBytes,
             )
+        } else {
+            ModelDownloadStatus(status = ModelDownloadStatusType.NOT_DOWNLOADED)
+        }
+    }
+
+    private fun createUiState(): ModelManagerUiState {
+        val modelDownloadStatus: MutableMap<String, ModelDownloadStatus> = mutableMapOf()
+        val modelInstances: MutableMap<String, ModelInitializationStatus> = mutableMapOf()
+        
+        for (task in ELIZA_TASKS) {
+            for (model in task.models) {
+                modelDownloadStatus[model.name] = getModelDownloadStatus(model = model)
+                modelInstances[model.name] =
+                    ModelInitializationStatus(status = ModelInitializationStatusType.NOT_INITIALIZED)
+            }
         }
 
-        Log.d(
-            TAG,
-            "Model '${model.name}' status: ${if (isDownloaded) "Downloaded" else "Not downloaded"}"
+        return ModelManagerUiState(
+            tasks = ELIZA_TASKS.toList(),
+            modelDownloadStatus = modelDownloadStatus,
+            modelInitializationStatus = modelInstances,
+            textInputHistory = emptyList(),
         )
-    }
-
-    /** Cancels the current model download. */
-    fun cancelDownload() {
-        val model = modelRegistry.getCurrentModel() ?: return
-        downloadRepository.cancelDownloadModel(model)
-        Log.d(TAG, "Cancelled download for model '${model.name}'")
-    }
-
-    /** Checks if the model is downloaded. */
-    fun isModelDownloaded(): Boolean {
-        val model = modelRegistry.getCurrentModel() ?: return false
-        return model.isDownloaded(context)
-    }
-
-    /** Cleans up model resources. */
-    fun cleanupModel() {
-        val model = modelRegistry.getCurrentModel() ?: return
-        inferenceHelper.cleanUp(model)
-        Log.d(TAG, "Cleaned up model '${model.name}'")
     }
 
     override fun onCleared() {
         super.onCleared()
-        cleanupModel()
+        // Clean up all models
+        for (task in ELIZA_TASKS) {
+            for (model in task.models) {
+                cleanupModel(task, model)
+            }
+        }
     }
 } 

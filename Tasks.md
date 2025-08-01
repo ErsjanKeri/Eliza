@@ -6,7 +6,7 @@
 ## Overview
 **Timeline**: 21 days  
 **Team**: 2-3 developers  
-**Goal**: Functional MVP demo with core AI tutoring features + VIDEO EXPLANATION SYSTEM + **CHAPTER TEST SYSTEM WITH "BEST ATTEMPT" PROGRESS** ✨ **COMPLETED**
+**Goal**: Functional MVP demo with core AI tutoring features + **FULL-SCREEN CHAT SYSTEM** + **CHAPTER TEST SYSTEM WITH "BEST ATTEMPT" PROGRESS** ✨ **COMPLETED**
 
 ## **🎉 MAJOR MILESTONE ACHIEVED**
 **Chapter Test System with Advanced Progress Tracking**: FULLY IMPLEMENTED ✨
@@ -16,161 +16,278 @@
 - ✅ Navigation loop fixes and enhanced flow
 - ✅ Real-time progress tracking across test attempts
 
-## Week 1: Foundation + Video Infrastructure (Days 1-7)
+## **🚨 CRITICAL NEW PRIORITY: Exercise Help Chat System Overhaul**
+
+### **URGENT Task: Remove Split-Screen Exercise Help and Implement Gallery Chat Integration**
+**Task**: Complete architectural redesign of exercise help system  
+**Owner**: Full Team (Frontend + Backend + Chat Specialist)  
+**Estimated**: 12 hours (High Priority)  
+**Dependencies**: Gallery chat analysis required  
+
+#### **What Needs to be Done - Step by Step:**
+
+**STEP 1: Remove Current Split-Screen Logic (2 hours)**
+- [ ] **DELETE** the current `ExerciseHelpInterface` component completely
+- [ ] **REMOVE** split-screen layout from exercise help UI
+- [ ] **DELETE** old exercise help navigation components
+- [ ] **CLEAN UP** any references to split-screen exercise help
+- [ ] **REMOVE** old "Generate New Trial" | "Ask for Explanation" side-by-side layout
+- [ ] **VERIFY** that test results screen no longer uses old help interface
+
+**STEP 2: Study and Copy Gallery Chat Interface (3 hours)**
+- [ ] **ANALYZE** gallery chat UI components extensively
+- [ ] **IDENTIFY** exact chat interface components from gallery project
+- [ ] **COPY** gallery chat composables 100% exactly (layout, styling, behavior)
+- [ ] **UNDERSTAND** gallery chat message types, especially video messages
+- [ ] **DOCUMENT** gallery chat navigation patterns
+- [ ] **MAP** gallery chat state management to our exercise context
+
+**STEP 3: Create Exercise-Specific Chat System (4 hours)**
+- [ ] **CREATE** new chat session type: `EXERCISE_HELP`
+- [ ] **IMPLEMENT** automatic chat session creation for exercise help
+- [ ] **ADD** exercise context to chat sessions (questionText, userAnswer, correctAnswer)
+- [ ] **INTEGRATE** chapter markdown as RAG context for exercise chats
+- [ ] **CREATE** chat title format: `"Exercise #1 Help: Solve 2x + 5 = 15"`
+- [ ] **IMPLEMENT** numbering system for multiple help sessions: `(2)`, `(3)`, etc.
+- [ ] **ENSURE** each help request creates a NEW chat session (never reuse)
+
+**STEP 4: Implement Full-Screen Chat Integration (3 hours)**
+- [ ] **REPLACE** exercise help buttons with chat navigation
+- [ ] **IMPLEMENT** 99% screen coverage for exercise help chats
+- [ ] **ADD** top-right return button that preserves accordion state
+- [ ] **INTEGRATE** video message support within exercise help chats
+- [ ] **IMPLEMENT** "Request Video" as a message type in chat
+- [ ] **ENSURE** video explanations appear as chat messages (just like gallery)
+- [ ] **PRESERVE** navigation state: return to test results with same accordion expanded
+
+#### **Critical Technical Details:**
+
+**Chat Session Creation Logic:**
+```kotlin
+// When user clicks "Local AI Explanation" or "Video Explanation"
+fun createExerciseHelpChat(
+    exerciseId: String,
+    questionText: String, 
+    userAnswer: Int,
+    correctAnswer: Int,
+    helpType: String // "Local AI" or "Video"
+) {
+    val sessionNumber = getExistingHelpSessionCount(exerciseId) + 1
+    val title = if (sessionNumber == 1) {
+        "Exercise #${exerciseNumber} Help: ${questionText.take(30)}..."
+    } else {
+        "Exercise #${exerciseNumber} Help: ${questionText.take(30)}... (${sessionNumber})"
+    }
+    
+    // Pre-fill context in chat
+    val initialContext = """
+    Question: ${questionText}
+    Your Answer: ${userAnswer}
+    Correct Answer: ${correctAnswer}
+    """
+    
+    // Auto-inject RAG context: Chapter markdown + exercise details
+    createChatSession(title, EXERCISE_HELP, initialContext, ragContext)
+}
+```
+
+**Navigation Preservation Logic:**
+```kotlin
+// When returning from exercise help chat
+fun returnToTestResults(expandedQuestionId: String) {
+    navigateToTestResults()
+    // Preserve accordion state - keep the same question expanded
+    testResultsState.expandedQuestion = expandedQuestionId
+}
+```
+
+**Chat Categories Architecture:**
+```
+Course: Algebra Basics
+  Chapter: Linear Equations
+    📚 General Chapter Discussion
+    ❓ Exercise Help
+      - Exercise #1 Help: Solve 2x + 5 = 15
+      - Exercise #1 Help: Solve 2x + 5 = 15 (2)
+      - Exercise #3 Help: Find x in 3x - 7 = 14
+    📝 Text Questions
+      - "How to solve complex equations?" (from text selection)
+```
+
+#### **Acceptance Criteria:**
+- [ ] **Old split-screen interface completely removed**
+- [ ] **Gallery chat UI copied 100% exactly** 
+- [ ] **Exercise help opens full-screen chat (99% coverage)**
+- [ ] **Chat titles follow exact format: "Exercise #X Help: [question]"**
+- [ ] **Each help request creates NEW chat session**
+- [ ] **Video explanations work as chat messages**
+- [ ] **Return navigation preserves accordion state**
+- [ ] **RAG context includes chapter + exercise details**
+- [ ] **Chat sessions persist for future reference**
+- [ ] **No more split-screen help interface anywhere**
+
+#### **Dependencies:**
+- [ ] **Gallery project chat interface study** (must be completed first)
+- [ ] **Existing chat system understanding** (core chat components)
+- [ ] **Test results accordion preservation** (navigation state)
+
+## Week 1: Foundation + Chat Infrastructure (Days 1-7)
 
 ### Day 1: Project Setup and Data Model Updates
-**Task**: Update project structure for video system and rename lessons to chapters  
+**Task**: Update project structure for full-screen chat system  
 **Owner**: Lead Developer  
 **Estimated**: 6 hours  
-**Dependencies**: None  
+**Dependencies**: Gallery chat analysis  
 
 **Subtasks**:
 - [x] Update all data models: Lesson → Chapter throughout codebase
 - [x] **Chapter Test System Data Models** ✨ **COMPLETED**
 - [x] **UserAnswer entity for detailed attempt tracking** ✨ **COMPLETED**
 - [x] **Exercise.isCompleted for permanent progress** ✨ **COMPLETED**  
-- [ ] Create new video explanation entities and database schema
-- [ ] Add network module to core for video API integration
-- [ ] Update Room database schema with new video tables
-- [ ] Create migration scripts for database changes
-- [ ] Update mock repositories with chapter-based data
-- [ ] Set up video API service interfaces
+- [ ] **PRIORITY: Complete Exercise Help Chat System Overhaul** ⚠️ **NEW CRITICAL TASK**
+- [ ] Create enhanced chat session entities for exercise help
+- [ ] Add exercise context fields to chat sessions
+- [ ] Update Room database schema for exercise help chats
+- [ ] Create migration scripts for chat system changes
+- [ ] Update mock repositories with exercise help chat data
 
 **Acceptance Criteria**:
 - All "lesson" references renamed to "chapter" ✅
 - **UserAnswer and Exercise progress data models implemented** ✅ **NEW**
 - **Test result persistence and reconstruction working** ✅ **NEW**
-- New database tables for video explanations and exercise help
-- Video API service interfaces defined
+- **Exercise help chat system fully implemented** ⚠️ **CRITICAL**
+- Exercise help chat data models complete
 - Project builds successfully with updated schema
 
-### Day 2: Network Infrastructure and Video API Integration
-**Task**: Implement network detection and video API client  
-**Owner**: Backend Developer  
+### Day 2: Gallery Chat Integration and Enhancement
+**Task**: Integrate gallery chat interface and enhance for exercise context  
+**Owner**: Frontend Developer + Chat Specialist  
 **Estimated**: 8 hours  
-**Dependencies**: Day 1 completion  
+**Dependencies**: Day 1 completion + Gallery analysis  
 
 **Subtasks**:
-- [ ] Enhance existing SimpleNetworkMonitor (core:data) for actual connectivity detection
-- [ ] Implement VideoExplanationService with Retrofit
-- [ ] Create API request/response models for chapter and exercise videos
-- [ ] Add video download functionality with progress tracking
-- [ ] Implement local video storage management
-- [ ] Create VideoManager for file operations
-- [ ] Integrate video features with existing NetworkMonitor.isOnline Flow<Boolean>
+- [ ] **Copy gallery chat components 100% exactly** 
+- [ ] **Adapt gallery chat for exercise help context**
+- [ ] **Implement exercise-specific chat session creation**
+- [ ] **Add video message support for exercise explanations**
+- [ ] **Create chat title generation logic**
+- [ ] **Implement RAG context injection for exercises**
+- [ ] **Add navigation preservation for accordion state**
 
 **Acceptance Criteria**:
-- Existing SimpleNetworkMonitor enhanced with real connectivity detection
-- Video API endpoints functional with proper error handling
-- Local video storage and retrieval working
-- Video download progress tracking implemented
-- Video features properly integrate with existing NetworkMonitor.isOnline Flow
+- Gallery chat interface copied exactly and working
+- Exercise help creates full-screen chat sessions
+- Video explanations work as chat messages
+- Chat titles follow specified format
+- Return navigation preserves test results state
 
-### Day 3: Database Implementation for Video System
-**Task**: Implement Room DAOs and entities for video features  
+### Day 3: Chat Session Management and Architecture
+**Task**: Implement hierarchical chat organization and session management  
 **Owner**: Backend Developer  
-**Estimated**: 6 hours  
-**Dependencies**: Day 1 completion  
-
-**Subtasks**:
-- [ ] Create VideoExplanationDao with CRUD operations
-- [ ] Create ExerciseHelpDao for help system
-- [ ] Update ChatSessionDao for chapter-based sessions
-- [ ] Implement database migrations from current schema
-- [ ] Create repository implementations for video features
-- [ ] Add proper database indexing for performance
-
-**Acceptance Criteria**:
-- All new entities persist correctly in database
-- Chapter-based chat sessions working
-- Video metadata properly stored and retrieved
-- Database migrations run successfully
-
-### Day 4: Chapter-Based Chat Architecture
-**Task**: Restructure chat system for chapter organization  
-**Owner**: Frontend Developer + AI Specialist  
-**Estimated**: 8 hours  
-**Dependencies**: Day 3 completion  
-
-**Subtasks**:
-- [ ] Update ChatRepository for chapter-specific sessions
-- [ ] Create ChapterChatService for session management  
-- [ ] Modify ElizaChatService for chapter context integration
-- [ ] Update RAG system for chapter-specific content
-- [ ] Implement chat session creation and switching
-- [ ] Add support for multiple sessions per chapter
-- [ ] Update chat message models for video content
-
-**Acceptance Criteria**:
-- Multiple chat sessions per chapter working
-- Chat sessions properly scoped to chapters
-- RAG enhancement using chapter content
-- Session creation and switching functional
-
-### Day 5: Basic Video UI Components
-**Task**: Create core video-related UI components  
-**Owner**: Frontend Developer  
 **Estimated**: 6 hours  
 **Dependencies**: Day 2 completion  
 
 **Subtasks**:
-- [ ] Create VideoRequestButton with network state awareness
-- [ ] Implement video player component for chat messages
-- [ ] Create video download progress indicator
-- [ ] Build network status indicators (online/offline)
-- [ ] Create video loading and error states
-- [ ] Implement video storage management UI
-- [ ] Add video metadata display components
+- [ ] **Implement hierarchical chat navigation: Course > Chapter > Categories**
+- [ ] **Create chat category system: General + Exercise Help + Text Questions**
+- [ ] **Add session numbering for multiple exercise help chats**
+- [ ] **Implement chat persistence and retrieval**
+- [ ] **Add RAG context management for exercise help**
+- [ ] **Create chat session filtering and organization**
 
 **Acceptance Criteria**:
-- Video request button shows/hides based on network
-- Video player displays downloaded videos
-- Loading states and progress indicators work
-- Network status clearly indicated to users
+- Hierarchical chat navigation working
+- Chat categories properly organized
+- Multiple exercise help sessions numbered correctly
+- Chat persistence working across app restarts
+- RAG context properly injected
 
-### Day 6: Chapter Interface Layout (Gallery-Style)
-**Task**: Build split-screen chapter interface with chat sidebar  
-**Owner**: Frontend Developer  
+### Day 4: Enhanced Exercise Help Flow
+**Task**: Complete exercise help integration with test results  
+**Owner**: Frontend Developer + Backend Developer  
 **Estimated**: 8 hours  
-**Dependencies**: Days 4, 5 completion  
+**Dependencies**: Day 3 completion  
 
 **Subtasks**:
-- [ ] Create split-screen layout (chapter content + chat)
-- [ ] Implement chapter content display (markdown rendering)
-- [ ] Build chat session sidebar with session list
-- [ ] Create active chat interface with message history
-- [ ] Add chat session creation and naming
-- [ ] Implement session switching functionality
-- [ ] Add responsive design for different screen sizes
+- [ ] **Update test results accordion to use new chat system**
+- [ ] **Remove all old exercise help UI components**
+- [ ] **Implement "Local AI Explanation" button → chat navigation**
+- [ ] **Implement "Video Explanation" button → chat with video message**
+- [ ] **Add accordion state preservation logic**
+- [ ] **Test complete exercise help flow end-to-end**
 
 **Acceptance Criteria**:
-- Split-screen layout matches design mockups
-- Chapter content displays properly
-- Chat sessions can be created and switched
-- Interface responsive and user-friendly
+- Test results properly navigate to exercise help chats
+- Old split-screen interface completely gone
+- Local AI and Video explanations both work via chat
+- Accordion state preserved when returning
+- Complete flow working seamlessly
 
-### Day 7: Video Request Integration
-**Task**: Connect video request UI with backend services  
+### Day 5: Video Integration in Chat System
+**Task**: Integrate video explanations as chat messages  
+**Owner**: Frontend Developer + Video Specialist  
+**Estimated**: 6 hours  
+**Dependencies**: Day 4 completion  
+
+**Subtasks**:
+- [ ] **Implement video messages in exercise help chats**
+- [ ] **Add "Request Video" functionality within chat**
+- [ ] **Integrate video download and display in chat messages**
+- [ ] **Add video loading states and error handling**
+- [ ] **Implement video retry mechanism in chat**
+- [ ] **Add network status awareness for video requests**
+
+**Acceptance Criteria**:
+- Video explanations appear as chat messages
+- Video requests work from within exercise help chats
+- Loading states and error handling proper
+- Network status properly communicated
+- Video retry mechanism functional
+
+### Day 6: RAG Context and AI Integration
+**Task**: Enhance RAG system for exercise help context  
+**Owner**: AI Specialist + Backend Developer  
+**Estimated**: 8 hours  
+**Dependencies**: Day 5 completion  
+
+**Subtasks**:
+- [ ] **Implement exercise-specific RAG context injection**
+- [ ] **Add chapter markdown context for exercise help**
+- [ ] **Create specialized prompts for exercise explanations**
+- [ ] **Implement "why was my answer wrong" vs "explain concept" logic**
+- [ ] **Add user attempt history to RAG context**
+- [ ] **Test AI response quality for exercise help**
+
+**Acceptance Criteria**:
+- Exercise help chats use proper RAG context
+- AI responses contextually appropriate for exercises
+- Different prompt templates working
+- Response quality meets educational standards
+- Context injection working correctly
+
+### Day 7: Testing and Integration Polish
+**Task**: Test complete exercise help chat system and fix issues  
 **Owner**: Full Team  
 **Estimated**: 6 hours  
-**Dependencies**: Days 2, 6 completion  
+**Dependencies**: Days 2-6 completion  
 
 **Subtasks**:
-- [ ] Connect video request button to API service
-- [ ] Implement video download and storage flow
-- [ ] Add video display in chat messages
-- [ ] Create error handling for failed video requests
-- [ ] Test video request flow end-to-end
-- [ ] Add loading states during video processing
-- [ ] Implement video retry mechanism
+- [ ] **Test complete exercise help flow end-to-end**
+- [ ] **Verify old split-screen interface completely removed**
+- [ ] **Test chat session creation and numbering**
+- [ ] **Verify navigation state preservation**
+- [ ] **Test video integration in exercise help chats**
+- [ ] **Fix any integration issues found**
+- [ ] **Performance testing with multiple chat sessions**
 
 **Acceptance Criteria**:
-- Video requests successfully sent to API
-- Videos download and display in chat
-- Error handling and retry logic working
-- End-to-end video flow functional
+- Complete exercise help flow working flawlessly
+- No remnants of old split-screen interface
+- Chat session management robust
+- Navigation preservation working
+- Performance acceptable with multiple sessions
 
-## Week 2: Exercise Help System + Advanced Features (Days 8-14)
+## Week 2: Advanced Features + Polish (Days 8-14)
 
 ### Day 8: Exercise Help Infrastructure
 **Task**: Build exercise help system with dual options  
@@ -531,25 +648,28 @@
 - [x] **UserAnswer tracking and persistence** ✨ **COMPLETED**  
 - [x] **Navigation flow fixes and enhancements** ✨ **COMPLETED**
 - [x] **Test results data reconstruction** ✨ **COMPLETED**
-- [ ] Video API integration complete by Day 2
+- [ ] **Exercise Help Chat System Overhaul** ⚠️ **CRITICAL NEW PRIORITY**
+- [ ] **Gallery chat integration complete** ⚠️ **CRITICAL**
+- [ ] **Full-screen exercise help working** ⚠️ **CRITICAL**
 - [ ] Chapter-based chat system working by Day 6
-- [ ] Exercise help system functional by Day 9
-- [ ] Network resilience implemented by Day 12
+- [ ] Video message integration complete by Day 5
 - [ ] Performance optimization complete by Day 18
 
-### Video System Quality Gates
-- [ ] Video request success rate > 90% when online
-- [ ] Video download time < 15 seconds for 2MB files
-- [ ] Local video playback starts within 2 seconds
-- [ ] Network detection accuracy > 99%
-- [ ] Video storage management working efficiently
+### Exercise Help Chat Quality Gates ⚠️ **NEW CRITICAL**
+- [ ] **Old split-screen interface completely removed: 100%**
+- [ ] **Gallery chat UI copied exactly: 100%**
+- [ ] **Exercise help chat creation success rate: 100%**
+- [ ] **Navigation state preservation: 100%**
+- [ ] **Video message integration: 100%**
+- [ ] **Chat session persistence: 100%**
+- [ ] **RAG context injection accuracy: 100%**
 
 ### User Experience Targets
-- [ ] Intuitive video request process with minimal steps
-- [ ] Clear network status communication
-- [ ] Smooth chapter-to-chat workflow
-- [ ] Effective exercise help discovery and usage
-- [ ] Reliable offline mode functionality
+- [ ] **Seamless exercise help chat creation**
+- [ ] **Intuitive full-screen chat interface**
+- [ ] **Preserved navigation state when returning**
+- [ ] **Clear chat session organization**
+- [ ] **Effective video integration in chats**
 
 ## Risk Mitigation for Video Features
 
@@ -600,19 +720,13 @@
 ## Implementation Notes
 
 ### Development Approach
-- **Parallel Development**: UI and backend video features developed simultaneously
-- **Incremental Testing**: Each video feature tested individually before integration
-- **User-Centric Design**: Video UI designed based on Gallery patterns
-- **Performance First**: Video features optimized from initial implementation
+- **Chat-First Design**: Exercise help completely redesigned around chat
+- **Gallery Integration**: 100% exact copy of gallery chat interface
+- **State Preservation**: Navigation state maintained across chat transitions
+- **Context Awareness**: Exercise details automatically injected into chat
 
 ### Quality Assurance
-- **Continuous Integration**: Automated testing for video API integration
-- **Device Testing**: Video playback tested on multiple Android devices
-- **Network Testing**: Comprehensive testing under various network conditions
-- **User Testing**: Regular feedback sessions throughout development
-
-### Documentation Requirements
-- **API Documentation**: Complete video API endpoint documentation
-- **User Guides**: Clear instructions for video feature usage
-- **Technical Specs**: Detailed video system architecture documentation
-- **Troubleshooting**: Common video issues and solutions guide
+- **Complete Flow Testing**: Exercise help → chat → return with state
+- **Chat Integration Testing**: Gallery chat compatibility and functionality
+- **Navigation Testing**: Accordion state preservation across all scenarios
+- **Context Testing**: RAG injection and AI response quality verification

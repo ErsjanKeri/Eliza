@@ -122,30 +122,46 @@
 - How should memory management handle shared model usage between test and chat systems?
 - What are the performance implications of model sharing vs separate instances?
 
-#### Story 1.8: Exercise Help System with Enhanced Chat Integration ✨ **UPDATED**
+#### Story 1.8: Exercise Help System with Full-Screen Chat Integration ✨ **COMPLETELY REDESIGNED**
 **As a** student  
-**I want** to get help with wrong answers from tests and individual exercises  
-**So that** I can understand my mistakes and improve my performance
+**I want** to get help with wrong answers through a seamless full-screen chat experience that copies the gallery chat interface  
+**So that** I can understand my mistakes in an intuitive, conversational way with persistent help history
 
 **Acceptance Criteria:**
-- WHEN a user completes an exercise incorrectly in a test THE SYSTEM SHALL provide help options in test results screen
-- WHEN user selects "Generate New Trial" THE SYSTEM SHALL create a new similar question using shared AI model
-- WHEN user selects "Ask for Explanation" THE SYSTEM SHALL open full-screen chat interface with question context
-- WHEN requesting explanation THE SYSTEM SHALL create question-specific chat tagged with exercise/chapter/course context
-- WHEN explanation is received THE SYSTEM SHALL display as chat message (text or video) in unified interface
-- WHEN user accesses help THE SYSTEM SHALL show all previous explanations in organized chat history
-- WHEN video explanations are provided THE SYSTEM SHALL integrate them as video messages in chat interface
+- WHEN a user completes an exercise incorrectly in a test THE SYSTEM SHALL provide "Local AI Explanation" and "Video Explanation" buttons in test results
+- WHEN user clicks any exercise help button THE SYSTEM SHALL open a full-screen chat interface (99% screen coverage) that copies gallery chat 100% exactly
+- WHEN exercise help chat opens THE SYSTEM SHALL automatically create a new chat session with title format "Exercise #X Help: [question text]"
+- WHEN user requests help for the same exercise multiple times THE SYSTEM SHALL create new numbered sessions: "(2)", "(3)", etc.
+- WHEN exercise help chat loads THE SYSTEM SHALL pre-populate context: question text, user's answer, correct answer, and chapter content via RAG
+- WHEN user interacts in exercise help chat THE SYSTEM SHALL provide contextually appropriate responses using chapter content and exercise details
+- WHEN user requests video explanation THE SYSTEM SHALL integrate video as a chat message (not separate interface)
+- WHEN user finishes getting help and returns THE SYSTEM SHALL preserve the exact accordion state (same question expanded) in test results
+- WHEN user accesses exercise help chats later THE SYSTEM SHALL organize them hierarchically: Course > Chapter > Exercise Help category
+- WHEN multiple exercise help sessions exist THE SYSTEM SHALL display them in organized list with proper numbering and timestamps
 
-**Exercise Video API Payload:**
-```json
-{
-  "exerciseText": "Complete exercise question",
-  "options": ["option1", "option2", "option3", "option4"],
-  "correctChoice": 0,
-  "incorrectChoice": 2,
-  "userQuestion": "Why is my answer wrong?",
-  "userId": "unique_user_identifier"
-}
+**Critical Technical Requirements:**
+- **Complete Removal**: All existing split-screen exercise help components must be completely deleted
+- **Gallery Integration**: Exercise help chat must copy gallery chat interface 100% exactly (same components, same behavior)
+- **Session Management**: Each help request creates NEW chat session (never reuse existing sessions)
+- **State Preservation**: Return navigation must preserve exact test results accordion state
+- **RAG Context**: Automatic injection of chapter markdown + exercise details + user attempt history
+- **Video Integration**: Video explanations work as chat messages within exercise help sessions
+- **Hierarchical Organization**: Exercise help chats organized under proper course/chapter hierarchy
+
+**OLD APPROACH (REMOVED)**: Split-screen "Generate New Trial" | "Ask for Explanation" layout  
+**NEW APPROACH**: Full-screen chat sessions that integrate with existing chat system architecture
+
+**Exercise Help Chat Categories:**
+```
+Course: Algebra Basics
+  Chapter: Linear Equations
+    📚 General Chapter Discussion
+    ❓ Exercise Help                    ← NEW specialized category
+      • Exercise #1 Help: Solve 2x + 5 = 15
+      • Exercise #1 Help: Solve 2x + 5 = 15 (2)
+      • Exercise #3 Help: Find x in 3x - 7 = 14
+    📝 Text Questions
+      • "How to solve complex equations?" (from text selection)
 ```
 
 #### Story 1.9: Advanced RAG Context System ✨ **NEW**
@@ -267,13 +283,26 @@
 ### User Experience
 - Successfully solve uploaded math problems: 80% accuracy
 - Complete basic tutoring conversation: 90% success rate
+- **Successfully create exercise help chat from test results: 100% success rate** ✨ **NEW**
+- **Navigate to full-screen exercise help chat: 100% success rate** ✨ **NEW**
+- **Return from exercise help chat with preserved accordion state: 100% success rate** ✨ **NEW**
 - Successfully request and view video explanations: 85% success rate
 - Navigate between screens without crashes: 99% reliability
-- Demonstrate core features including video system in 5-minute demo: 100% completion
+- Demonstrate core features including **exercise help chat system** in 5-minute demo: 100% completion
 - **Complete chapter test without data loss: 100% success rate** ✨ **NEW**
 - **View accurate test results showing real answers: 100% success rate** ✨ **NEW**
 - **Navigate from test results without getting stuck: 100% success rate** ✨ **NEW**
 - **Retake tests while preserving question progress: 100% success rate** ✨ **NEW**
+
+### Exercise Help Chat System Performance ✨ **NEW CRITICAL**
+- **Gallery chat integration accuracy: 100%** (UI must be identical)
+- **Exercise help chat creation success rate: 100%**
+- **Chat session numbering accuracy: 100%** (proper (2), (3) numbering)
+- **Navigation state preservation: 100%** (accordion state maintained)
+- **RAG context injection success rate: 100%** (chapter + exercise context)
+- **Video message integration in chat: 100%** (videos work as chat messages)
+- **Old split-screen component removal: 100%** (no remnants allowed)
+- **Exercise help chat persistence: 100%** (chats saved and accessible later)
 
 ### Network Management
 - Proper online/offline detection: 99% accuracy
@@ -340,3 +369,68 @@
 - **Enhance ChapterTestViewModel for robust test data handling** ✨ **NEW**
 - **Implement loadChapterForResults for navigation data recovery** ✨ **NEW**
 - **Integrate ProgressRepository.recordAnswer for UserAnswer persistence** ✨ **NEW**
+
+#### Story 1.8.1: Gallery Chat Interface Integration ✨ **NEW CRITICAL DEPENDENCY**
+**As a** developer implementing exercise help  
+**I want** to copy the gallery chat interface 100% exactly for exercise help functionality  
+**So that** users have a consistent, proven chat experience across all AI interactions
+
+**Acceptance Criteria:**
+- WHEN implementing exercise help chat THE SYSTEM SHALL analyze gallery chat interface components extensively
+- WHEN creating exercise help UI THE SYSTEM SHALL copy gallery chat composables 100% exactly (layout, styling, behavior)
+- WHEN exercise help chat loads THE SYSTEM SHALL use identical message display, input handling, and navigation patterns as gallery
+- WHEN video messages appear in exercise help THE SYSTEM SHALL use same video message components as gallery chat
+- WHEN user interacts with exercise help chat THE SYSTEM SHALL provide identical user experience to gallery chat
+- WHEN exercise help chat is implemented THE SYSTEM SHALL maintain all gallery chat features: message history, video integration, loading states
+- WHEN development is complete THE SYSTEM SHALL have zero differences between gallery chat and exercise help chat interfaces
+
+**Technical Requirements:**
+- **Component Reuse**: Identify and copy exact gallery chat composables
+- **UI Consistency**: Maintain identical visual design and behavior patterns
+- **Feature Parity**: All gallery chat features must work in exercise help context
+- **Code Standards**: Follow same architecture patterns and code organization as gallery
+
+**Dependencies:**
+- Gallery project analysis must be completed first
+- Gallery chat interface components must be fully understood
+- Exercise help context integration must not break gallery chat patterns
+
+#### Story 1.8.2: Split-Screen Exercise Help Removal ✨ **NEW CRITICAL TASK**
+**As a** developer cleaning up the codebase  
+**I want** to completely remove all existing split-screen exercise help components  
+**So that** there are no conflicts or confusion with the new full-screen chat approach
+
+**Acceptance Criteria:**
+- WHEN removing old exercise help THE SYSTEM SHALL delete all split-screen exercise help UI components completely
+- WHEN cleaning up code THE SYSTEM SHALL remove all "Generate New Trial" | "Ask for Explanation" side-by-side layouts
+- WHEN updating navigation THE SYSTEM SHALL remove all references to old exercise help interfaces
+- WHEN verifying removal THE SYSTEM SHALL have zero remaining split-screen exercise help components
+- WHEN testing the app THE SYSTEM SHALL show no traces of old exercise help UI anywhere
+- WHEN build is complete THE SYSTEM SHALL compile successfully with all old components removed
+
+**Removal Checklist:**
+- [ ] Delete `ExerciseHelpInterface` component completely
+- [ ] Remove split-screen layout components
+- [ ] Delete old exercise help navigation
+- [ ] Remove old help button implementations
+- [ ] Clean up unused imports and references
+- [ ] Verify no build errors after removal
+
+### Exercise Help Chat System ✨ **NEW CRITICAL REQUIREMENT**
+- **Gallery Chat Integration**: Copy gallery chat interface 100% exactly for exercise help
+- **Split-Screen Removal**: Complete deletion of all existing exercise help UI components
+- **Full-Screen Chat Sessions**: 99% screen coverage for exercise help (like gallery)
+- **Chat Session Management**: Automatic creation with proper title format "Exercise #X Help: [question]"
+- **Session Numbering**: Multiple help sessions numbered as (2), (3), etc.
+- **Navigation State Preservation**: Return to test results with exact accordion state preserved
+- **RAG Context Integration**: Automatic injection of chapter markdown + exercise details + user history
+- **Video Message Integration**: Video explanations as chat messages (not separate interface)
+- **Hierarchical Organization**: Exercise help chats under proper course/chapter hierarchy
+- **Session Persistence**: All exercise help chats saved permanently for future reference
+
+### Chat System Architecture ✨ **ENHANCED**
+- **Gallery Component Reuse**: Exact same composables and patterns as gallery chat
+- **Exercise Context Support**: Enhanced chat sessions with exercise-specific data
+- **Multiple Chat Categories**: General Discussion + Exercise Help + Text Questions
+- **Video Message Types**: Integrated video support within chat conversations
+- **State Management**: Proper preservation of UI state across chat navigation transitions

@@ -106,6 +106,10 @@ dependencies {
     // Gson for JSON parsing
     implementation("com.google.code.gson:gson:2.10.1")
     
+    // MediaPipe for AI model inference (from Gallery)
+    implementation("com.google.mediapipe:tasks-genai:0.10.25")
+    implementation("com.google.mediapipe:tasks-text:0.10.21")
+    
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

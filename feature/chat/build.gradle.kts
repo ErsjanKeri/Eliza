@@ -1,19 +1,3 @@
-/*
- * Copyright 2025 The Eliza Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -24,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.ai.edge.eliza.feature.chapter"
+    namespace = "com.example.ai.edge.eliza.feature.chat"
     compileSdk = 34
 
     defaultConfig {
@@ -64,8 +48,9 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.core.common)
     
-    // Feature modules
-    implementation(projects.feature.chat)
+    // AI modules
+    implementation(projects.ai.service)
+    implementation(projects.ai.modelmanager)
     
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
@@ -91,18 +76,4 @@ dependencies {
     
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
-    
-    // Markdown rendering (following Gallery approach)
-    implementation("com.halilibo.compose-richtext:richtext-ui-material3:1.0.0-alpha02")
-    implementation("com.halilibo.compose-richtext:richtext-commonmark:1.0.0-alpha02")
-    
-    // Image loading for markdown images
-    implementation("io.coil-kt:coil-compose:2.6.0")
-    
-    // Testing
-    testImplementation(libs.junit)
-    testImplementation(libs.androidx.ui.test.junit4)
-    testImplementation(libs.androidx.ui.test.manifest)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 } 

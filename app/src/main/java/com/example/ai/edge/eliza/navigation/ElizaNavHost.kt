@@ -19,6 +19,7 @@ package com.example.ai.edge.eliza.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
+import androidx.navigation.navOptions
 import com.example.ai.edge.eliza.feature.home.navigation.HOME_BASE_ROUTE
 import com.example.ai.edge.eliza.feature.home.navigation.homeSection
 import com.example.ai.edge.eliza.feature.courseprogress.navigation.courseProgressScreen
@@ -29,6 +30,10 @@ import com.example.ai.edge.eliza.feature.chapter.navigation.chapterTestResultScr
 import com.example.ai.edge.eliza.feature.chapter.navigation.navigateToChapter
 import com.example.ai.edge.eliza.feature.chapter.navigation.navigateToChapterTest
 import com.example.ai.edge.eliza.feature.chapter.navigation.navigateToChapterTestResult
+import com.example.ai.edge.eliza.feature.chapter.navigation.CHAPTER_ROUTE
+import com.example.ai.edge.eliza.feature.chat.navigation.chatSection
+import com.example.ai.edge.eliza.feature.chat.navigation.navigateToChat
+import com.example.ai.edge.eliza.feature.chat.navigation.navigateToExerciseHelpChat
 import com.example.ai.edge.eliza.ui.ElizaAppState
 
 /**
@@ -72,6 +77,9 @@ fun ElizaNavHost(
             },
             onNavigateToTest = { chapterId ->
                 navController.navigateToChapterTest(chapterId)
+            },
+            onNavigateToChat = { chapterId, chapterTitle ->
+                navController.navigateToChat(chapterTitle)
             }
         )
         
@@ -86,11 +94,22 @@ fun ElizaNavHost(
         
         chapterTestResultScreen(
             onBackClick = { chapterId ->
-                // Navigate directly to chapter content to avoid navigation loops
-                navController.navigateToChapter(chapterId)
+                // Clear test screens and return to original chapter
+                navController.navigateToChapter(chapterId, 
+                    androidx.navigation.navOptions {
+                        popUpTo("$CHAPTER_ROUTE/$chapterId") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                )
             },
             onNavigateToChapter = { chapterId ->
-                navController.navigateToChapter(chapterId)
+                // Clear test screens and return to original chapter
+                navController.navigateToChapter(chapterId,
+                    androidx.navigation.navOptions {
+                        popUpTo("$CHAPTER_ROUTE/$chapterId") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                )
             },
             onNavigateToTest = { chapterId ->
                 navController.navigateToChapterTest(chapterId)
@@ -100,17 +119,29 @@ fun ElizaNavHost(
                 navController.popBackStack()
             },
             onNavigateToHome = {
-                // Navigate to main home page
-                navController.navigate(HOME_BASE_ROUTE) {
-                    popUpTo(HOME_BASE_ROUTE) { inclusive = false }
-                    launchSingleTop = true
-                }
+                // Navigate to main home page and clear stack
+                navController.navigate(HOME_BASE_ROUTE, 
+                    androidx.navigation.navOptions {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                )
+            },
+            onNavigateToExerciseHelp = { exerciseNumber, questionText, userAnswer, correctAnswer ->
+                // Navigate to exercise help chat
+                navController.navigateToExerciseHelpChat(exerciseNumber, questionText, userAnswer, correctAnswer)
+            }
+        )
+        
+        // Chat section - Gallery-style chat interface
+        chatSection(
+            onNavigateUp = {
+                navController.popBackStack()
             }
         )
         
         // TODO: Add other sections as they're implemented
         // settingsSection()
-        // chatSection()
         // coursesSection()
     }
 } 

@@ -30,6 +30,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.example.ai.edge.eliza.core.designsystem.icon.ElizaIcons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
@@ -58,15 +59,17 @@ import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
 import com.example.ai.edge.eliza.feature.chapter.component.ElizaMarkdownRenderer
 
 /**
- * Chapter Screen showing markdown content with optional split-screen chat.
- * Supports full-screen reading and split-screen chat functionality.
+ * Chapter screen that displays markdown content and provides test functionality.
+ * Now with full-screen chat navigation instead of split view.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChapterScreen(
     chapterId: String,
     onBackClick: () -> Unit,
     onNavigateToTest: () -> Unit,
+    onNavigateToResults: () -> Unit = onNavigateToTest, // Default to same as test for backward compatibility
+    onRetakeTest: () -> Unit = onNavigateToTest, // Default to same as test for backward compatibility  
+    onNavigateToChat: (String) -> Unit, // Navigate to full-screen chat with chapter title
     modifier: Modifier = Modifier,
     viewModel: ChapterViewModel = hiltViewModel()
 ) {
@@ -83,8 +86,11 @@ fun ChapterScreen(
             ChapterTopAppBar(
                 title = uiState.chapter?.title ?: "Chapter",
                 onBackClick = onBackClick,
-                onChatClick = { viewModel.toggleChatLayout() },
-                isChatVisible = uiState.isChatVisible
+                onChatClick = { 
+                    // Navigate to full-screen chat instead of split view
+                    val chapterTitle = uiState.chapter?.title ?: "Chapter"
+                    onNavigateToChat(chapterTitle)
+                }
             )
         }
     ) { paddingValues ->
@@ -109,24 +115,18 @@ fun ChapterScreen(
                 }
                 
                 uiState.hasContent -> {
-                    // Success state - show content based on layout
-                    when (uiState.layoutState) {
-                        ChapterLayoutState.FullScreen -> {
-                            FullScreenContent(
-                                chapter = uiState.chapter!!,
-                                onImageClick = viewModel::onImageClick,
-                                onTakeTestClick = onNavigateToTest
-                            )
+                    // Success state - show full-screen content only (no more split view)
+                    FullScreenContent(
+                        chapter = uiState.chapter!!,
+                        onImageClick = viewModel::onImageClick,
+                        onTakeTestClick = { action ->
+                            when (action) {
+                                TestButtonAction.TAKE_TEST -> onNavigateToTest()
+                                TestButtonAction.SHOW_RESULTS -> onNavigateToResults()
+                                TestButtonAction.RETAKE_TEST -> onRetakeTest()
+                            }
                         }
-                        ChapterLayoutState.SplitScreen -> {
-                            SplitScreenContent(
-                                chapter = uiState.chapter!!,
-                                onImageClick = viewModel::onImageClick,
-                                onTakeTestClick = onNavigateToTest,
-                                onCloseChatClick = { viewModel.hideChat() }
-                            )
-                        }
-                    }
+                    )
                 }
                 
                 else -> {
@@ -147,7 +147,6 @@ private fun ChapterTopAppBar(
     title: String,
     onBackClick: () -> Unit,
     onChatClick: () -> Unit,
-    isChatVisible: Boolean,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
@@ -172,8 +171,8 @@ private fun ChapterTopAppBar(
         actions = {
             IconButton(onClick = onChatClick) {
                 Icon(
-                    imageVector = if (isChatVisible) Icons.Filled.Close else ElizaIcons.Chat,
-                    contentDescription = if (isChatVisible) "Close chat" else "Open chat",
+                    imageVector = ElizaIcons.Chat,
+                    contentDescription = "Open chat",
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -195,7 +194,7 @@ private fun ChapterTopAppBar(
 private fun FullScreenContent(
     chapter: com.example.ai.edge.eliza.core.model.Chapter,
     onImageClick: (String) -> Unit,
-    onTakeTestClick: () -> Unit,
+    onTakeTestClick: (TestButtonAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -222,82 +221,6 @@ private fun FullScreenContent(
         
         // Add some bottom padding for better scrolling experience
         Spacer(modifier = Modifier.height(32.dp))
-    }
-}
-
-/**
- * Split screen content layout with chat.
- */
-@Composable
-private fun SplitScreenContent(
-    chapter: com.example.ai.edge.eliza.core.model.Chapter,
-    onImageClick: (String) -> Unit,
-    onTakeTestClick: () -> Unit,
-    onCloseChatClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxSize()
-    ) {
-        // Chapter content (left half)
-        val scrollState = rememberScrollState()
-        
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-        ) {
-            ElizaMarkdownRenderer(
-                content = chapter.markdownContent,
-                onImageClick = onImageClick,
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            // Test button - shown at the bottom of chapter content
-            ChapterTestButton(
-                chapter = chapter,
-                onTakeTestClick = onTakeTestClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-        }
-        
-        // Chat interface (right half)
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Placeholder for chat interface
-            Text(
-                text = "Chat Interface",
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = "Ask questions about this chapter",
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            ElizaButton(
-                onClick = onCloseChatClick,
-                text = { Text("Close Chat") }
-            )
-        }
     }
 }
 
@@ -395,24 +318,30 @@ private fun EmptyState(
 /**
  * Test button component that shows different states based on chapter completion.
  */
+enum class TestButtonAction {
+    TAKE_TEST,
+    SHOW_RESULTS, 
+    RETAKE_TEST
+}
+
 @Composable
 private fun ChapterTestButton(
     chapter: com.example.ai.edge.eliza.core.model.Chapter,
-    onTakeTestClick: () -> Unit,
+    onTakeTestClick: (TestButtonAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Enhanced logic: Check for partial progress
-    val hasProgress = chapter.exercises.any { it.userAnswer != null }
+    // Enhanced logic: Check for test attempts using database state
+    val hasTestAttempts = chapter.testAttempts > 0
     
     val buttonText = when {
         chapter.isCompleted -> "Retake Test (Score: ${chapter.testScore ?: 0}%)"
-        hasProgress -> "Continue Test (${chapter.exercises.count { it.isCompleted }}/${chapter.exercises.size} complete)"
+        hasTestAttempts -> "Show Results (Score: ${chapter.testScore ?: 0}%)"
         else -> "Take Test (${chapter.exercises.size} Questions)"
     }
     
     val buttonIcon = when {
         chapter.isCompleted -> Icons.Default.Refresh // Retake icon
-        hasProgress -> Icons.Default.Edit // Continue icon (reuse edit icon)
+        hasTestAttempts -> Icons.Default.Info // Show results icon
         else -> Icons.Default.Edit // Take test icon
     }
     
@@ -442,7 +371,14 @@ private fun ChapterTestButton(
         
         // Main test button
         ElizaButton(
-            onClick = onTakeTestClick,
+            onClick = { 
+                val action = when {
+                    chapter.isCompleted -> TestButtonAction.RETAKE_TEST
+                    hasTestAttempts -> TestButtonAction.SHOW_RESULTS
+                    else -> TestButtonAction.TAKE_TEST
+                }
+                onTakeTestClick(action)
+            },
             text = {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -452,7 +388,7 @@ private fun ChapterTestButton(
                         imageVector = buttonIcon,
                         contentDescription = when {
                     chapter.isCompleted -> "Retake Test"
-                    hasProgress -> "Continue Test"
+                    hasTestAttempts -> "Show Results"
                     else -> "Take Test"
                 },
                         tint = MaterialTheme.colorScheme.onPrimary
@@ -465,10 +401,10 @@ private fun ChapterTestButton(
                             )
                         )
                         Text(
-                            text = if (chapter.isCompleted) {
-                                "Try again for 100% completion"
-                            } else {
-                                "Test your understanding!"
+                            text = when {
+                                chapter.isCompleted -> "Try again for 100% completion"
+                                hasTestAttempts -> "View your test results"
+                                else -> "Test your understanding!"
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
@@ -479,8 +415,8 @@ private fun ChapterTestButton(
             modifier = Modifier.fillMaxWidth()
         )
         
-        // Additional info for incomplete chapters
-        if (!chapter.isCompleted && chapter.testAttempts > 0) {
+        // Additional info for chapters with test attempts
+        if (hasTestAttempts) {
             Text(
                 text = "Attempts: ${chapter.testAttempts}",
                 style = MaterialTheme.typography.bodySmall,

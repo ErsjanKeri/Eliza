@@ -96,86 +96,205 @@ markdown# AI Tutor App - Technical Design
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1.1. Legacy Chapter Interface Layout (Gallery-Style Split Screen) - **DEPRECATED**
+### 2. Exercise Help Interface ✨ **COMPLETELY REDESIGNED - FULL-SCREEN CHAT INTEGRATION**
+
+**OLD APPROACH (REMOVED)**: Split-screen "Generate New Trial" | "Ask for Explanation" layout  
+**NEW APPROACH**: Full-screen chat sessions that copy gallery chat interface 100% exactly
+
+#### **Exercise Help Flow - Full-Screen Chat Integration:**
 
 ```
+Test Results Screen → User clicks "Local AI Explanation" or "Video Explanation" on wrong answer:
+
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                          Chapter: Linear Equations                        │
-├─────────────────────────┬───────────────────────────────────────────────┤
-│                         │                                               │
-│   📖 CHAPTER CONTENT    │           💬 CHAT INTERFACE                   │
-│                         │                                               │
-│ # Linear Equations      │ ┌─────────────────────────────────────────┐   │
-│                         │ │         Chat Sessions                   │   │
-│ Linear equations are... │ │ ┌─────────────────────────────────────┐ │   │
-│                         │ │ │ 📝 "Understanding basics"  [Active] │ │   │
-│ ## Example 1:           │ │ │ 📝 "Practice problems"             │ │   │
-│ Solve: 2x + 5 = 15      │ │ │ 📝 "Step-by-step solutions"       │ │   │
-│                         │ │ │ [+ New Chat Session]               │ │   │
-│ Step 1: Subtract 5...   │ │ └─────────────────────────────────────┘ │   │
-│ Step 2: Divide by 2...  │ └─────────────────────────────────────────┘   │
-│                         │                                               │
-│ ## Practice Problems:   │ ┌─────────────────────────────────────────┐   │
-│ 1. Solve: 3x - 7 = 8    │ │           Active Chat                   │   │
-│ 2. Solve: x/4 + 2 = 6   │ │                                         │   │
-│                         │ │ 👤 User: "I don't understand step 2"   │   │
-│ [📊 Test Yourself]      │ │                                         │   │
-│                         │ │ 🤖 AI: "Step 2 involves dividing both  │   │
-│                         │ │     sides by the coefficient..."        │   │
-│                         │ │                                         │   │
-│                         │ │ 👤 User: "Can you show me visually?"   │   │
-│                         │ │                                         │   │
-│                         │ │ [🎥 REQUEST VIDEO] [💬 ASK MORE]        │   │
-│                         │ │                                         │   │
-│                         │ │ ⏳ Requesting video explanation...      │   │
-│                         │ │                                         │   │
-│                         │ │ 📹 [Video Player - 1.2MB]              │   │
-│                         │ │    "Visual Guide to Linear Equations"  │   │
-│                         │ │    ▶️ [0:00 / 2:30]                     │   │
-│                         │ │                                         │   │
-│                         │ └─────────────────────────────────────────┘   │
-│                         │                                               │
-│                         │ ┌─────────────────────────────────────────┐   │
-│                         │ │ 💬 Type your question...                │   │
-│                         │ │ [Send] [🎥 Request Video] [🌐 Online]   │   │
-│                         │ └─────────────────────────────────────────┘   │
-└─────────────────────────┴───────────────────────────────────────────────┘
-```
-
-### 2. Exercise Help Interface (Separate Section)
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           🧪 EXERCISE HELP                              │
+│ 💬 Exercise #1 Help: Solve 2x + 5 = 15                           ✖️   │ ← Return button (preserves accordion state)
 ├─────────────────────────────────────────────────────────────────────────┤
+│ 📍 Course: Algebra Basics > Chapter: Linear Equations > Exercise Help   │ ← Hierarchical context
 │                                                                         │
-│ ❌ Exercise #3: Solve 2x + 7 = 19                                       │
+│ 📁 Chat Navigation (Hierarchical):                                     │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ ▼ 📚 General Chapter Discussion                                    │ │
+│ │ ▼ ❓ Exercise Help                            [Active Category]     │ │
+│ │   • Exercise #1 Help: Solve 2x + 5 = 15     [Current Session]      │ │
+│ │   • Exercise #1 Help: Solve 2x + 5 = 15 (2) [Previous Session]     │ │
+│ │   • Exercise #3 Help: Find x in 3x - 7 = 14                        │ │
+│ │ ▼ 📝 Text Questions                                                 │ │
+│ │   • "How to solve complex equations?"        (from text selection)  │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
 │                                                                         │
-│ Your Answer: ❌ x = 5    Correct Answer: ✅ x = 6                       │
+│ 💬 Exercise Context (Auto-Generated):                                  │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ 📋 Question: Solve the equation 2x + 5 = 15                        │ │ ← Auto-populated context
+│ │ 👤 Your Answer: x = 5                                               │ │
+│ │ ✅ Correct Answer: x = 6                                            │ │
+│ │ 📚 Chapter Context: Linear Equations (via RAG)                     │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
 │                                                                         │
-│ ┌─────────────────────────┬─────────────────────────────────────────┐   │
-│ │    🔄 GENERATE NEW      │         ❓ ASK FOR EXPLANATION         │   │
-│ │        TRIAL            │                                         │   │
-│ │                         │  ┌─────────────────────────────────┐   │   │
-│ │ Create a new similar    │  │ 💬 Ask Locally (AI)             │   │   │
-│ │ question to practice    │  │                                 │   │   │
-│ │                         │  │ 🤖 "You subtracted 7 instead   │   │   │
-│ │ [Generate Question]     │  │    of adding. The correct...    │   │   │
-│ │                         │  └─────────────────────────────────┘   │   │
-│ │                         │                                         │   │
-│ │                         │  ┌─────────────────────────────────┐   │   │
-│ │                         │  │ 🎥 Request Video (Online)       │   │   │
-│ │                         │  │                                 │   │   │
-│ │                         │  │ 📹 [Video Player - 0.8MB]      │   │   │
-│ │                         │  │    "Why x=5 is Wrong"          │   │   │
-│ │                         │  │    ▶️ [0:00 / 1:45]             │   │   │
-│ │                         │  └─────────────────────────────────┘   │   │
-│ └─────────────────────────┴─────────────────────────────────────────┘   │
+│ 💬 Active Conversation:                                                 │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ 🤖 AI: I can see you answered x = 5, but the correct answer is     │ │ ← Contextual AI response
+│ │     x = 6. Let me explain what went wrong...                        │ │
+│ │                                                                     │ │
+│ │     When solving 2x + 5 = 15:                                       │ │ ← RAG-enhanced explanation
+│ │     Step 1: Subtract 5 from both sides: 2x = 10                    │ │
+│ │     Step 2: Divide by 2: x = 5... Wait, that gives x = 5!          │ │
+│ │                                                                     │ │
+│ │     Let me double-check: 2(5) + 5 = 10 + 5 = 15 ✓                 │ │
+│ │     Actually, your answer x = 5 IS correct! There might be an       │ │
+│ │     error in the answer key.                                        │ │
+│ │                                                                     │ │
+│ │ 👤 You: Can you show me this visually?                             │ │
+│ │                                                                     │ │
+│ │ 🤖 AI: I'll request a video explanation for you.                   │ │
+│ │                                                                     │ │
+│ │ 📹 [Video Message - 1.2MB] "Visual Algebra: Solving 2x + 5 = 15"   │ │ ← Video as chat message
+│ │    ▶️ [0:00 / 1:45]                        [🌐 Online]             │ │
+│ │                                                                     │ │
+│ │ 👤 You: This was really helpful, thanks!                           │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
 │                                                                         │
-│ 📚 Previous Explanations for this Exercise:                            │
-│ • 🎥 "Why x=5 is Wrong" (2 days ago)                                   │
-│ • 💬 "Step-by-step breakdown" (1 week ago)                             │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ 💬 Type your question...                  [🎥 Video] [📷] [Send]    │ │ ← Unified input (like gallery)
+│ └─────────────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────────┘
+
+When user clicks ✖️ → Returns to Test Results with Exercise #1 accordion still expanded
+```
+
+#### **Multiple Exercise Help Sessions (NEW):**
+
+```
+If user requests help for same exercise multiple times:
+
+📁 ❓ Exercise Help
+  • Exercise #1 Help: Solve 2x + 5 = 15      ← First help session
+  • Exercise #1 Help: Solve 2x + 5 = 15 (2)  ← Second help session  
+  • Exercise #1 Help: Solve 2x + 5 = 15 (3)  ← Third help session
+  • Exercise #3 Help: Find x in 3x - 7 = 14  ← Different exercise
+
+Each creates a NEW chat session (never reuse existing sessions)
+All sessions persist for future reference
+```
+
+#### **Video Integration in Exercise Help:**
+
+```
+User can request video explanations in two ways:
+
+1. Direct from test results: "Video Explanation" button → Creates chat with video message
+2. Within chat conversation: [🎥 Video] button → Adds video message to existing chat
+
+Video Messages in Chat:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🤖 AI: Let me get a video explanation for this specific problem...      │
+│                                                                         │
+│ ⏳ Requesting video explanation... [Cancel]                             │ ← Loading state
+│                                                                         │
+│ 📹 [Video Message - 1.2MB] "Why x=5 is Wrong in 2x + 5 = 15"          │ ← Success state
+│    ▶️ [0:00 / 1:45]                        [🌐 Online]                 │
+│                                                                         │
+│ 🤖 AI: The video shows the step-by-step solution. Do you have any      │ ← Follow-up text
+│     questions about the visual explanation?                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+When offline:
+📹 [⚠️ Videos unavailable offline] [Try again when online]
+```
+
+#### **RAG Context Injection for Exercise Help:**
+
+```
+Automatic Context Provided to AI:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 📚 Chapter Content: [Full chapter markdown about Linear Equations]      │
+│ 📝 Exercise Details:                                                    │
+│   • Question: "Solve the equation 2x + 5 = 15"                         │
+│   • Options: ["x = 2", "x = 5", "x = 6", "x = 10"]                     │
+│   • User Selected: "x = 5" (index 1)                                   │
+│   • Correct Answer: "x = 6" (index 2)                                  │
+│   • Exercise Explanation: "Subtract 5, then divide by 2"               │
+│ 🔄 User History:                                                        │
+│   • Previous attempts: 2 (both answered "x = 5")                       │
+│   • Time spent: 45 seconds                                             │
+│   • Hints used: 0                                                      │
+│ 💬 Previous Help: Links to 1 previous exercise help chat               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+This context is automatically injected - user doesn't see it directly
+```
+
+#### **Navigation State Preservation:**
+
+```
+Critical Requirement: When user returns from exercise help chat,
+they must land exactly where they started.
+
+Test Results State Before Chat:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ✅ Question 1: [expanded with details visible] 
+│ ❌ Question 2: [collapsed]
+│ ✅ Question 3: [collapsed]                    ← User clicks help on Q1
+│ ❌ Question 4: [collapsed]
+│ ✅ Question 5: [collapsed]
+└─────────────────────────────────────────────────────────────────────────┘
+
+After returning from chat:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ✅ Question 1: [still expanded with details visible] ← Preserved state
+│ ❌ Question 2: [still collapsed]
+│ ✅ Question 3: [still collapsed]
+│ ❌ Question 4: [still collapsed]  
+│ ✅ Question 5: [still collapsed]
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### **Technical Implementation Notes:**
+
+**Chat Session Creation Logic:**
+```kotlin
+data class ExerciseHelpChatRequest(
+    val exerciseId: String,
+    val exerciseNumber: Int,
+    val questionText: String,
+    val userAnswer: Int,
+    val correctAnswer: Int,
+    val chapterContent: String, // For RAG
+    val helpType: String // "Local AI" or "Video"
+)
+
+fun createExerciseHelpChat(request: ExerciseHelpChatRequest): ChatSession {
+    val existingCount = getExerciseHelpSessionCount(request.exerciseId)
+    val sessionNumber = existingCount + 1
+    
+    val title = if (sessionNumber == 1) {
+        "Exercise #${request.exerciseNumber} Help: ${request.questionText.take(30)}..."
+    } else {
+        "Exercise #${request.exerciseNumber} Help: ${request.questionText.take(30)}... (${sessionNumber})"
+    }
+    
+    return ChatSession(
+        title = title,
+        chatType = ChatType.EXERCISE_HELP,
+        exerciseContext = request,
+        ragContext = request.chapterContent,
+        createdAt = System.currentTimeMillis()
+    )
+}
+```
+
+**Gallery Chat Integration:**
+```kotlin
+// Copy these components 100% exactly from gallery:
+@Composable
+fun ExerciseHelpChatScreen() {
+    // Use EXACT same layout as gallery chat
+    GalleryChatInterface(
+        modifier = Modifier.fillMaxSize(), // 99% coverage
+        showReturnButton = true,
+        onReturnClick = { preserveNavigationState() },
+        chatContext = exerciseHelpContext
+    )
+}
 ```
 
 ### 3. Network State Indicators

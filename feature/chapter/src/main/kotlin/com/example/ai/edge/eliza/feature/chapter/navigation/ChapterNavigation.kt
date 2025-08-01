@@ -43,11 +43,13 @@ import com.example.ai.edge.eliza.feature.chapter.test.ChapterTestResultScreen
 import com.example.ai.edge.eliza.feature.chapter.test.ChapterTestViewModel
 import com.example.ai.edge.eliza.core.model.TestState
 import com.example.ai.edge.eliza.core.model.TestResult
+import com.example.ai.edge.eliza.feature.chat.navigation.navigateToExerciseHelpChat
 
 const val CHAPTER_ROUTE = "chapter_route"
 const val CHAPTER_TEST_ROUTE = "chapter_test_route"
 const val CHAPTER_TEST_RESULT_ROUTE = "chapter_test_result_route"
 const val CHAPTER_ID_ARG = "chapterId"
+const val TEST_ACTION_ARG = "action"
 const val TEST_SCORE_ARG = "testScore"
 const val TEST_CORRECT_ARG = "testCorrect"
 const val TEST_TOTAL_ARG = "testTotal"
@@ -82,14 +84,18 @@ fun NavController.navigateToChapterTestResult(
 /**
  * Chapter screen composable for the navigation graph.
  * 
- * Shows markdown content with full-screen and split-screen chat functionality.
+ * Shows markdown content with full-screen chat functionality.
  * 
  * @param onBackClick - Called when the back button is clicked
  * @param onNavigateToTest - Called when the test button is clicked
+ * @param onNavigateToResults - Called when the results button is clicked
+ * @param onNavigateToChat - Called when the chat button is clicked to open full-screen chat
  */
 fun NavGraphBuilder.chapterScreen(
     onBackClick: () -> Unit,
     onNavigateToTest: (String) -> Unit,
+    onNavigateToResults: (String) -> Unit = onNavigateToTest, // Default to same behavior
+    onNavigateToChat: (String, String) -> Unit, // (chapterId, chapterTitle) -> navigate to chat
 ) {
     composable(
         route = "$CHAPTER_ROUTE/{$CHAPTER_ID_ARG}",
@@ -103,7 +109,10 @@ fun NavGraphBuilder.chapterScreen(
         ChapterScreen(
             chapterId = chapterId,
             onBackClick = onBackClick,
-            onNavigateToTest = { onNavigateToTest(chapterId) }
+            onNavigateToTest = { onNavigateToTest(chapterId) },
+            onNavigateToResults = { onNavigateToResults(chapterId) },
+            onRetakeTest = { onNavigateToTest(chapterId) }, // Retake uses same navigation as start test
+            onNavigateToChat = { chapterTitle -> onNavigateToChat(chapterId, chapterTitle) }
         )
     }
 }
@@ -121,19 +130,29 @@ fun NavGraphBuilder.chapterTestScreen(
     onNavigateToResults: (String, Int, Int, Int) -> Unit,
 ) {
     composable(
-        route = "$CHAPTER_TEST_ROUTE/{$CHAPTER_ID_ARG}",
+        route = "$CHAPTER_TEST_ROUTE/{$CHAPTER_ID_ARG}?$TEST_ACTION_ARG={$TEST_ACTION_ARG}",
         arguments = listOf(
             navArgument(CHAPTER_ID_ARG) {
                 type = NavType.StringType
+            },
+            navArgument(TEST_ACTION_ARG) {
+                type = NavType.StringType
+                defaultValue = "start"
             }
         )
     ) { backStackEntry ->
         val chapterId = backStackEntry.arguments?.getString(CHAPTER_ID_ARG) ?: ""
+        val action = backStackEntry.arguments?.getString(TEST_ACTION_ARG) ?: "start"
         val viewModel: ChapterTestViewModel = hiltViewModel()
         
-        // Start test when screen loads
-        androidx.compose.runtime.LaunchedEffect(chapterId) {
-            viewModel.startTest(chapterId)
+        // Call appropriate ViewModel method based on action parameter
+        androidx.compose.runtime.LaunchedEffect(chapterId, action) {
+            when (action) {
+                "start" -> viewModel.startTest(chapterId)
+                "results" -> viewModel.showResults(chapterId)
+                "retake" -> viewModel.retakeTest(chapterId)
+                else -> viewModel.startTest(chapterId) // Default to start
+            }
         }
         
         val testState by viewModel.testState.collectAsState()
@@ -226,6 +245,7 @@ fun NavGraphBuilder.chapterTestResultScreen(
     onNavigateToTest: (String) -> Unit,
     onContinueLearning: () -> Unit,
     onNavigateToHome: () -> Unit,
+    onNavigateToExerciseHelp: (Int, String, String, String) -> Unit,
 ) {
     composable(
         route = "$CHAPTER_TEST_RESULT_ROUTE/{$CHAPTER_ID_ARG}/{$TEST_SCORE_ARG}/{$TEST_CORRECT_ARG}/{$TEST_TOTAL_ARG}",
@@ -279,19 +299,40 @@ fun NavGraphBuilder.chapterTestResultScreen(
         ChapterTestResultScreen(
             testResult = testResult,
             onRetakeTest = { viewModel.retakeTest(chapterId) },
-            onRequestLocalHelp = { exercise ->
-                // TODO: Integrate with ExerciseHelp system - Local AI
-            },
-            onRequestVideoHelp = { exercise ->
-                // TODO: Integrate with ExerciseHelp system - Video
-            },
             onRetakeQuestion = { exercise ->
                 // TODO: Navigate to single question test
             },
-            onBackToChapter = { onNavigateToChapter(chapterId) },
+            onBackToChapter = { onBackClick(chapterId) },
             onContinueLearning = onContinueLearning,
             onNavigateToHome = onNavigateToHome,
-            isOnline = true // TODO: Get from NetworkMonitor
+            onRequestLocalHelp = { exercise ->
+                // Navigate to exercise help chat with local AI
+                val exerciseNumber = testResult.exercises.indexOf(exercise) + 1
+                val userAnswerText = testResult.userAnswers.getOrNull(testResult.exercises.indexOf(exercise))?.let { answerIndex ->
+                    if (answerIndex >= 0 && answerIndex < exercise.options.size) {
+                        exercise.options[answerIndex]
+                    } else {
+                        "No answer"
+                    }
+                } ?: "No answer"
+                val correctAnswerText = exercise.options[exercise.correctAnswerIndex]
+                
+                onNavigateToExerciseHelp(exerciseNumber, exercise.questionText, userAnswerText, correctAnswerText)
+            },
+            onRequestVideoHelp = { exercise ->
+                // Navigate to exercise help chat with video request (same as local for now)
+                val exerciseNumber = testResult.exercises.indexOf(exercise) + 1
+                val userAnswerText = testResult.userAnswers.getOrNull(testResult.exercises.indexOf(exercise))?.let { answerIndex ->
+                    if (answerIndex >= 0 && answerIndex < exercise.options.size) {
+                        exercise.options[answerIndex]
+                    } else {
+                        "No answer"
+                    }
+                } ?: "No answer"
+                val correctAnswerText = exercise.options[exercise.correctAnswerIndex]
+                
+                onNavigateToExerciseHelp(exerciseNumber, exercise.questionText, userAnswerText, correctAnswerText)
+            }
         )
     }
 } 

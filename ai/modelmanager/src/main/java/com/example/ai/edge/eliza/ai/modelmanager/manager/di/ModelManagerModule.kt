@@ -16,44 +16,27 @@
 
 package com.example.ai.edge.eliza.ai.modelmanager.manager.di
 
-import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelper
-import com.example.ai.edge.eliza.ai.inference.ElizaInferenceHelperImpl
 import com.example.ai.edge.eliza.ai.modelmanager.download.ModelDownloadRepository
 import com.example.ai.edge.eliza.ai.modelmanager.download.ModelDownloadRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 
 /**
  * Hilt module for AI ModelManager dependencies.
- * Binds interfaces to their implementations for dependency injection.
+ * Gallery-style approach with proper interface bindings
  */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ModelManagerModule {
-
+    
     /**
-     * Binds the ModelDownloadRepository interface to its implementation.
-     * This handles model downloading with progress tracking.
+     * Bind ModelDownloadRepository interface to implementation
+     * Gallery-style dependency injection pattern
      */
     @Binds
-    @Singleton
     abstract fun bindModelDownloadRepository(
-        modelDownloadRepositoryImpl: ModelDownloadRepositoryImpl
+        impl: ModelDownloadRepositoryImpl
     ): ModelDownloadRepository
-
-    /**
-     * Binds the ElizaInferenceHelper interface to its implementation.
-     * This handles MediaPipe model initialization and inference.
-     */
-    @Binds
-    @Singleton
-    abstract fun bindElizaInferenceHelper(
-        elizaInferenceHelperImpl: ElizaInferenceHelperImpl
-    ): ElizaInferenceHelper
-
-    // Note: ElizaChatService is automatically provided by @Singleton and @Inject
-    // No binding needed since it's a concrete class, not an interface
 } 
