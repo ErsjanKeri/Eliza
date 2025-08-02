@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -32,6 +34,16 @@ android {
         minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+        
+        // Read HuggingFace API token from local.properties
+        val localPropertiesFile = rootProject.file("local.properties")
+        val properties = Properties()
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { properties.load(it) }
+        }
+        
+        val huggingFaceToken = properties.getProperty("HUGGINGFACE_API_TOKEN") ?: ""
+        buildConfigField("String", "HUGGINGFACE_API_TOKEN", "\"$huggingFaceToken\"")
     }
 
     buildTypes {
@@ -52,6 +64,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.15"
@@ -101,8 +114,7 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.hilt:hilt-work:1.1.0")
     
-    // OAuth & DataStore (provided by app module)
-    implementation(libs.openid.appauth)
+    // Note: DataStore access provided through core:data module
     // Note: DataStore and protobuf dependencies provided by app module
     
     // Gson for JSON parsing

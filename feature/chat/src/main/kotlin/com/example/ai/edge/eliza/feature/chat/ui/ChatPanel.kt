@@ -185,7 +185,7 @@ fun ChatPanel(
             // Sender row.
             if (message.side == ChatSide.AGENT) {
               Text(
-                text = "AI Tutor",
+                text = "Eliza",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)

@@ -66,7 +66,7 @@ data class ElizaWorkInfo(val modelName: String, val workId: String)
 interface ModelDownloadRepository {
     fun downloadModel(
         model: Model,
-        accessToken: String? = null, // NEW: OAuth access token for HuggingFace
+        accessToken: String? = null, // API access token for HuggingFace
         onStatusUpdated: (model: Model, status: ModelDownloadStatus) -> Unit,
     )
 
@@ -102,7 +102,7 @@ class ModelDownloadRepositoryImpl @Inject constructor(
     
     override fun downloadModel(
         model: Model,
-        accessToken: String?, // NEW: OAuth access token for HuggingFace
+        accessToken: String?, // API access token for HuggingFace
         onStatusUpdated: (model: Model, status: ModelDownloadStatus) -> Unit,
     ) {
         Log.d(TAG, "Starting WorkManager download for model: ${model.name}")
@@ -116,7 +116,7 @@ class ModelDownloadRepositoryImpl @Inject constructor(
             .putString(KEY_MODEL_DOWNLOAD_FILE_NAME, model.downloadFileName)
             .putLong(KEY_MODEL_TOTAL_BYTES, model.sizeInBytes)
             
-        // NEW: Add OAuth access token for HuggingFace authentication
+        // Add API access token for HuggingFace authentication
         if (!accessToken.isNullOrBlank()) {
             inputDataBuilder.putString(KEY_MODEL_ACCESS_TOKEN, accessToken)
             Log.d(TAG, "Added access token to download request for model: ${model.name}")

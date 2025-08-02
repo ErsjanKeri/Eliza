@@ -48,7 +48,7 @@ import com.example.ai.edge.eliza.core.model.SAMPLE_RATE
 
 /** Type of task. Simplified for Eliza. */
 enum class TaskType(val label: String, val id: String) {
-  ELIZA_CHAT(label = "AI Tutor", id = "eliza_chat"),
+  ELIZA_CHAT(label = "Eliza", id = "eliza_chat"),
   ELIZA_EXERCISE_HELP(label = "Exercise Help", id = "eliza_exercise_help"),
 }
 
@@ -106,7 +106,7 @@ val TASK_ELIZA_CHAT =
     type = TaskType.ELIZA_CHAT,
     icon = Icons.Outlined.Star,
     models = mutableListOf(),
-    description = "Chat with AI tutor for personalized learning assistance",
+    description = "Chat with Eliza for personalized learning assistance",
     docUrl = "https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/android",
   )
 

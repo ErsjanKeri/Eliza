@@ -52,8 +52,7 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
     
-    // OAuth (needed for AuthConfig)
-    implementation(libs.openid.appauth)
+    // OAuth removed - using direct API tokens instead
     
     // Testing
     testImplementation(libs.junit)

@@ -18,9 +18,6 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        // Needed for HuggingFace OAuth workflows (copied from Gallery)
-        manifestPlaceholders["appAuthRedirectScheme"] = "com.example.ai.edge.eliza.oauth"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -95,8 +92,7 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.hilt:hilt-work:1.1.0")
     
-    // OAuth & DataStore (copied from Gallery)
-    implementation(libs.openid.appauth)
+    // DataStore for token storage (protobuf kept for compatibility)
     implementation(libs.androidx.datastore)
     implementation(libs.protobuf.javalite)
     

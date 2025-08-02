@@ -40,7 +40,7 @@ interface DataStoreRepository {
   fun readImportedModels(): List<String>
 }
 
-// OAuth-related types that don't depend on protobuf
+// Authentication token types (OAuth removed - using direct API tokens)
 enum class TokenStatus {
   NOT_STORED,
   EXPIRED,

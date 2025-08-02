@@ -33,20 +33,13 @@ import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 import com.example.ai.edge.eliza.ai.modelmanager.data.TaskType
 import com.example.ai.edge.eliza.ai.modelmanager.data.processTasks
 import com.example.ai.edge.eliza.ai.modelmanager.download.ModelDownloadRepository
-// OAuth imports now from core data layer and app level
+// DataStore for token management (OAuth removed - using direct API tokens)
 import com.example.ai.edge.eliza.core.data.repository.DataStoreRepository
 import com.example.ai.edge.eliza.core.data.repository.AccessTokenData
 import com.example.ai.edge.eliza.core.data.repository.TokenStatus
 import com.example.ai.edge.eliza.core.data.repository.TokenStatusAndData
 import com.example.ai.edge.eliza.core.data.repository.TokenRequestResult
 import com.example.ai.edge.eliza.core.data.repository.TokenRequestResultType
-import com.example.ai.edge.eliza.core.data.auth.AuthConfig
-import net.openid.appauth.AuthorizationRequest
-import net.openid.appauth.AuthorizationResponse
-import net.openid.appauth.AuthorizationException
-import net.openid.appauth.AuthorizationService
-import net.openid.appauth.ResponseTypeValues
-import androidx.core.net.toUri
 import java.net.HttpURLConnection
 import java.net.URL
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,11 +47,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
+import com.example.ai.edge.eliza.ai.modelmanager.BuildConfig
 
 private const val TAG = "ElizaModelManager"
 
@@ -100,8 +95,7 @@ constructor(
     private val dataStoreRepository: DataStoreRepository, // Fixed: Use app-level DataStore
 ) : ViewModel() {
     
-    // OAuth components (copied from Gallery)
-    private val authService = AuthorizationService(context)
+    // Direct API token management (OAuth removed for simplicity)
     private var curAccessToken: String? = null
 
     private val _uiState = MutableStateFlow(createUiState())
@@ -110,6 +104,9 @@ constructor(
     init {
         // Load models using Gallery's exact pattern
         loadElizaModels()
+        
+        //  Initialize HuggingFace API token for easy authentication
+        initializeDirectApiToken()
     }
 
     /**
@@ -401,11 +398,11 @@ constructor(
     }
     
     /**
-     * Download a model with OAuth authentication - Gallery's exact authentication pattern
-     * Enhanced with proper error state clearing
+     * Download a model with direct API token authentication
+     * Simplified approach without OAuth complexity
      */
     fun downloadModel(context: Context, task: Task, model: Model) {
-        Log.d(TAG, "Starting download for model '${model.name}' using Gallery OAuth + WorkManager pattern")
+        Log.d(TAG, "Starting download for model '${model.name}' using direct API token authentication")
         
         // Clear any previous error states first
         clearModelErrorStates(model)
@@ -419,67 +416,35 @@ constructor(
         // Gallery's exact pattern: Delete existing model files first
         deleteModel(task = task, model = model)
         
-        // 🔐 NEW: Gallery's OAuth Authentication Flow
+        // 🔑 Simplified Direct API Token Authentication (OAuth removed)
         if (model.url.startsWith("https://huggingface.co")) {
-            Log.d(TAG, "Model '${model.name}' is from HuggingFace. Checking if auth is needed...")
+            Log.d(TAG, "Model '${model.name}' is from HuggingFace. Using direct API token...")
             
-            // Step 1: Check if the URL needs authentication
-            val firstResponseCode = getModelUrlResponse(model = model)
-            if (firstResponseCode == HttpURLConnection.HTTP_OK) {
-                Log.d(TAG, "Model '${model.name}' doesn't need auth. Start downloading...")
-                startDownloadWithToken(model, null)
-                return
-            } else if (firstResponseCode < 0) {
-                Log.e(TAG, "Network error checking model URL")
-                setDownloadStatus(
-                    curModel = model,
-                    status = ModelDownloadStatus(
-                        status = ModelDownloadStatusType.FAILED,
-                        errorMessage = "Network error checking model URL"
-                    )
-                )
-                return
-            }
-            
-            Log.d(TAG, "Model '${model.name}' needs auth. Checking token status...")
-            
-            // Step 2: Check current token status
-            val tokenStatusAndData = getTokenStatusAndData()
-            
-            when (tokenStatusAndData.status) {
-                TokenStatus.NOT_STORED, TokenStatus.EXPIRED -> {
-                    Log.d(TAG, "Token not available or expired. User needs to authenticate.")
-                    setDownloadStatus(
-                        curModel = model,
-                        status = ModelDownloadStatus(
-                            status = ModelDownloadStatusType.FAILED,
-                            errorMessage = "Authentication required. Please sign in to HuggingFace."
-                        )
-                    )
-                    // TODO: Trigger OAuth flow in UI
-                }
+            // Use Dispatchers.IO for network calls
+            viewModelScope.launch(Dispatchers.IO) {
+                // Check current token status (should be populated by initializeDirectApiToken)
+                val tokenStatusAndData = getTokenStatusAndData()
                 
-                TokenStatus.NOT_EXPIRED -> {
-                    // Use current token to check download URL
-                    Log.d(TAG, "Checking download URL with current token...")
-                    val responseCode = getModelUrlResponse(
-                        model = model,
-                        accessToken = tokenStatusAndData.data!!.accessToken
-                    )
-                    
-                    if (responseCode == HttpURLConnection.HTTP_OK) {
-                        Log.d(TAG, "Download URL accessible with current token.")
-                        startDownloadWithToken(model, tokenStatusAndData.data!!.accessToken)
-                    } else {
-                        Log.d(TAG, "Download URL not accessible. Response code: $responseCode. Need new token.")
-                        setDownloadStatus(
-                            curModel = model,
-                            status = ModelDownloadStatus(
-                                status = ModelDownloadStatusType.FAILED,
-                                errorMessage = "Authentication expired. Please sign in to HuggingFace again."
+                when (tokenStatusAndData.status) {
+                    TokenStatus.NOT_STORED, TokenStatus.EXPIRED -> {
+                        Log.e(TAG, "No valid API token found. Please check HUGGINGFACE_API_TOKEN in local.properties")
+                        withContext(Dispatchers.Main) {
+                            setDownloadStatus(
+                                curModel = model,
+                                status = ModelDownloadStatus(
+                                    status = ModelDownloadStatusType.FAILED,
+                                    errorMessage = "API token not found. Please check HUGGINGFACE_API_TOKEN in local.properties"
+                                )
                             )
-                        )
-                        // TODO: Trigger OAuth flow in UI
+                        }
+                    }
+                    
+                    TokenStatus.NOT_EXPIRED -> {
+                        // Use stored API token for download
+                        Log.d(TAG, "Using stored API token for download...")
+                        withContext(Dispatchers.Main) {
+                            startDownloadWithToken(model, tokenStatusAndData.data!!.accessToken)
+                        }
                     }
                 }
             }
@@ -590,7 +555,50 @@ constructor(
         )
     }
 
-    // ✨ OAuth Methods (copied from Gallery) ✨
+    // ✨ Direct API Token Management (OAuth removed) ✨
+    
+    /**
+     * 🔑 Direct API Token Initialization 
+     * Uses HuggingFace API token from environment variable for authentication
+     * This is much simpler than OAuth for development and personal use
+     */
+    private fun initializeDirectApiToken() {
+        // Read HuggingFace API token from environment variable
+        val directApiToken = BuildConfig.HUGGINGFACE_API_TOKEN
+        
+        if (directApiToken.isEmpty()) {
+            Log.e(TAG, "HUGGINGFACE_API_TOKEN not found in local.properties! Please add your token.")
+            return
+        }
+        
+        Log.d(TAG, "Initializing direct API token for HuggingFace authentication...")
+        
+        // Check if we already have a valid token
+        val tokenStatusAndData = getTokenStatusAndData()
+        
+        when (tokenStatusAndData.status) {
+            TokenStatus.NOT_STORED, TokenStatus.EXPIRED -> {
+                Log.d(TAG, "No valid token found. Saving direct API token to DataStore...")
+                
+                // Save the API token with far future expiration (1 year from now)
+                val oneYearFromNow = System.currentTimeMillis() + (365L * 24L * 60L * 60L * 1000L)
+                
+                dataStoreRepository.saveAccessTokenData(
+                    accessToken = directApiToken,
+                    refreshToken = directApiToken, // API tokens don't need refresh, so reuse the same token
+                    expiresAt = oneYearFromNow
+                )
+                
+                curAccessToken = directApiToken
+                Log.d(TAG, "✅ Direct API token saved successfully. Authentication ready!")
+            }
+            
+            TokenStatus.NOT_EXPIRED -> {
+                Log.d(TAG, "✅ Valid token already exists. Using stored token for authentication.")
+                curAccessToken = tokenStatusAndData.data?.accessToken
+            }
+        }
+    }
 
     /**
      * EXACT COPY of Gallery's getModelUrlResponse method
@@ -646,23 +654,8 @@ constructor(
     }
 
     /**
-     * Create authorization request for HuggingFace OAuth
-     * Copied from Gallery's getAuthorizationRequest
-     */
-    fun getAuthorizationRequest(): AuthorizationRequest {
-        return AuthorizationRequest.Builder(
-            AuthConfig.authServiceConfig,
-            AuthConfig.clientId,
-            ResponseTypeValues.CODE,
-            AuthConfig.redirectUri.toUri(),
-        )
-        .setScope("read-repos")
-        .build()
-    }
-
-    /**
      * Save access token data securely
-     * Copied from Gallery's saveAccessToken pattern
+     * Simplified version for direct API token usage
      */
     private fun saveAccessToken(accessToken: String, refreshToken: String, expiresAt: Long) {
         dataStoreRepository.saveAccessTokenData(
@@ -670,76 +663,6 @@ constructor(
             refreshToken = refreshToken,
             expiresAt = expiresAt
         )
-    }
-
-    /**
-     * Handle OAuth authorization result and exchange code for tokens
-     * Copied from Gallery's handleAuthResult method
-     */
-    fun handleAuthResult(
-        authResponse: AuthorizationResponse?,
-        authException: AuthorizationException?,
-        onTokenRequested: (TokenRequestResult) -> Unit
-    ) {
-        when {
-            authResponse?.authorizationCode != null -> {
-                // Authorization successful, exchange the code for tokens
-                var errorMessage: String? = null
-                authService.performTokenRequest(authResponse.createTokenExchangeRequest()) { 
-                    tokenResponse, tokenEx ->
-                    
-                    if (tokenResponse != null) {
-                        if (tokenResponse.accessToken == null) {
-                            errorMessage = "Empty access token"
-                        } else if (tokenResponse.refreshToken == null) {
-                            errorMessage = "Empty refresh token"
-                        } else if (tokenResponse.accessTokenExpirationTime == null) {
-                            errorMessage = "Empty expiration time"
-                        } else {
-                            // Token exchange successful. Store the tokens securely
-                            Log.d(TAG, "Token exchange successful. Storing tokens...")
-                            saveAccessToken(
-                                accessToken = tokenResponse.accessToken!!,
-                                refreshToken = tokenResponse.refreshToken!!,
-                                expiresAt = tokenResponse.accessTokenExpirationTime!!,
-                            )
-                            curAccessToken = tokenResponse.accessToken!!
-                            Log.d(TAG, "Token successfully saved.")
-                        }
-                    } else if (tokenEx != null) {
-                        errorMessage = "Token exchange failed: ${tokenEx.message}"
-                    } else {
-                        errorMessage = "Token exchange failed"
-                    }
-                    
-                    if (errorMessage == null) {
-                        onTokenRequested(TokenRequestResult(status = TokenRequestResultType.SUCCEEDED))
-                    } else {
-                        onTokenRequested(
-                            TokenRequestResult(
-                                status = TokenRequestResultType.FAILED,
-                                errorMessage = errorMessage,
-                            )
-                        )
-                    }
-                }
-            }
-
-            authException != null -> {
-                onTokenRequested(
-                    TokenRequestResult(
-                        status = if (authException.message == "User cancelled flow") 
-                            TokenRequestResultType.USER_CANCELLED
-                        else TokenRequestResultType.FAILED,
-                        errorMessage = authException.message,
-                    )
-                )
-            }
-
-            else -> {
-                onTokenRequested(TokenRequestResult(status = TokenRequestResultType.USER_CANCELLED))
-            }
-        }
     }
 
     override fun onCleared() {
@@ -751,4 +674,4 @@ constructor(
             }
         }
     }
-} 
+}

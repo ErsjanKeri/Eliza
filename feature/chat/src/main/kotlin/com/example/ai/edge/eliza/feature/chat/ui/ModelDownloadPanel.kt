@@ -48,6 +48,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,6 +64,9 @@ import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
 import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Gallery-style model download status panel
@@ -277,6 +281,8 @@ private fun ModelDownloadButton(
     modelManager: ElizaModelManager
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isProcessing by remember { mutableStateOf(false) }
     
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -303,19 +309,46 @@ private fun ModelDownloadButton(
             color = MaterialTheme.colorScheme.primary
         )
         
-        // Gallery's download button pattern
+        // Gallery's download button pattern with proper threading
         Button(
             onClick = { 
-                modelManager.downloadModel(context, task, model)
-            }
+                if (!isProcessing) {
+                    isProcessing = true
+                    // EXACT Gallery pattern: Use Dispatchers.IO for network operations
+                    scope.launch(Dispatchers.IO) {
+                        try {
+                            // Call the download method which now uses proper threading
+                            withContext(Dispatchers.Main) {
+                                modelManager.downloadModel(context, task, model)
+                            }
+                        } finally {
+                            withContext(Dispatchers.Main) {
+                                isProcessing = false
+                            }
+                        }
+                    }
+                }
+            },
+            enabled = !isProcessing
         ) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
+            if (isProcessing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
             Text(
-                text = if (downloadStatus?.status == ModelDownloadStatusType.FAILED) "Retry Download" else "Download Model",
+                text = when {
+                    isProcessing -> "Processing..."
+                    downloadStatus?.status == ModelDownloadStatusType.FAILED -> "Retry Download"
+                    else -> "Download Model"
+                },
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
