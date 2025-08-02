@@ -19,19 +19,16 @@ package com.example.ai.edge.eliza.ai.modelmanager
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
-import com.example.ai.edge.eliza.ai.modelmanager.data.Accelerator
-import com.example.ai.edge.eliza.ai.modelmanager.data.CONFIG_MAX_TOKENS
-import com.example.ai.edge.eliza.ai.modelmanager.data.CONFIG_TEMPERATURE
-import com.example.ai.edge.eliza.ai.modelmanager.data.CONFIG_TOPK
-import com.example.ai.edge.eliza.ai.modelmanager.data.CONFIG_TOPP
-import com.example.ai.edge.eliza.ai.modelmanager.data.CONFIG_ACCELERATOR
-import com.example.ai.edge.eliza.ai.modelmanager.data.DEFAULT_MAX_TOKEN
-import com.example.ai.edge.eliza.ai.modelmanager.data.DEFAULT_TEMPERATURE
-import com.example.ai.edge.eliza.ai.modelmanager.data.DEFAULT_TOPK
-import com.example.ai.edge.eliza.ai.modelmanager.data.DEFAULT_TOPP
-import com.example.ai.edge.eliza.ai.modelmanager.data.MAX_IMAGE_COUNT
-import com.example.ai.edge.eliza.ai.modelmanager.data.Model
-import com.example.ai.edge.eliza.ai.modelmanager.data.cleanUpMediapipeTaskErrorMessage
+// Import Gallery-compatible classes from core.model
+import com.example.ai.edge.eliza.core.model.Accelerator
+import com.example.ai.edge.eliza.core.model.ConfigKey
+import com.example.ai.edge.eliza.core.model.DEFAULT_MAX_TOKEN
+import com.example.ai.edge.eliza.core.model.DEFAULT_TEMPERATURE
+import com.example.ai.edge.eliza.core.model.DEFAULT_TOPK
+import com.example.ai.edge.eliza.core.model.DEFAULT_TOPP
+import com.example.ai.edge.eliza.core.model.MAX_IMAGE_COUNT
+import com.example.ai.edge.eliza.core.model.Model
+// cleanUpMediapipeTaskErrorMessage function now defined locally in Gallery style
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.genai.llminference.GraphOptions
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
@@ -55,11 +52,11 @@ object LlmChatModelHelper {
 
     fun initialize(context: Context, model: Model, onDone: (String) -> Unit) {
         // Prepare options.
-        val maxTokens = model.getIntConfigValue(key = CONFIG_MAX_TOKENS, defaultValue = DEFAULT_MAX_TOKEN)
-        val topK = model.getIntConfigValue(key = CONFIG_TOPK, defaultValue = DEFAULT_TOPK)
-        val topP = model.getFloatConfigValue(key = CONFIG_TOPP, defaultValue = DEFAULT_TOPP)
-        val temperature = model.getFloatConfigValue(key = CONFIG_TEMPERATURE, defaultValue = DEFAULT_TEMPERATURE)
-        val accelerator = model.getStringConfigValue(key = CONFIG_ACCELERATOR, defaultValue = Accelerator.GPU.label)
+        val maxTokens = model.getIntConfigValue(key = ConfigKey.MAX_TOKENS, defaultValue = DEFAULT_MAX_TOKEN)
+        val topK = model.getIntConfigValue(key = ConfigKey.TOPK, defaultValue = DEFAULT_TOPK)
+        val topP = model.getFloatConfigValue(key = ConfigKey.TOPP, defaultValue = DEFAULT_TOPP)
+        val temperature = model.getFloatConfigValue(key = ConfigKey.TEMPERATURE, defaultValue = DEFAULT_TEMPERATURE)
+        val accelerator = model.getStringConfigValue(key = ConfigKey.ACCELERATOR, defaultValue = Accelerator.GPU.label)
         
         Log.d(TAG, "Initializing...")
         val preferredBackend = when (accelerator) {
@@ -109,9 +106,9 @@ object LlmChatModelHelper {
             session.close()
 
             val inference = instance.engine
-            val topK = model.getIntConfigValue(key = CONFIG_TOPK, defaultValue = DEFAULT_TOPK)
-            val topP = model.getFloatConfigValue(key = CONFIG_TOPP, defaultValue = DEFAULT_TOPP)
-            val temperature = model.getFloatConfigValue(key = CONFIG_TEMPERATURE, defaultValue = DEFAULT_TEMPERATURE)
+            val topK = model.getIntConfigValue(key = ConfigKey.TOPK, defaultValue = DEFAULT_TOPK)
+            val topP = model.getFloatConfigValue(key = ConfigKey.TOPP, defaultValue = DEFAULT_TOPP)
+            val temperature = model.getFloatConfigValue(key = ConfigKey.TEMPERATURE, defaultValue = DEFAULT_TEMPERATURE)
             
             val newSession = LlmInferenceSession.createFromOptions(
                 inference,
@@ -192,4 +189,15 @@ object LlmChatModelHelper {
         }
         val unused = session.generateResponseAsync(resultListener)
     }
-} 
+}
+
+/**
+ * EXACT COPY of Gallery's cleanUpMediapipeTaskErrorMessage from Utils.kt
+ */
+private fun cleanUpMediapipeTaskErrorMessage(message: String): String {
+    val index = message.indexOf("=== Source Location Trace")
+    if (index >= 0) {
+        return message.substring(0, index)
+    }
+    return message
+}

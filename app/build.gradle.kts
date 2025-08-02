@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.protobuf)
 }
 
 android {
@@ -16,6 +17,9 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        // Needed for HuggingFace OAuth workflows (copied from Gallery)
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.example.ai.edge.eliza.oauth"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -91,6 +95,11 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.hilt:hilt-work:1.1.0")
     
+    // OAuth & DataStore (copied from Gallery)
+    implementation(libs.openid.appauth)
+    implementation(libs.androidx.datastore)
+    implementation(libs.protobuf.javalite)
+    
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -99,4 +108,20 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+// Protobuf configuration (copied from Gallery)
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:4.26.1"
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
 }

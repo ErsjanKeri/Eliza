@@ -82,7 +82,7 @@ class DownloadWorker @AssistedInject constructor(
         val fileName = inputData.getString(KEY_MODEL_DOWNLOAD_FILE_NAME)
         val modelDir = inputData.getString(KEY_MODEL_DOWNLOAD_MODEL_DIR) ?: "models"
         val totalBytes = inputData.getLong(KEY_MODEL_TOTAL_BYTES, 0L)
-        val accessToken = inputData.getString(KEY_MODEL_DOWNLOAD_ACCESS_TOKEN)
+        val accessToken = inputData.getString(KEY_MODEL_ACCESS_TOKEN)
         val sha256Checksum = inputData.getString(KEY_MODEL_SHA256_CHECKSUM)
 
         return withContext(Dispatchers.IO) {

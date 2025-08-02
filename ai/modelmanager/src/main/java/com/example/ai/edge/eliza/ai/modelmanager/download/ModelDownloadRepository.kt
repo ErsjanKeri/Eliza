@@ -27,9 +27,11 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkQuery
-import com.example.ai.edge.eliza.ai.modelmanager.data.Model
-import com.example.ai.edge.eliza.ai.modelmanager.data.ModelDownloadStatus
-import com.example.ai.edge.eliza.ai.modelmanager.data.ModelDownloadStatusType
+// Import Gallery-compatible classes from core.model
+import com.example.ai.edge.eliza.core.model.Model
+import com.example.ai.edge.eliza.core.model.ModelDownloadStatus
+import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
+import com.example.ai.edge.eliza.ai.modelmanager.download.KEY_MODEL_ACCESS_TOKEN
 import com.example.ai.edge.eliza.ai.modelmanager.download.KEY_MODEL_DOWNLOAD_ERROR_MESSAGE
 import com.example.ai.edge.eliza.ai.modelmanager.download.KEY_MODEL_DOWNLOAD_FILE_NAME
 import com.example.ai.edge.eliza.ai.modelmanager.download.KEY_MODEL_DOWNLOAD_MODEL_DIR
@@ -64,6 +66,7 @@ data class ElizaWorkInfo(val modelName: String, val workId: String)
 interface ModelDownloadRepository {
     fun downloadModel(
         model: Model,
+        accessToken: String? = null, // NEW: OAuth access token for HuggingFace
         onStatusUpdated: (model: Model, status: ModelDownloadStatus) -> Unit,
     )
 
@@ -99,6 +102,7 @@ class ModelDownloadRepositoryImpl @Inject constructor(
     
     override fun downloadModel(
         model: Model,
+        accessToken: String?, // NEW: OAuth access token for HuggingFace
         onStatusUpdated: (model: Model, status: ModelDownloadStatus) -> Unit,
     ) {
         Log.d(TAG, "Starting WorkManager download for model: ${model.name}")
@@ -106,11 +110,17 @@ class ModelDownloadRepositoryImpl @Inject constructor(
         // Create input data exactly like Gallery's pattern
         val inputDataBuilder = Data.Builder()
             .putString(KEY_MODEL_NAME, model.name)
-            .putString(KEY_MODEL_URL, model.downloadUrl)
+            .putString(KEY_MODEL_URL, model.url)
             .putString(KEY_MODEL_VERSION, model.version)
             .putString(KEY_MODEL_DOWNLOAD_MODEL_DIR, model.normalizedName)
             .putString(KEY_MODEL_DOWNLOAD_FILE_NAME, model.downloadFileName)
             .putLong(KEY_MODEL_TOTAL_BYTES, model.sizeInBytes)
+            
+        // NEW: Add OAuth access token for HuggingFace authentication
+        if (!accessToken.isNullOrBlank()) {
+            inputDataBuilder.putString(KEY_MODEL_ACCESS_TOKEN, accessToken)
+            Log.d(TAG, "Added access token to download request for model: ${model.name}")
+        }
             
         // Note: sha256Checksum not available in Gallery Model, but we keep the logic for future use
         

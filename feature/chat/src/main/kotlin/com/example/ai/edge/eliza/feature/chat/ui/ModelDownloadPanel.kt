@@ -56,8 +56,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.ai.edge.eliza.ai.modelmanager.data.Model
-import com.example.ai.edge.eliza.ai.modelmanager.data.ModelDownloadStatusType
+// Import Gallery-compatible classes from core.model
+import com.example.ai.edge.eliza.core.model.Model
+import com.example.ai.edge.eliza.core.model.ModelDownloadStatus
+import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
 import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import kotlinx.coroutines.delay
@@ -171,7 +173,7 @@ fun ModelDownloadPanel(
 private fun ModelDownloadingContent(
     model: Model,
     task: Task,
-    downloadStatus: com.example.ai.edge.eliza.ai.modelmanager.data.ModelDownloadStatus?,
+    downloadStatus: ModelDownloadStatus?,
     modelManager: ElizaModelManager
 ) {
     Column(
@@ -271,7 +273,7 @@ private fun ModelDownloadingContent(
 private fun ModelDownloadButton(
     model: Model,
     task: Task,
-    downloadStatus: com.example.ai.edge.eliza.ai.modelmanager.data.ModelDownloadStatus?,
+    downloadStatus: ModelDownloadStatus?,
     modelManager: ElizaModelManager
 ) {
     val context = LocalContext.current
@@ -287,7 +289,7 @@ private fun ModelDownloadButton(
         )
         
         Text(
-            text = model.description,
+            text = model.info,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.secondary

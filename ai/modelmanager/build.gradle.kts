@@ -21,6 +21,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    // Removed protobuf plugin - handled at app level
 }
 
 android {
@@ -100,8 +101,9 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.hilt:hilt-work:1.1.0")
     
-    // DataStore (direct dependency)
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    // OAuth & DataStore (provided by app module)
+    implementation(libs.openid.appauth)
+    // Note: DataStore and protobuf dependencies provided by app module
     
     // Gson for JSON parsing
     implementation("com.google.code.gson:gson:2.10.1")
@@ -118,4 +120,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-} 
+}
+
+// Protobuf configuration removed - handled at app level to avoid KSP conflicts 

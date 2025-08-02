@@ -25,7 +25,8 @@ import com.example.ai.edge.eliza.ai.modelmanager.LlmChatModelHelper
 import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_CHAT
 import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_EXERCISE_HELP
 import com.example.ai.edge.eliza.ai.modelmanager.data.Task
-import com.example.ai.edge.eliza.ai.modelmanager.data.Model
+// Import Gallery-compatible Model class from core.model
+import com.example.ai.edge.eliza.core.model.Model
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

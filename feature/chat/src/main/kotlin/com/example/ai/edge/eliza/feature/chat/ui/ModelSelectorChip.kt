@@ -47,7 +47,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.ai.edge.eliza.ai.modelmanager.data.Model
+// Import Gallery-compatible Model class from core.model
+import com.example.ai.edge.eliza.core.model.Model
 import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import kotlinx.coroutines.launch

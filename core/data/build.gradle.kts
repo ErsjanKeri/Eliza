@@ -52,6 +52,9 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
     
+    // OAuth (needed for AuthConfig)
+    implementation(libs.openid.appauth)
+    
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -16,12 +16,35 @@
 
 package com.example.ai.edge.eliza.ai.modelmanager.data
 
+import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.ui.graphics.vector.ImageVector
+import java.io.File
+import java.util.regex.Pattern
+
+// Import Gallery-compatible classes from core.model
+import com.example.ai.edge.eliza.core.model.Model
+import com.example.ai.edge.eliza.core.model.ModelDataFile
+import com.example.ai.edge.eliza.core.model.ModelDownloadStatus
+import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
+import com.example.ai.edge.eliza.core.model.Config
+import com.example.ai.edge.eliza.core.model.ConfigKey
+import com.example.ai.edge.eliza.core.model.ValueType
+import com.example.ai.edge.eliza.core.model.Accelerator
+import com.example.ai.edge.eliza.core.model.createLlmChatConfigs
+import com.example.ai.edge.eliza.core.model.convertValueToTargetType
+import com.example.ai.edge.eliza.core.model.DEFAULT_MAX_TOKEN
+import com.example.ai.edge.eliza.core.model.DEFAULT_TOPK
+import com.example.ai.edge.eliza.core.model.DEFAULT_TOPP
+import com.example.ai.edge.eliza.core.model.DEFAULT_TEMPERATURE
+import com.example.ai.edge.eliza.core.model.DEFAULT_ACCELERATORS
+import com.example.ai.edge.eliza.core.model.MAX_IMAGE_COUNT
+import com.example.ai.edge.eliza.core.model.MAX_AUDIO_CLIP_COUNT
+import com.example.ai.edge.eliza.core.model.SAMPLE_RATE
 
 /** Type of task. Simplified for Eliza. */
 enum class TaskType(val label: String, val id: String) {
@@ -62,6 +85,20 @@ data class Task(
   var index: Int = -1,
   val updateTrigger: MutableState<Long> = mutableLongStateOf(0),
 )
+
+// All constants and functions are now imported from core.model to ensure Gallery compatibility
+
+/**
+ * Gallery's exact MediaPipe error message cleanup function
+ * Copied exactly from Gallery's Utils.kt
+ */
+fun cleanUpMediapipeTaskErrorMessage(message: String): String {
+    val index = message.indexOf("=== Source Location Trace")
+    if (index >= 0) {
+        return message.substring(0, index)
+    }
+    return message
+}
 
 /** Eliza's main chat task. */
 val TASK_ELIZA_CHAT =
@@ -104,4 +141,4 @@ fun processTasks() {
       model.preProcess()
     }
   }
-} 
+}

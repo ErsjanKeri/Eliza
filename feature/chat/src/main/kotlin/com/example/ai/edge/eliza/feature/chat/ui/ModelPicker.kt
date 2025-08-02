@@ -39,7 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ai.edge.eliza.ai.modelmanager.data.Model
+// Import Gallery-compatible Model class from core.model
+import com.example.ai.edge.eliza.core.model.Model
 import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import com.example.ai.edge.eliza.core.designsystem.icon.ElizaIcons

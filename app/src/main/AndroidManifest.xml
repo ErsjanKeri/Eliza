@@ -32,6 +32,19 @@
             </intent-filter>
         </activity>
 
+        <!-- OAuth redirect handling activity (copied from Gallery) -->
+        <activity
+            android:name="net.openid.appauth.RedirectUriReceiverActivity"
+            android:exported="true"
+            tools:node="replace">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="${appAuthRedirectScheme}" />
+            </intent-filter>
+        </activity>
+
         <!-- WorkManager foreground service for model downloads -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"

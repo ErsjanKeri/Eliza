@@ -47,7 +47,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_CHAT
-import com.example.ai.edge.eliza.ai.modelmanager.data.ModelDownloadStatusType
+// Import Gallery-compatible ModelDownloadStatusType from core.model
+import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import com.example.ai.edge.eliza.ai.service.ElizaChatViewModel
 
