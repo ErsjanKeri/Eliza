@@ -375,38 +375,7 @@ private fun ResultSection(
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Result indicator
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = if (isCorrect) {
-                    Green40.copy(alpha = 0.2f)
-                } else {
-                    Red40.copy(alpha = 0.2f)
-                }
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = if (isCorrect) "🎉 Correct!" else "❌ Incorrect",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = if (isCorrect) Green40 else Red40
-                )
-                if (!isCorrect) {
-                    Text(
-                        text = "Correct answer: ${trial.options[trial.correctAnswerIndex]}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
-        
+    ) {  
         // AI Explanation
         Card(
             colors = CardDefaults.cardColors(

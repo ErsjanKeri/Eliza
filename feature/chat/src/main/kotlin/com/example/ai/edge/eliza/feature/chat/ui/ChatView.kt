@@ -164,6 +164,8 @@ fun ChatView(
                 selectedModel = selectedModel,
                 modelManager = modelManager,
                 onModelSelected = { model ->
+                    // FIXED: Add missing selectModel call - Gallery's exact pattern
+                    modelManager.selectModel(model)
                     // Initialize the selected model
                     modelManager.initializeModel(
                         context = context.applicationContext,

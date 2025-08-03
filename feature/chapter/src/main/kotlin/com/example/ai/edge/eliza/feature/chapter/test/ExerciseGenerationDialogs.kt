@@ -119,7 +119,9 @@ fun DifficultySelectionDialog(
                     selectedModel = selectedModel,
                     modelManager = modelManager,
                     onModelSelected = { model ->
-                        // Initialize the selected model (same as ChatView)
+                        // FIXED: Add missing selectModel call - Gallery's exact pattern
+                        modelManager.selectModel(model)
+                        // Initialize the selected model
                         modelManager.initializeModel(
                             context = context.applicationContext,
                             task = task,

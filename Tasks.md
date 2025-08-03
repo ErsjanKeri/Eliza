@@ -29,12 +29,11 @@
 
 - [X] **Remove retake exercise button** - Delete retake exercise button from exercise interfaces, maintain exercise functionality through other UI flows, clean up related event handlers
 
-- [ ] Next and previous buttons while taking a test, do not have the same height! 
- 
-- [ ] the take test button in chapter still its text is weird 
-- [ ] in window, loading model, should be instead exactly "Eliza is getting ready" 
+- [X] Next and previous buttons while taking a test, do not have the same height! 
+- [X] the take test button in chapter still its text is weird 
+- [X] in window, loading model, should be instead exactly "Eliza is getting ready" 
 
-- [ ] **Hide generated question UI elements** - the problem with the generated question is that its answer is spoiled! it should not be spoiled! only after user tries it then the explanation is also displayed! currently we are kind of spoiling the test exercise!
+- [X] **Hide generated question UI elements** - the problem with the generated question is that its answer is spoiled! it should not be spoiled! only after user tries it then the explanation is also displayed! currently we are kind of spoiling the test exercise!
 
 ### **Model Management**
 - [ ] **Fix model switching functionality** - Implement proper model switching in ElizaModelManager, ensure selected model persists across app sessions, add loading indicators during model switching, handle model initialization correctly after switching, currently the model picker does not work on switching! upon clicking the alternative to gemma-3n-4b which is the gemma-3n-2b nothing changes! Here focus on gallery how they do it! 
@@ -45,7 +44,7 @@ This is very important! a proper data flow is what makes the app working, make s
 
 
 ### **Exercise Context System**
-- [ ] **Implement exercise context as system prompt instead of RAG** - Add question text and answer options as system prompt context for exercise help, ensure AI recognizes both question and selected answer, modify prompt engineering to include exercise context directly, remove RAG dependency for exercise context, currently I am unsure whether the RAG toggle works!
+- [ ] **Implement exercise context as system prompt together with RAG** - Add question text and answer options as system prompt context for exercise help, ensure AI recognizes both question and selected answer, modify prompt engineering to include exercise context directly, remove RAG dependency for exercise context, currently I am unsure whether the RAG toggle works!
 
 ---
 

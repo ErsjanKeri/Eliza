@@ -687,23 +687,11 @@ private fun QuestionExpandedContent(
         // Help options with network-aware dual buttons
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Practice with this question:",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
+        ) { 
             // Practice option
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Practice more:",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
+            ) { 
                 ElizaButton(
                     onClick = { onGenerateNewQuestion(exercise) }, // Transfer generate functionality
                     text = { 
