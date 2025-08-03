@@ -401,15 +401,15 @@ private fun ChapterTestButton(
                                 fontWeight = FontWeight.SemiBold
                             )
                         )
-                        Text(
-                            text = when {
-                                chapter.isCompleted -> "Try again for 100% completion"
-                                hasTestAttempts -> "View your test results"
-                                else -> "Test your understanding!"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                        )
+                        // Text(
+                        //     text = when {
+                        //         chapter.isCompleted -> "Try again for 100% completion"
+                        //         hasTestAttempts -> "View your test results"
+                        //         else -> "Test your understanding!"
+                        //     },
+                        //     style = MaterialTheme.typography.bodySmall,
+                        //     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                        // )
                     }
                 }
             },

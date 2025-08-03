@@ -86,6 +86,8 @@ import com.example.ai.edge.eliza.core.designsystem.component.ElizaBackground
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaOutlinedButton
 import com.example.ai.edge.eliza.core.designsystem.theme.ElizaTheme
+import com.example.ai.edge.eliza.core.designsystem.theme.Green40
+import com.example.ai.edge.eliza.core.designsystem.theme.Orange40
 import com.example.ai.edge.eliza.core.model.TestResult
 import com.example.ai.edge.eliza.core.model.Exercise
 import com.example.ai.edge.eliza.core.model.Difficulty
@@ -300,10 +302,10 @@ private fun ScoreDisplay(
                     progress = { animatedScore },
                     modifier = Modifier.size(140.dp),
                     color = when {
-                        testResult.score == 100 -> Color(0xFF26890C) // Green
+                        testResult.score == 100 -> Green40 // Success color from theme
                         testResult.score >= 80 -> MaterialTheme.colorScheme.primary // Blue
-                        testResult.score >= 60 -> Color(0xFFD89E00) // Orange
-                        else -> Color(0xFFE21B23) // Red
+                        testResult.score >= 60 -> Orange40 // Warning color from theme
+                        else -> MaterialTheme.colorScheme.error // Error color from theme
                     },
                     strokeWidth = 10.dp,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
@@ -446,7 +448,7 @@ private fun QuestionResultCard(
                 Icon(
                     imageVector = if (isCorrect) Icons.Filled.Check else Icons.Filled.Close,
                     contentDescription = if (isCorrect) "Correct" else "Incorrect",
-                    tint = if (isCorrect) Color(0xFF26890C) else Color(0xFFE21B23),
+                    tint = if (isCorrect) Green40 else MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(24.dp)
                 )
                 
@@ -464,7 +466,7 @@ private fun QuestionResultCard(
                     Text(
                         text = if (isCorrect) "Correct" else "Incorrect",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (isCorrect) Color(0xFF26890C) else Color(0xFFE21B23)
+                        color = if (isCorrect) Green40 else MaterialTheme.colorScheme.error
                     )
                 }
                 
@@ -566,7 +568,7 @@ private fun QuestionExpandedContent(
                     Icon(
                         imageVector = if (isCorrect) Icons.Filled.Check else Icons.Filled.Close,
                         contentDescription = null,
-                        tint = if (isCorrect) Color(0xFF26890C) else Color(0xFFE21B23),
+                        tint = if (isCorrect) Green40 else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(16.dp)
                     )
                     Column(modifier = Modifier.weight(1f)) {
@@ -584,7 +586,7 @@ private fun QuestionExpandedContent(
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Medium
                             ),
-                            color = if (isCorrect) Color(0xFF26890C) else Color(0xFFE21B23)
+                            color = if (isCorrect) Green40 else MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -598,7 +600,7 @@ private fun QuestionExpandedContent(
                         Icon(
                             imageVector = Icons.Filled.Check,
                             contentDescription = null,
-                            tint = Color(0xFF26890C),
+                            tint = Green40,
                             modifier = Modifier.size(16.dp)
                         )
                         Column(modifier = Modifier.weight(1f)) {
@@ -612,7 +614,7 @@ private fun QuestionExpandedContent(
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Medium
                                 ),
-                                color = Color(0xFF26890C)
+                                color = Green40
                             )
                         }
                     }
@@ -703,7 +705,7 @@ private fun QuestionExpandedContent(
                 )
                 
                 ElizaButton(
-                    onClick = onRetakeQuestion,
+                    onClick = { onGenerateNewQuestion(exercise) }, // Transfer generate functionality
                     text = { 
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -720,28 +722,6 @@ private fun QuestionExpandedContent(
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
-                
-                // NEW: Generate New Question button
-                OutlinedButton(
-                    onClick = { onGenerateNewQuestion(exercise) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.tertiary
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Star, // AI generation icon
-                            contentDescription = "Generate New Question",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text("🎲 Generate New Question")
-                    }
-                }
             }
         }
     }
@@ -788,116 +768,9 @@ private fun ActionButtons(
                 modifier = Modifier.fillMaxWidth()
             )
             
-            ElizaOutlinedButton(
-                onClick = onRetakeTest,
-                text = { 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Retake Test"
-                        )
-                        Text("Retake Test")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            ElizaOutlinedButton(
-                onClick = onBackToChapter,
-                text = { 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Return to Chapter"
-                        )
-                        Text("Return to Chapter")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            // Add main home button
-            ElizaOutlinedButton(
-                onClick = onNavigateToHome,
-                text = { 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Go to Main Page"
-                        )
-                        Text("Main Home")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Navigation buttons removed as requested - users can use bottom navigation
         } else {
-            // Failed - show retake test as primary action
-            ElizaButton(
-                onClick = onRetakeTest,
-                text = { 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Retake Test",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Text(
-                            "Retake Test",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            ElizaOutlinedButton(
-                onClick = onBackToChapter,
-                text = { 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Back to Chapter"
-                        )
-                        Text("Back to Chapter")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            // Add main home button for failed case too
-            ElizaOutlinedButton(
-                onClick = onNavigateToHome,
-                text = { 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Go to Main Page"
-                        )
-                        Text("Main Home")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Navigation buttons removed for failed case too - users can use bottom navigation or accordion buttons
         }
     }
 }

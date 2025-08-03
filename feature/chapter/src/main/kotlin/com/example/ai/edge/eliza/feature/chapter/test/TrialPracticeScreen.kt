@@ -1,5 +1,8 @@
 package com.example.ai.edge.eliza.feature.chapter.test
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -41,6 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaBackground
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
+import com.example.ai.edge.eliza.core.designsystem.theme.LocalTestColors
+import com.example.ai.edge.eliza.core.designsystem.theme.Green40
+import com.example.ai.edge.eliza.core.designsystem.theme.Red40
 import com.example.ai.edge.eliza.core.model.Trial
 
 /**
@@ -135,7 +142,8 @@ private fun TrialPracticeTopBar(
     TopAppBar(
         title = {
             Text(
-                text = "🎲 Practice Question",
+                // TODO replace 🎲 with a proper icon
+                text = "Practice Question",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.SemiBold
                 )
@@ -163,9 +171,10 @@ private fun PracticeHeader(
 ) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            containerColor = MaterialTheme.colorScheme.primaryContainer // Clean blue background like test pages
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // No shadows like test pages
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp), // Square corners consistency
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -244,7 +253,7 @@ private fun QuestionContent(
 }
 
 /**
- * Individual answer option - reusing the design pattern from test screens.
+ * Individual answer option - identical styling to chapter test screen for consistency.
  */
 @Composable
 private fun AnswerOption(
@@ -257,59 +266,76 @@ private fun AnswerOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = when {
-        isCorrect && isRevealed -> Color(0xFF4CAF50).copy(alpha = 0.2f)
-        isWrong && isRevealed -> Color(0xFFF44336).copy(alpha = 0.2f)
-        isSelected && !isRevealed -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-        else -> MaterialTheme.colorScheme.surface
-    }
+    // Use Eliza test colors - identical to chapter test screen
+    val testColors = LocalTestColors.current
+    val optionColors = testColors.getColorsForCount(4) // Standard A, B, C, D options
+    val optionIndex = optionLetter.first() - 'A' // Convert A, B, C, D to 0, 1, 2, 3
     
-    val borderColor = when {
-        isCorrect && isRevealed -> Color(0xFF4CAF50)
-        isWrong && isRevealed -> Color(0xFFF44336)
-        isSelected && !isRevealed -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.outline
+    // Determine background color based on selection state (like chapter test)
+    val backgroundColor = if (isSelected) {
+        optionColors[optionIndex]
+    } else {
+        MaterialTheme.colorScheme.surface
     }
     
     Card(
-        onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 2.dp),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 6.dp else 2.dp // Dynamic elevation like chapter test
+        ),
+        border = if (isSelected) null else 
+            androidx.compose.foundation.BorderStroke(
+                2.dp, 
+                optionColors[optionIndex].copy(alpha = 0.3f) // Color-coded borders like chapter test
+            )
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp), // Identical padding to chapter test
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp) // Identical spacing to chapter test
         ) {
-            // Option letter
+            // Option indicator - identical to chapter test styling
             Box(
                 modifier = Modifier
-                    .size(32.dp),
+                    .size(32.dp)
+                    .background(
+                        color = if (isSelected) Color.White else optionColors[optionIndex],
+                        shape = RoundedCornerShape(0.dp) // Square design consistency
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = optionLetter,
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = borderColor
+                    color = if (isSelected) optionColors[optionIndex] else Color.White
                 )
             }
             
-            // Option text
+            // Option text - identical styling to chapter test
             Text(
                 text = optionText,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                ),
+                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
             
-            // Status indicator
+            // Status indicator for revealed answers
             if (isRevealed) {
                 Icon(
                     imageVector = if (isCorrect) Icons.Default.CheckCircle else Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFF44336),
+                    tint = if (isCorrect) Green40 else Red40,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -354,9 +380,9 @@ private fun ResultSection(
         Card(
             colors = CardDefaults.cardColors(
                 containerColor = if (isCorrect) {
-                    Color(0xFF4CAF50).copy(alpha = 0.2f)
+                    Green40.copy(alpha = 0.2f)
                 } else {
-                    Color(0xFFF44336).copy(alpha = 0.2f)
+                    Red40.copy(alpha = 0.2f)
                 }
             )
         ) {
@@ -369,7 +395,7 @@ private fun ResultSection(
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFF44336)
+                    color = if (isCorrect) Green40 else Red40
                 )
                 if (!isCorrect) {
                     Text(

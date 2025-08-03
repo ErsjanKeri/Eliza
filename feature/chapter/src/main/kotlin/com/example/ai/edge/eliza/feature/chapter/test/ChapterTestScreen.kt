@@ -229,7 +229,7 @@ private fun QuestionIndicators(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(0.dp)) // Square design consistency
                     .background(
                         when {
                             isCurrent -> MaterialTheme.colorScheme.primary
@@ -379,7 +379,7 @@ private fun KahootAnswerOptions(
                             .size(32.dp)
                             .background(
                                 color = if (isSelected) Color.White else optionColors[index],
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(0.dp) // Square design consistency
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -422,31 +422,34 @@ private fun NavigationControls(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(8.dp), // Small gap between buttons
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Previous button
+        // Previous button - 50% width
         if (canGoPrevious) {
             ElizaOutlinedButton(
                 onClick = onPreviousClick,
+                modifier = Modifier.weight(1f), // Fill 50% of available space
                 text = { Text("← Previous") }
             )
         } else {
-            Spacer(modifier = Modifier.width(100.dp))
+            Spacer(modifier = Modifier.weight(1f)) // Fill 50% even when hidden
         }
         
-        // Next/Submit button
+        // Next/Submit button - 50% width
         if (canGoNext) {
             ElizaButton(
                 onClick = onNextClick,
+                modifier = Modifier.weight(1f), // Fill 50% of available space
                 text = { Text("Next →") }
             )
         } else if (isAllAnswered) {
             ElizaButton(
                 onClick = onSubmitClick,
+                modifier = Modifier.weight(1f), // Fill 50% of available space
                 text = { 
                     Text(
-                        "🎯 Submit Test",
+                        "Submit Test",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         )
@@ -457,6 +460,7 @@ private fun NavigationControls(
             ElizaOutlinedButton(
                 onClick = { },
                 enabled = false,
+                modifier = Modifier.weight(1f), // Fill 50% of available space
                 text = { Text("Answer to continue") }
             )
         }

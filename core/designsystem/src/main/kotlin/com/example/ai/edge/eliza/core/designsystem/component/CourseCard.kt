@@ -133,7 +133,7 @@ fun CourseCard(
                     // Subject badge
                     Surface(
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(0.dp), // Square design consistency
                         modifier = Modifier.padding(bottom = 4.dp) // UPDATED: Reduced spacing (was 8.dp)
                     ) {
                         Text(

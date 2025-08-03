@@ -72,6 +72,7 @@ fun ElizaButton(
 ) {
     Surface(
         color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
         shape = RoundedCornerShape(0.dp), // Square corners like home page
         modifier = modifier
             .height(48.dp) // Consistent height
@@ -141,8 +142,9 @@ fun ElizaOutlinedButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.height(48.dp), // Consistent height with ElizaButton
         enabled = enabled,
+        shape = RoundedCornerShape(0.dp), // Square corners consistency
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = MaterialTheme.colorScheme.primary,
         ),
@@ -205,8 +207,9 @@ fun ElizaTextButton(
 ) {
     TextButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.height(48.dp), // Consistent height with other ElizaButtons
         enabled = enabled,
+        shape = RoundedCornerShape(0.dp), // Square corners consistency
         colors = ButtonDefaults.textButtonColors(
             contentColor = MaterialTheme.colorScheme.primary,
         ),
@@ -254,28 +257,20 @@ private fun ElizaButtonContent(
     text: @Composable () -> Unit,
     leadingIcon: @Composable (() -> Unit)? = null,
 ) {
-    if (leadingIcon != null) {
-        Box(
-            modifier = Modifier.sizeIn(maxHeight = ButtonDefaults.IconSize),
-        ) {
-            leadingIcon()
-        }
-    }
-    Box(
-        modifier = Modifier.padding(
-            start = if (leadingIcon != null) {
-                ButtonDefaults.IconSpacing
-            } else {
-                0.dp
-            },
-        ),
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(ButtonDefaults.IconSpacing),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Ensure text uses onPrimary color for contrast
-        CompositionLocalProvider(
-            LocalContentColor provides MaterialTheme.colorScheme.onPrimary
-        ) {
-            text()
+        if (leadingIcon != null) {
+            Box(
+                modifier = Modifier.sizeIn(maxHeight = ButtonDefaults.IconSize),
+            ) {
+                leadingIcon()
+            }
         }
+        
+        // Use appropriate text color - let the button component handle it
+        text()
     }
 }
 
@@ -300,19 +295,9 @@ fun ElizaSmallButton(
             vertical = 8.dp,
         ),
     ) {
-        if (leadingIcon != null) {
-            Icon(
-                imageVector = ElizaIcons.Check, // Placeholder - use passed icon
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-            )
-        }
-        if (leadingIcon != null) {
-            Box(modifier = Modifier.padding(start = 8.dp)) {
-                text()
-            }
-        } else {
-            text()
-        }
+        ElizaButtonContent(
+            text = text,
+            leadingIcon = leadingIcon,
+        )
     }
 } 

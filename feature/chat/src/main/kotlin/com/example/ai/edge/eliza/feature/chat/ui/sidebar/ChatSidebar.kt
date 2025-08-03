@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -58,6 +59,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.ai.edge.eliza.core.designsystem.component.ElizaOutlinedButton
+import com.example.ai.edge.eliza.core.designsystem.component.ElizaTextButton
 import com.example.ai.edge.eliza.core.model.ChatSession
 import com.example.ai.edge.eliza.core.model.ChatType
 
@@ -100,11 +103,11 @@ fun ChatSidebar(
                 .border(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+                    shape = RoundedCornerShape(0.dp) // Square design consistency
                 ),
             color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 8.dp,
-            shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+            shadowElevation = 0.dp, // Clean flat design - no shadows
+            shape = RoundedCornerShape(0.dp) // Square design consistency
         ) {
             Column(
                 modifier = Modifier
@@ -171,17 +174,18 @@ private fun SidebarHeader(
         
         Spacer(modifier = Modifier.height(8.dp))
         
-        OutlinedButton(
+        ElizaOutlinedButton(
             onClick = onCreateNewChat,
-            modifier = Modifier.width(240.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            Text("New Chat")
-        }
+            modifier = Modifier.width(240.dp),
+            text = { Text("New Chat") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        )
         
         Spacer(modifier = Modifier.height(8.dp))
         
@@ -264,22 +268,24 @@ private fun CourseItem(
     onToggleExpanded: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextButton(
+    ElizaTextButton(
         onClick = onToggleExpanded,
-        modifier = modifier
-    ) {
-        Icon(
-            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-            contentDescription = if (isExpanded) "Collapse" else "Expand"
-        )
-        Text(
-            text = courseName,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-            modifier = Modifier.padding(start = 8.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
+        modifier = modifier,
+        text = {
+            Text(
+                text = courseName,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Collapse" else "Expand"
+            )
+        }
+    )
 }
 
 /**
@@ -293,24 +299,25 @@ private fun ChapterItem(
     onToggleExpanded: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextButton(
+    ElizaTextButton(
         onClick = onToggleExpanded,
-        modifier = modifier
-    ) {
-        Icon(
-            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-            contentDescription = if (isExpanded) "Collapse" else "Expand"
-        )
-        Text(
-            text = chapterName,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-            modifier = Modifier.padding(start = 8.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
+        modifier = modifier,
+        text = {
+            Text(
+                text = chapterName,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Collapse" else "Expand"
+            )
+        }
+    )
 }
-
 /**
  * List of chat types and their sessions.
  */
@@ -386,12 +393,11 @@ private fun ErrorMessage(
                 color = MaterialTheme.colorScheme.onErrorContainer,
                 modifier = Modifier.padding(top = 4.dp)
             )
-            TextButton(
+            ElizaTextButton(
                 onClick = onRetry,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text("Retry")
-            }
+                modifier = Modifier.padding(top = 8.dp),
+                text = { Text("Retry") }
+            )
         }
     }
 }

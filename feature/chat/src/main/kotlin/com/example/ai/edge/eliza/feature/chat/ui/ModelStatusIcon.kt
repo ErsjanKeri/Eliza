@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.dp
 // Import Gallery-compatible classes from core.model
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatus
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
+import com.example.ai.edge.eliza.core.designsystem.theme.Green40
+import com.example.ai.edge.eliza.core.designsystem.theme.Red40
 
 /**
  * Gallery's exact StatusIcon component for showing model download status.
@@ -46,7 +48,7 @@ fun ModelStatusIcon(
             Icon(
                 imageVector = Icons.Filled.CheckCircle,
                 contentDescription = "Downloaded",
-                tint = Color(0xFF4CAF50), // Green
+                tint = Green40, // Success color from theme
                 modifier = modifier.size(12.dp)
             )
         }
@@ -69,7 +71,7 @@ fun ModelStatusIcon(
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "Failed",
-                tint = Color(0xFFF44336), // Red
+                tint = Red40, // Error color from theme
                 modifier = modifier.size(12.dp)
             )
         }

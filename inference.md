@@ -430,15 +430,10 @@ Enhanced prompt → Gemma model → Contextually relevant response
 - RAG indexing processes ~50+ content chunks
 - Vector embeddings verified for educational accuracy
 
-### **Performance Benchmarks**
-- Initialization: <5 seconds
-- Enhanced RAG: <500ms overhead
-- Vector search: <100ms for typical queries
-- Content retrieval: 3-5 relevant chunks per query
 
 ### **Quality Metrics**
-- Confidence scoring: 0.7+ threshold for enhanced responses
-- Relevance: Cosine similarity >0.7 for included chunks
+- Confidence scoring: 0.6+ threshold for enhanced responses
+- Relevance: Cosine similarity >0.6 for included chunks
 - Coverage: Multi-vector strategy ensures comprehensive context
 
 ## Future Enhancements

@@ -13,7 +13,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -88,9 +98,12 @@ fun DifficultySelectionDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(0.dp), // Square corners like rest of app
+        containerColor = MaterialTheme.colorScheme.surface, // Clean white background
         title = {
             Text(
-                text = "🎲 Generate New Practice Question",
+                // TODO: replace 🎲 with a proper icon 
+                text = "Generate New Practice Question",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.SemiBold
                 )
@@ -117,12 +130,14 @@ fun DifficultySelectionDialog(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // Original question preview
+                // Original question preview - 100% width with white text
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        containerColor = MaterialTheme.colorScheme.primaryContainer // Light blue background
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    shape = RoundedCornerShape(0.dp), // Square corners consistency
+                    modifier = Modifier.fillMaxWidth() // 100% width as requested
                 ) {
                     Column(
                         modifier = Modifier.padding(12.dp)
@@ -130,11 +145,12 @@ fun DifficultySelectionDialog(
                         Text(
                             text = "Original Question:",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color.White // Pure white text as requested
                         )
                         Text(
                             text = originalExercise.questionText,
                             style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White, // Pure white text as requested
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
@@ -186,12 +202,23 @@ fun DifficultySelectionDialog(
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = if (isModelReady) "🤖 Generate Question" else "⏳ Loading Model...",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.SemiBold
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isModelReady) Icons.Filled.Build else Icons.Filled.Info,
+                            contentDescription = null,
+                            tint = if (isModelReady) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
                         )
-                    )
+                        Text(
+                            text = if (isModelReady) "Generate Question" else "Eliza is getting ready...",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
                 }
             }
         },
@@ -279,17 +306,37 @@ fun ExerciseGenerationDialog(
 ) {
     AlertDialog(
         onDismissRequest = if (generationState !is GenerationResult.Loading) onDismiss else { {} },
+        shape = RoundedCornerShape(0.dp), // Square corners like the rest of the app
+        containerColor = MaterialTheme.colorScheme.surface, // Clean white background
         title = {
-            Text(
-                text = when (generationState) {
-                    is GenerationResult.Loading -> "⚡ Generating Question..."
-                    is GenerationResult.Success -> "🎲 Generated Practice Question"
-                    is GenerationResult.Error -> "❌ Generation Failed"
-                },
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.SemiBold
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = when (generationState) {
+                        is GenerationResult.Loading -> Icons.Filled.Build
+                        is GenerationResult.Success -> Icons.Filled.Create
+                        is GenerationResult.Error -> Icons.Filled.Close
+                    },
+                    contentDescription = null,
+                    tint = when (generationState) {
+                        is GenerationResult.Loading -> MaterialTheme.colorScheme.primary
+                        is GenerationResult.Success -> MaterialTheme.colorScheme.primary
+                        is GenerationResult.Error -> MaterialTheme.colorScheme.error
+                    }
                 )
-            )
+                Text(
+                    text = when (generationState) {
+                        is GenerationResult.Loading -> "Generating Question..."
+                        is GenerationResult.Success -> "Generated Practice Question"
+                        is GenerationResult.Error -> "Generation Failed"
+                    },
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            }
         },
         text = {
             when (generationState) {
@@ -324,13 +371,24 @@ fun ExerciseGenerationDialog(
                                 shape = RoundedCornerShape(0.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(
-                                    text = "🔄 Generate Another",
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Refresh,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "Generate Another",
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.Medium
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                         
@@ -351,12 +409,23 @@ fun ExerciseGenerationDialog(
                                 ),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(
-                                    text = "✅ Practice This Question",
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.SemiBold
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(16.dp)
                                     )
-                                )
+                                    Text(
+                                        text = "Practice This Question",
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    )
+                                }
                             }
                         }
                     }
@@ -393,7 +462,18 @@ fun ExerciseGenerationDialog(
         dismissButton = if (generationState !is GenerationResult.Loading) {
             {
                 TextButton(onClick = onDismiss) {
-                    Text("❌ Discard")
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text("Discard")
+                    }
                 }
             }
         } else null,
@@ -496,7 +576,8 @@ private fun GeneratedQuestionPreview(
     ) {
         // Generation info
         Text(
-            text = "⚡ Generated with Gemma 3n (${trial.difficulty.name.lowercase().replaceFirstChar { it.uppercase() }} Difficulty)",
+            // TODO replace ⚡
+            text = "Generated with Gemma 3n (${trial.difficulty.name.lowercase().replaceFirstChar { it.uppercase() }} Difficulty)",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -504,9 +585,10 @@ private fun GeneratedQuestionPreview(
         // Question preview
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                containerColor = MaterialTheme.colorScheme.surface // Clean white background
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            shape = RoundedCornerShape(0.dp) // Square corners consistency
         ) {
             Column(
                 modifier = Modifier.padding(12.dp),
@@ -524,34 +606,32 @@ private fun GeneratedQuestionPreview(
                     )
                 )
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                // Elegant spacing between question and alternatives
+                Spacer(modifier = Modifier.height(16.dp))
                 
-                // Options preview
-                trial.options.forEachIndexed { index, option ->
-                    val isCorrect = index == trial.correctAnswerIndex
-                    Text(
-                        text = "${('A' + index)} $option ${if (isCorrect) "✅" else ""}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (isCorrect) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                // Options preview - styled as cards with 100% width and elegant spacing
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp) // Elegant spacing between alternatives
+                ) {
+                    trial.options.forEachIndexed { index, option ->
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant // Uniform background for all options
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // No shadows
+                            shape = RoundedCornerShape(0.dp), // Square corners consistency
+                            modifier = Modifier.fillMaxWidth() // 100% width as requested
+                        ) {
+                            Text(
+                                text = "${('A' + index)} $option", // No indication of correct answer
+                                style = MaterialTheme.typography.bodyMedium, // Slightly larger text for better readability
+                                color = MaterialTheme.colorScheme.onSurfaceVariant, // Uniform text color
+                                modifier = Modifier.padding(16.dp) // More generous padding for elegance
+                            )
                         }
-                    )
+                    }
                 }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // AI explanation preview
-                Text(
-                    text = "AI Explanation:",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = trial.explanation,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                // removed the ai explanation as we do not need it 
             }
         }
     }
