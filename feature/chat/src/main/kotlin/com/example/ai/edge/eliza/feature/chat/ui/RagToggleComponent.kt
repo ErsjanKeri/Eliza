@@ -39,6 +39,46 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
+ * Simplified RAG toggle for top bar layout (left position).
+ */
+@Composable
+fun SimpleRagToggle(
+    modifier: Modifier = Modifier,
+    viewModel: RagToggleViewModel = hiltViewModel()
+) {
+    val isRagEnabled by viewModel.isRagEnabled.collectAsState()
+    val isInitializing by viewModel.isInitializing.collectAsState()
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+      
+        
+        if (isInitializing) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp
+            )
+        } else {
+            Switch(
+                checked = isRagEnabled,
+                onCheckedChange = { viewModel.toggleRag(it) },
+                modifier = Modifier.size(width = 32.dp, height = 20.dp)
+            )
+        }
+        // add some space between the switch and the text
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "RAG enhanced",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+/**
  * Component for toggling RAG functionality in the chat interface.
  */
 @Composable

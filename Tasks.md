@@ -42,6 +42,7 @@
 - [ ] **Fix test retaking answer persistence** - Ensure test answers properly save to database when retaking tests, fix UserAnswer record updates, implement proper data flow for retaken tests, ensure "best attempt" progress tracking works correctly
 This is very important! a proper data flow is what makes the app working, make sure the chat messages and sessions are also stored and created! currently there are no data updates throughout the app! 
 
+- [] Toggle for RAG leads to that the model picker in the middle is not centereed anymore! need to re-center it! 
 
 ### **Exercise Context System**
 - [ ] **Implement exercise context as system prompt together with RAG** - Add question text and answer options as system prompt context for exercise help, ensure AI recognizes both question and selected answer, modify prompt engineering to include exercise context directly, remove RAG dependency for exercise context, currently I am unsure whether the RAG toggle works!

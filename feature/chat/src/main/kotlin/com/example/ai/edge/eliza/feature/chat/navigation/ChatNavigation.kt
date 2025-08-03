@@ -79,7 +79,8 @@ fun NavGraphBuilder.chatSection(
         
         ChatView(
             title = title,
-            onNavigateUp = onNavigateUp
+            onNavigateUp = onNavigateUp,
+            showSidebarToggle = true // Enable sidebar for general chat
         )
     }
     

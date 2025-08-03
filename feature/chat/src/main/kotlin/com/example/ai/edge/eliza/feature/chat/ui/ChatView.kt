@@ -18,11 +18,15 @@ package com.example.ai.edge.eliza.feature.chat.ui
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
@@ -158,27 +162,39 @@ fun ChatView(
                     .weight(1f)
                     .fillMaxSize()
             ) {
-            // Model selector chip - Gallery's exact pattern
-            ModelSelectorChip(
-                task = task,
-                selectedModel = selectedModel,
-                modelManager = modelManager,
-                onModelSelected = { model ->
-                    // FIXED: Add missing selectModel call - Gallery's exact pattern
-                    modelManager.selectModel(model)
-                    // Initialize the selected model
-                    modelManager.initializeModel(
-                        context = context.applicationContext,
+                // Top bar with RAG toggle, model picker, and proper spacing
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // RAG toggle - left position
+                    SimpleRagToggle()
+                    
+                    // Model selector chip - center position
+                    ModelSelectorChip(
                         task = task,
-                        model = model
+                        selectedModel = selectedModel,
+                        modelManager = modelManager,
+                        onModelSelected = { model ->
+                            // FIXED: Add missing selectModel call - Gallery's exact pattern
+                            modelManager.selectModel(model)
+                            // Initialize the selected model
+                            modelManager.initializeModel(
+                                context = context.applicationContext,
+                                task = task,
+                                model = model
+                            )
+                        },
+                        modifier = Modifier.weight(1f) // Take available space in center
                     )
+                    
+                    // Sidebar toggle is in TopAppBar actions (right position)
+                    // This space reserved for better balance
+                    Spacer(modifier = Modifier.width(48.dp))
                 }
-            )
-            
-            // RAG Enhancement Toggle
-            RagToggleComponent(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
             
             // Main content area - Gallery's exact pattern
             if (isModelReady && selectedModel != null) {
@@ -491,6 +507,7 @@ private fun EnhancedChatInterface(
         initialMessages = initialMessages,
         chatContext = chatContext,
         chatViewModel = chatViewModel,
+        showSidebarToggle = true, // Enable sidebar for enhanced chat
         modifier = modifier
     )
     
