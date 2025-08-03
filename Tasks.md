@@ -36,9 +36,9 @@
 - [X] **Hide generated question UI elements** - the problem with the generated question is that its answer is spoiled! it should not be spoiled! only after user tries it then the explanation is also displayed! currently we are kind of spoiling the test exercise!
 
 ### **Model Management**
-- [ ] **Fix model switching functionality** - Implement proper model switching in ElizaModelManager, ensure selected model persists across app sessions, add loading indicators during model switching, handle model initialization correctly after switching, currently the model picker does not work on switching! upon clicking the alternative to gemma-3n-4b which is the gemma-3n-2b nothing changes! Here focus on gallery how they do it! 
+- [X] **Fix model switching functionality** - Implement proper model switching in ElizaModelManager, ensure selected model persists across app sessions, add loading indicators during model switching, handle model initialization correctly after switching, currently the model picker does not work on switching! upon clicking the alternative to gemma-3n-4b which is the gemma-3n-2b nothing changes! Here focus on gallery how they do it! 
 
-### **Test System Data Flow**
+### **Test System Data Flow** DATA FLOW is a huge task, this will be final as it takes a lot of time! 
 - [ ] **Fix test retaking answer persistence** - Ensure test answers properly save to database when retaking tests, fix UserAnswer record updates, implement proper data flow for retaken tests, ensure "best attempt" progress tracking works correctly
 This is very important! a proper data flow is what makes the app working, make sure the chat messages and sessions are also stored and created! currently there are no data updates throughout the app! 
 
