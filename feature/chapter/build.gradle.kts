@@ -64,6 +64,10 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.core.common)
     
+    // AI modules
+    implementation(projects.ai.service)
+    implementation(projects.ai.modelmanager) // NEW: For ElizaModelManager integration
+    
     // Feature modules
     implementation(projects.feature.chat)
     

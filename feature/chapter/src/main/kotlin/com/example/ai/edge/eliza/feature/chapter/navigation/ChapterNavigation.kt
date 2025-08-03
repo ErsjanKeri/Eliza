@@ -332,6 +332,10 @@ fun NavGraphBuilder.chapterTestResultScreen(
                 val correctAnswerText = exercise.options[exercise.correctAnswerIndex]
                 
                 onNavigateToExerciseHelp(testResult.chapterId, exerciseNumber, exercise.questionText, userAnswerText, correctAnswerText)
+            },
+            onGenerateNewQuestion = { exercise ->
+                // NEW: Wire to ViewModel's generation functionality
+                viewModel.requestExerciseGeneration(exercise)
             }
         )
     }

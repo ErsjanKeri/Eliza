@@ -31,6 +31,18 @@ import com.example.ai.edge.eliza.core.model.UserAnswer
 import com.example.ai.edge.eliza.core.model.TestResult
 import com.example.ai.edge.eliza.core.model.TestState
 import com.example.ai.edge.eliza.core.model.Exercise
+import com.example.ai.edge.eliza.core.model.GenerationResult // NEW: For exercise generation
+import com.example.ai.edge.eliza.core.model.Model // NEW: For AI model handling
+import com.example.ai.edge.eliza.core.model.RelativeDifficulty // NEW: For difficulty selection
+import com.example.ai.edge.eliza.core.model.Trial // NEW: For generated trials
+import com.example.ai.edge.eliza.ai.service.ExerciseGenerationService // NEW: Generation service
+import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager // NEW: Model management
+import com.example.ai.edge.eliza.ai.modelmanager.manager.ModelInitializationStatusType // NEW: Model status
+import com.example.ai.edge.eliza.ai.modelmanager.data.ELIZA_TASKS // NEW: Task definitions
+import com.example.ai.edge.eliza.ai.modelmanager.data.TaskType // NEW: Task types
+import android.content.Context // NEW: For model initialization
+import android.util.Log // NEW: For logging
+import dagger.hilt.android.qualifiers.ApplicationContext // NEW: Context injection
 import java.util.UUID
 import javax.inject.Inject
 
@@ -40,9 +52,22 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class ChapterTestViewModel @Inject constructor(
+    @ApplicationContext private val context: Context, // NEW: For model initialization
     private val courseRepository: CourseRepository,
-    private val progressRepository: ProgressRepository
+    private val progressRepository: ProgressRepository,
+    private val exerciseGenerationService: ExerciseGenerationService // NEW: For AI generation
 ) : ViewModel() {
+
+    // ElizaModelManager will be provided from the UI layer since it's a @HiltViewModel
+    private var elizaModelManager: ElizaModelManager? = null
+    
+    /**
+     * Set the model manager from the UI layer.
+     * This is required because ElizaModelManager is a @HiltViewModel and can't be directly injected.
+     */
+    fun setModelManager(modelManager: ElizaModelManager) {
+        this.elizaModelManager = modelManager
+    }
 
     private val _testState = MutableStateFlow<TestState>(TestState.NotStarted)
     val testState: StateFlow<TestState> = _testState.asStateFlow()
@@ -52,6 +77,25 @@ class ChapterTestViewModel @Inject constructor(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    // NEW: Exercise generation state management
+    private val _generationState = MutableStateFlow<GenerationResult?>(null)
+    val generationState: StateFlow<GenerationResult?> = _generationState.asStateFlow()
+
+    private val _showDifficultyDialog = MutableStateFlow(false)
+    val showDifficultyDialog: StateFlow<Boolean> = _showDifficultyDialog.asStateFlow()
+
+    private val _showGenerationDialog = MutableStateFlow(false)
+    val showGenerationDialog: StateFlow<Boolean> = _showGenerationDialog.asStateFlow()
+
+    private val _selectedExerciseForGeneration = MutableStateFlow<Exercise?>(null)
+    val selectedExerciseForGeneration: StateFlow<Exercise?> = _selectedExerciseForGeneration.asStateFlow()
+
+    private val _showTrialPractice = MutableStateFlow(false)
+    val showTrialPractice: StateFlow<Boolean> = _showTrialPractice.asStateFlow()
+
+    private val _currentTrial = MutableStateFlow<Trial?>(null)
+    val currentTrial: StateFlow<Trial?> = _currentTrial.asStateFlow()
 
     // Constants
     private val defaultUserId = "user_default" // TODO: Get from user session
@@ -476,6 +520,235 @@ class ChapterTestViewModel @Inject constructor(
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    // NEW: Exercise generation functionality
+
+    /**
+     * Start the exercise generation process for a given exercise.
+     * Shows difficulty selection dialog.
+     */
+    fun requestExerciseGeneration(exercise: Exercise) {
+        _selectedExerciseForGeneration.value = exercise
+        _showDifficultyDialog.value = true
+    }
+
+    /**
+     * Generate new question with selected difficulty and provided model.
+     * Model is already initialized by DifficultySelectionDialog.
+     */
+    fun generateNewQuestion(exercise: Exercise, difficulty: RelativeDifficulty, model: Model) {
+        viewModelScope.launch {
+            _showDifficultyDialog.value = false
+            _showGenerationDialog.value = true
+            
+            try {
+                Log.d("ChapterTestViewModel", "Starting exercise generation for exercise: ${exercise.id}")
+                Log.d("ChapterTestViewModel", "Using model: ${model.name}")
+                
+                // Start the actual generation process (model is already ready)
+                exerciseGenerationService.generateTrialQuestion(
+                    originalExercise = exercise,
+                    difficulty = difficulty,
+                    model = model
+                ).collect { result ->
+                    _generationState.value = result
+                }
+                
+            } catch (e: Exception) {
+                Log.e("ChapterTestViewModel", "Exercise generation failed", e)
+                _generationState.value = GenerationResult.Error("Generation failed: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Start practice with generated trial (modal approach).
+     */
+    fun startTrialPractice(trial: Trial) {
+        _showGenerationDialog.value = false
+        _generationState.value = null
+        _currentTrial.value = trial
+        _showTrialPractice.value = true
+    }
+
+    /**
+     * Generate another question with same settings.
+     */
+    fun generateAnother() {
+        val selectedExercise = _selectedExerciseForGeneration.value
+        if (selectedExercise != null) {
+            // Reopen difficulty dialog for new generation
+            _showGenerationDialog.value = false
+            _showDifficultyDialog.value = true
+        }
+    }
+
+    /**
+     * Dismiss all generation dialogs.
+     */
+    fun dismissGenerationDialogs() {
+        _showDifficultyDialog.value = false
+        _showGenerationDialog.value = false
+        _generationState.value = null
+        _selectedExerciseForGeneration.value = null
+    }
+
+    /**
+     * Handle trial practice answer submission.
+     */
+    fun submitTrialAnswer(answerIndex: Int, isCorrect: Boolean) {
+        val trial = _currentTrial.value ?: return
+        
+        viewModelScope.launch {
+            try {
+                // Use existing CourseRepository method to submit trial answer
+                courseRepository.submitTrialAnswer(trial.id, answerIndex)
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to save trial answer: ${e.message}"
+            }
+        }
+    }
+
+    /**
+     * Dismiss trial practice screen.
+     */
+    fun dismissTrialPractice() {
+        _showTrialPractice.value = false
+        _currentTrial.value = null
+    }
+
+    /**
+     * Generate another question from trial practice.
+     */
+    fun generateAnotherFromPractice() {
+        val selectedExercise = _selectedExerciseForGeneration.value
+        if (selectedExercise != null) {
+            _showTrialPractice.value = false
+            _currentTrial.value = null
+            _showDifficultyDialog.value = true
+        }
+    }
+
+    /**
+     * Get current selected model and ensure it's properly initialized.
+     * Returns null if no model is selected or if initialization fails.
+     */
+    private suspend fun getCurrentInitializedModel(): com.example.ai.edge.eliza.core.model.Model? {
+        try {
+            // Check if model manager is available
+            val modelManager = elizaModelManager
+            if (modelManager == null) {
+                Log.e("ChapterTestViewModel", "ElizaModelManager not set - call setModelManager() first")
+                return null
+            }
+            
+            // Get current UI state from ElizaModelManager
+            val uiState = modelManager.uiState.value
+            val selectedModel = uiState.selectedModel
+            
+            if (selectedModel == null) {
+                Log.d("ChapterTestViewModel", "No model selected in ElizaModelManager")
+                return null
+            }
+            
+            Log.d("ChapterTestViewModel", "Selected model: ${selectedModel.name}")
+            
+            // Check if model is already initialized
+            val initStatus = uiState.modelInitializationStatus[selectedModel.name]
+            
+            when (initStatus?.status) {
+                ModelInitializationStatusType.INITIALIZED -> {
+                    Log.d("ChapterTestViewModel", "Model ${selectedModel.name} already initialized")
+                    return selectedModel
+                }
+                ModelInitializationStatusType.INITIALIZING -> {
+                    Log.d("ChapterTestViewModel", "Model ${selectedModel.name} is currently initializing, waiting...")
+                    // Wait for initialization to complete
+                    return waitForModelInitialization(selectedModel)
+                }
+                else -> {
+                    Log.d("ChapterTestViewModel", "Model ${selectedModel.name} not initialized, starting initialization...")
+                    // Initialize the model
+                    return initializeModel(selectedModel)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ChapterTestViewModel", "Failed to get initialized model", e)
+            return null
+        }
+    }
+    
+    /**
+     * Initialize a model and wait for it to complete.
+     */
+    private suspend fun initializeModel(model: com.example.ai.edge.eliza.core.model.Model): com.example.ai.edge.eliza.core.model.Model? {
+        try {
+            val modelManager = elizaModelManager ?: return null
+            
+            // Find the appropriate task for this model
+            val task = ELIZA_TASKS.find { task -> 
+                task.models.any { it.name == model.name }
+            } ?: ELIZA_TASKS.first() // Fallback to first task
+            
+            Log.d("ChapterTestViewModel", "Initializing model ${model.name} with task ${task.type}")
+            
+            // Start model initialization
+            modelManager.initializeModel(context, task, model)
+            
+            // Wait for initialization to complete
+            return waitForModelInitialization(model)
+            
+        } catch (e: Exception) {
+            Log.e("ChapterTestViewModel", "Failed to initialize model ${model.name}", e)
+            return null
+        }
+    }
+    
+    /**
+     * Wait for model initialization to complete and return the model if successful.
+     */
+    private suspend fun waitForModelInitialization(model: com.example.ai.edge.eliza.core.model.Model): com.example.ai.edge.eliza.core.model.Model? {
+        return try {
+            val modelManager = elizaModelManager ?: return null
+            
+            // Use kotlinx.coroutines delay in a loop to wait for initialization
+            var attempts = 0
+            val maxAttempts = 30 // 30 seconds max wait time
+            
+            while (attempts < maxAttempts) {
+                kotlinx.coroutines.delay(1000) // Wait 1 second
+                attempts++
+                
+                val currentStatus = modelManager.uiState.value.modelInitializationStatus[model.name]
+                
+                when (currentStatus?.status) {
+                    ModelInitializationStatusType.INITIALIZED -> {
+                        Log.d("ChapterTestViewModel", "Model ${model.name} initialized successfully after ${attempts} seconds")
+                        return model
+                    }
+                    ModelInitializationStatusType.ERROR -> {
+                        Log.e("ChapterTestViewModel", "Model ${model.name} initialization failed: ${currentStatus.error}")
+                        return null
+                    }
+                    ModelInitializationStatusType.INITIALIZING -> {
+                        Log.d("ChapterTestViewModel", "Model ${model.name} still initializing... (${attempts}/${maxAttempts})")
+                        continue
+                    }
+                    else -> {
+                        Log.w("ChapterTestViewModel", "Model ${model.name} status unknown: ${currentStatus?.status}")
+                        continue
+                    }
+                }
+            }
+            
+            Log.e("ChapterTestViewModel", "Model ${model.name} initialization timed out after ${maxAttempts} seconds")
+            null
+            
+        } catch (e: Exception) {
+            Log.e("ChapterTestViewModel", "Error waiting for model initialization", e)
+            null
         }
     }
 } 

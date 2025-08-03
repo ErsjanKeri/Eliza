@@ -50,6 +50,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -64,6 +65,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,6 +79,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.LaunchedEffect
+import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaBackground
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaOutlinedButton
@@ -98,8 +103,24 @@ fun ChapterTestResultScreen(
     onNavigateToHome: () -> Unit = {},
     onRequestLocalHelp: (Exercise) -> Unit = {},
     onRequestVideoHelp: (Exercise) -> Unit = {},
+    onGenerateNewQuestion: (Exercise) -> Unit = {}, // NEW: Generate new question callback
     modifier: Modifier = Modifier
 ) {
+    // NEW: Get ViewModel and collect generation state
+    val viewModel: ChapterTestViewModel = hiltViewModel()
+    val modelManager: ElizaModelManager = hiltViewModel() // Get ElizaModelManager
+    
+    // Set model manager in ViewModel (required because it's a @HiltViewModel)
+    LaunchedEffect(Unit) {
+        viewModel.setModelManager(modelManager)
+    }
+    
+    val showDifficultyDialog by viewModel.showDifficultyDialog.collectAsState()
+    val showGenerationDialog by viewModel.showGenerationDialog.collectAsState()
+    val generationState by viewModel.generationState.collectAsState()
+    val selectedExercise by viewModel.selectedExerciseForGeneration.collectAsState()
+    val showTrialPractice by viewModel.showTrialPractice.collectAsState()
+    val currentTrial by viewModel.currentTrial.collectAsState()
     ElizaBackground(modifier = modifier) {
         Scaffold(
             topBar = {
@@ -128,7 +149,8 @@ fun ChapterTestResultScreen(
                         userAnswers = testResult.userAnswers,
                         onRetakeQuestion = onRetakeQuestion,
                         onRequestLocalHelp = onRequestLocalHelp,
-                        onRequestVideoHelp = onRequestVideoHelp
+                        onRequestVideoHelp = onRequestVideoHelp,
+                        onGenerateNewQuestion = onGenerateNewQuestion // NEW: Pass through callback
                     )
                 }
                 
@@ -145,6 +167,56 @@ fun ChapterTestResultScreen(
                 
                 // Bottom spacing for visual balance
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+        
+        // NEW: Exercise Generation Dialogs
+        selectedExercise?.let { exercise ->
+            if (showDifficultyDialog) {
+                DifficultySelectionDialog(
+                    originalExercise = exercise,
+                    onDifficultySelected = { difficulty, model ->
+                        viewModel.generateNewQuestion(exercise, difficulty, model)
+                    },
+                    onDismiss = {
+                        viewModel.dismissGenerationDialogs()
+                    }
+                )
+            }
+        }
+        
+        generationState?.let { state ->
+            if (showGenerationDialog) {
+                ExerciseGenerationDialog(
+                    generationState = state,
+                    onDismiss = {
+                        viewModel.dismissGenerationDialogs()
+                    },
+                    onPracticeQuestion = { trial ->
+                        viewModel.startTrialPractice(trial)
+                    },
+                    onGenerateAnother = {
+                        viewModel.generateAnother()
+                    }
+                )
+            }
+        }
+        
+        // NEW: Trial Practice Modal
+        currentTrial?.let { trial ->
+            if (showTrialPractice) {
+                TrialPracticeScreen(
+                    trial = trial,
+                    onAnswerSubmitted = { answerIndex, isCorrect ->
+                        viewModel.submitTrialAnswer(answerIndex, isCorrect)
+                    },
+                    onGenerateAnother = {
+                        viewModel.generateAnotherFromPractice()
+                    },
+                    onBackToResults = {
+                        viewModel.dismissTrialPractice()
+                    }
+                )
             }
         }
     }
@@ -287,6 +359,7 @@ private fun AllQuestionsSection(
     onRetakeQuestion: (Exercise) -> Unit,
     onRequestLocalHelp: (Exercise) -> Unit = {},
     onRequestVideoHelp: (Exercise) -> Unit = {},
+    onGenerateNewQuestion: (Exercise) -> Unit = {}, // NEW: Generate new question callback
     modifier: Modifier = Modifier
 ) {
     // State for accordion behavior - track which question is expanded
@@ -320,7 +393,8 @@ private fun AllQuestionsSection(
                 },
                 onRetakeQuestion = { onRetakeQuestion(exercise) },
                 onRequestLocalHelp = onRequestLocalHelp,
-                onRequestVideoHelp = onRequestVideoHelp
+                onRequestVideoHelp = onRequestVideoHelp,
+                onGenerateNewQuestion = onGenerateNewQuestion // NEW: Pass through callback
             )
         }
     }
@@ -340,6 +414,7 @@ private fun QuestionResultCard(
     onRetakeQuestion: () -> Unit,
     onRequestLocalHelp: (Exercise) -> Unit = {},
     onRequestVideoHelp: (Exercise) -> Unit = {},
+    onGenerateNewQuestion: (Exercise) -> Unit = {}, // NEW: Generate new question callback
     modifier: Modifier = Modifier
 ) {
     val arrowRotation by animateFloatAsState(
@@ -416,7 +491,8 @@ private fun QuestionResultCard(
                     isCorrect = isCorrect,
                     onRetakeQuestion = onRetakeQuestion,
                     onRequestLocalHelp = onRequestLocalHelp,
-                    onRequestVideoHelp = onRequestVideoHelp
+                    onRequestVideoHelp = onRequestVideoHelp,
+                    onGenerateNewQuestion = onGenerateNewQuestion // NEW: Pass through callback
                 )
             }
         }
@@ -434,6 +510,7 @@ private fun QuestionExpandedContent(
     onRetakeQuestion: () -> Unit,
     onRequestLocalHelp: (Exercise) -> Unit = {},
     onRequestVideoHelp: (Exercise) -> Unit = {},
+    onGenerateNewQuestion: (Exercise) -> Unit = {}, // NEW: Generate new question callback
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -643,6 +720,28 @@ private fun QuestionExpandedContent(
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
+                
+                // NEW: Generate New Question button
+                OutlinedButton(
+                    onClick = { onGenerateNewQuestion(exercise) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.tertiary
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star, // AI generation icon
+                            contentDescription = "Generate New Question",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text("🎲 Generate New Question")
+                    }
+                }
             }
         }
     }
