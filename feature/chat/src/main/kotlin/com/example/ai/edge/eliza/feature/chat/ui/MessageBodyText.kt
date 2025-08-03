@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.ai.edge.eliza.core.designsystem.component.ElizaMarkdownRenderer
 
 /** Composable function to display the text content of a ChatMessageText. */
 @Composable
@@ -31,18 +32,17 @@ fun MessageBodyText(message: ChatMessageText) {
   if (message.side == ChatSide.USER) {
     Text(
       message.content,
-      style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-      color = Color.White,
+      style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal),
+      color = Color.Black,
       modifier = Modifier.padding(12.dp),
     )
   } else if (message.side == ChatSide.AGENT) {
-    // For now, using plain Text instead of MarkdownText to avoid dependencies
-    // TODO: Add proper markdown support later
-    Text(
-      message.content,
-      style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-      color = MaterialTheme.colorScheme.onSurface,
-      modifier = Modifier.padding(12.dp),
+    // Use ElizaMarkdownRenderer for AI responses - same as chapter content
+    ElizaMarkdownRenderer(
+      content = message.content.trimEnd(),
+      smallFontSize = false,
+      useDefaultPadding = false, // Chat messages handle their own padding
+      modifier = Modifier.padding(12.dp)
     )
   }
 } 

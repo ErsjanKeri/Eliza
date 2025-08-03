@@ -58,8 +58,11 @@ interface RagProvider {
 /**
  * Factory for creating appropriate RagProvider instances based on context.
  */
-public interface RagProviderFactory {
+interface RagProviderFactory {
     fun createProvider(context: ChatContext): RagProvider
+    fun createEnhancedProvider(context: ChatContext): RagProvider
+    fun setUseEnhancedRag(enabled: Boolean)
+    fun isEnhancedRagEnabled(): Boolean
 } 
 
 /**
@@ -345,16 +348,44 @@ class ExerciseRagProvider @Inject constructor(
 
 /**
  * Factory implementation for creating appropriate RAG providers.
+ * Supports both basic and enhanced (vector-based) RAG providers with UI toggle.
  */
 @Singleton
 class RagProviderFactoryImpl @Inject constructor(
     private val chapterRagProvider: ChapterRagProvider,
     private val revisionRagProvider: RevisionRagProvider,
     private val generalRagProvider: GeneralRagProvider,
-    private val exerciseRagProvider: ExerciseRagProvider
+    private val exerciseRagProvider: ExerciseRagProvider,
+    private val enhancedRagProvider: com.example.ai.edge.eliza.ai.rag.service.EnhancedRagProvider
 ) : RagProviderFactory {
     
+    private var useEnhancedRag = false // UI toggle state
+    
     override fun createProvider(context: ChatContext): RagProvider {
+        return if (useEnhancedRag) {
+            createEnhancedProvider(context)
+        } else {
+            createBasicProvider(context)
+        }
+    }
+    
+    override fun createEnhancedProvider(context: ChatContext): RagProvider {
+        // Enhanced provider works for all context types
+        return enhancedRagProvider
+    }
+    
+    override fun setUseEnhancedRag(enabled: Boolean) {
+        useEnhancedRag = enabled
+    }
+    
+    override fun isEnhancedRagEnabled(): Boolean {
+        return useEnhancedRag
+    }
+    
+    /**
+     * Create basic (non-vector) RAG provider.
+     */
+    private fun createBasicProvider(context: ChatContext): RagProvider {
         return when (context) {
             is ChatContext.ChapterReading -> chapterRagProvider
             is ChatContext.Revision -> revisionRagProvider

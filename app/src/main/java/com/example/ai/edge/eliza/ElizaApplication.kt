@@ -17,11 +17,35 @@
 package com.example.ai.edge.eliza
 
 import android.app.Application
+import android.util.Log
+import com.example.ai.edge.eliza.ai.rag.service.RagInitializationService
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 /**
  * Application class for Eliza AI Tutor app.
  * Required for Hilt dependency injection.
+ * Initializes the RAG system on app startup.
  */
 @HiltAndroidApp
-class ElizaApplication : Application() 
+class ElizaApplication : Application() {
+    
+    @Inject
+    lateinit var ragInitializationService: RagInitializationService
+    
+    companion object {
+        private const val TAG = "ElizaApplication"
+    }
+    
+    override fun onCreate() {
+        super.onCreate()
+        
+        Log.d(TAG, "Eliza app starting...")
+        
+        // Initialize the RAG system in background
+        // This will index mock data and prepare embeddings for enhanced chat
+        ragInitializationService.initializeAsync()
+        
+        Log.d(TAG, "RAG initialization triggered")
+    }
+} 

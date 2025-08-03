@@ -27,16 +27,23 @@ import kotlinx.serialization.Serializable
 sealed class ChatContext {
     /**
      * Context for reading and discussing chapter content.
-     * This is used when the user is reading a specific chapter.
-     * UPDATED: Renamed from lesson references to chapter references.
+     * Enhanced with full course and chapter information for superior RAG performance.
      */
     @Serializable
     data class ChapterReading(
         val courseId: String,
-        val chapterId: String, // RENAMED from lessonId
+        val courseTitle: String,
+        val courseSubject: String,
+        val courseGrade: String,
+        val chapterId: String,
         val chapterTitle: String,
+        val chapterNumber: Int,
+        val markdownContent: String? = null, // Full chapter content for RAG indexing
         val currentSection: String? = null,
         val readingProgress: Float = 0f,
+        val totalChapters: Int,
+        val completedChapters: Int = 0,
+        val relatedChapterIds: List<String> = emptyList(), // For cross-chapter context
         val lastReadTime: Long = System.currentTimeMillis()
     ) : ChatContext()
 
@@ -68,20 +75,86 @@ sealed class ChatContext {
 
     /**
      * Context for working on specific exercises or trials.
-     * This is used when the user is actively solving problems.
-     * UPDATED: Renamed lesson references to chapter references.
+     * Enhanced with comprehensive context for RAG-powered exercise help.
      */
     @Serializable
     data class ExerciseSolving(
         val exerciseId: String,
-        val chapterId: String, // RENAMED from lessonId
+        val exerciseNumber: Int,
+        val questionText: String,
+        val userAnswer: String? = null,
+        val correctAnswer: String? = null,
+        val chapterId: String,
+        val chapterTitle: String,
+        val chapterContent: String? = null, // Chapter content for context
         val courseId: String,
+        val courseTitle: String,
+        val courseSubject: String,
         val difficulty: String,
         val attempts: Int = 0,
+        val isTestQuestion: Boolean = false, // Distinguish test vs practice
+        val previousAttempts: List<String> = emptyList(), // History of wrong answers
         val hintsUsed: Int = 0,
         val startTime: Long = System.currentTimeMillis(),
         val relatedConcepts: List<String> = emptyList()
     ) : ChatContext()
+    
+    companion object {
+        /**
+         * Create a ChapterReading context from domain models.
+         */
+        fun createChapterReading(
+            course: Course,
+            chapter: Chapter,
+            completedChapters: Int = 0,
+            readingProgress: Float = 0f
+        ): ChapterReading {
+            return ChapterReading(
+                courseId = course.id,
+                courseTitle = course.title,
+                courseSubject = course.subject.name,
+                courseGrade = course.grade,
+                chapterId = chapter.id,
+                chapterTitle = chapter.title,
+                chapterNumber = chapter.chapterNumber,
+                markdownContent = chapter.markdownContent,
+                totalChapters = course.totalChapters,
+                completedChapters = completedChapters,
+                readingProgress = readingProgress
+            )
+        }
+        
+        /**
+         * Create an ExerciseSolving context from domain models.
+         */
+        fun createExerciseSolving(
+            course: Course,
+            chapter: Chapter,
+            exercise: Exercise,
+            userAnswer: String? = null,
+            isTestQuestion: Boolean = false,
+            attempts: Int = 0,
+            previousAttempts: List<String> = emptyList()
+        ): ExerciseSolving {
+            return ExerciseSolving(
+                exerciseId = exercise.id,
+                exerciseNumber = chapter.exercises.indexOf(exercise) + 1,
+                questionText = exercise.questionText,
+                userAnswer = userAnswer,
+                correctAnswer = exercise.options.getOrNull(exercise.correctAnswerIndex),
+                chapterId = chapter.id,
+                chapterTitle = chapter.title,
+                chapterContent = chapter.markdownContent,
+                courseId = course.id,
+                courseTitle = course.title,
+                courseSubject = course.subject.name,
+                difficulty = exercise.difficulty.name,
+                attempts = attempts,
+                isTestQuestion = isTestQuestion,
+                previousAttempts = previousAttempts
+            )
+        }
+    }
 }
 
 /**
@@ -103,6 +176,7 @@ data class ContentChunk(
  */
 @Serializable
 enum class ContentChunkType {
+    SUMMARY,           // High-level summaries for general queries
     CHAPTER_SECTION,
     EXAMPLE,
     DEFINITION,

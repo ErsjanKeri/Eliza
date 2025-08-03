@@ -150,7 +150,7 @@ fun ChatPanel(
         items(messages) { message ->
           val imageHistoryCurIndex = remember { mutableIntStateOf(0) }
           var hAlign: Alignment.Horizontal = Alignment.End
-          var backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer
+          var backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant
           var hardCornerAtLeftOrRight = false
           var extraPaddingStart = 48.dp
           var extraPaddingEnd = 0.dp

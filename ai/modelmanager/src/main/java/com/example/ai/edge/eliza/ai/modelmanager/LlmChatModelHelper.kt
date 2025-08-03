@@ -165,7 +165,17 @@ object LlmChatModelHelper {
         images: List<Bitmap> = listOf(),
         audioClips: List<ByteArray> = listOf(),
     ) {
+        Log.d(TAG, "runInference called for model: ${model.name}")
+        Log.d(TAG, "Input text: ${input.take(100)}...")
+        
+        if (model.instance == null) {
+            Log.e(TAG, "Model instance is null! Cannot run inference.")
+            resultListener("Model instance is null", true)
+            return
+        }
+        
         val instance = model.instance as LlmModelInstance
+        Log.d(TAG, "Model instance available: ${instance}")
 
         // Set listener.
         if (!cleanUpListeners.containsKey(model.name)) {
@@ -177,6 +187,8 @@ object LlmChatModelHelper {
         // For a model that supports image modality, we need to add the text query chunk before adding
         // image.
         val session = instance.session
+        Log.d(TAG, "Adding query chunk to session...")
+        
         if (input.trim().isNotEmpty()) {
             session.addQueryChunk(input)
         }
@@ -187,7 +199,13 @@ object LlmChatModelHelper {
             // Uncomment when audio is supported.
             // session.addAudio(audioClip)
         }
-        val unused = session.generateResponseAsync(resultListener)
+        
+        Log.d(TAG, "Starting async response generation...")
+        val unused = session.generateResponseAsync { partialResult, done ->
+            Log.d(TAG, "Response callback - done: $done, partial: ${partialResult.take(50)}...")
+            resultListener(partialResult, done)
+        }
+        Log.d(TAG, "generateResponseAsync call completed")
     }
 }
 

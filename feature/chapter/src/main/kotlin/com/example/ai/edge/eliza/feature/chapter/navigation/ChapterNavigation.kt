@@ -95,7 +95,7 @@ fun NavGraphBuilder.chapterScreen(
     onBackClick: () -> Unit,
     onNavigateToTest: (String) -> Unit,
     onNavigateToResults: (String) -> Unit = onNavigateToTest, // Default to same behavior
-    onNavigateToChat: (String, String) -> Unit, // (chapterId, chapterTitle) -> navigate to chat
+    onNavigateToChat: (String, String) -> Unit, // (courseId, chapterId) -> navigate to chapter chat
 ) {
     composable(
         route = "$CHAPTER_ROUTE/{$CHAPTER_ID_ARG}",
@@ -112,7 +112,7 @@ fun NavGraphBuilder.chapterScreen(
             onNavigateToTest = { onNavigateToTest(chapterId) },
             onNavigateToResults = { onNavigateToResults(chapterId) },
             onRetakeTest = { onNavigateToTest(chapterId) }, // Retake uses same navigation as start test
-            onNavigateToChat = { chapterTitle -> onNavigateToChat(chapterId, chapterTitle) }
+            onNavigateToChat = { courseId, chapterId -> onNavigateToChat(courseId, chapterId) }
         )
     }
 }
@@ -245,7 +245,7 @@ fun NavGraphBuilder.chapterTestResultScreen(
     onNavigateToTest: (String) -> Unit,
     onContinueLearning: () -> Unit,
     onNavigateToHome: () -> Unit,
-    onNavigateToExerciseHelp: (Int, String, String, String) -> Unit,
+    onNavigateToExerciseHelp: (String, Int, String, String, String) -> Unit,
 ) {
     composable(
         route = "$CHAPTER_TEST_RESULT_ROUTE/{$CHAPTER_ID_ARG}/{$TEST_SCORE_ARG}/{$TEST_CORRECT_ARG}/{$TEST_TOTAL_ARG}",
@@ -317,7 +317,7 @@ fun NavGraphBuilder.chapterTestResultScreen(
                 } ?: "No answer"
                 val correctAnswerText = exercise.options[exercise.correctAnswerIndex]
                 
-                onNavigateToExerciseHelp(exerciseNumber, exercise.questionText, userAnswerText, correctAnswerText)
+                onNavigateToExerciseHelp(testResult.chapterId, exerciseNumber, exercise.questionText, userAnswerText, correctAnswerText)
             },
             onRequestVideoHelp = { exercise ->
                 // Navigate to exercise help chat with video request (same as local for now)
@@ -331,7 +331,7 @@ fun NavGraphBuilder.chapterTestResultScreen(
                 } ?: "No answer"
                 val correctAnswerText = exercise.options[exercise.correctAnswerIndex]
                 
-                onNavigateToExerciseHelp(exerciseNumber, exercise.questionText, userAnswerText, correctAnswerText)
+                onNavigateToExerciseHelp(testResult.chapterId, exerciseNumber, exercise.questionText, userAnswerText, correctAnswerText)
             }
         )
     }

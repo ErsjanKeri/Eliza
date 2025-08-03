@@ -16,29 +16,61 @@
 
 package com.example.ai.edge.eliza.ai.rag.di
 
+import android.content.Context
+import androidx.room.Room
 import com.example.ai.edge.eliza.ai.rag.RagProviderFactory
 import com.example.ai.edge.eliza.ai.rag.RagProviderFactoryImpl
+import com.example.ai.edge.eliza.ai.rag.data.ContentChunkDao
+import com.example.ai.edge.eliza.ai.rag.data.VectorIndexMetadataDao
+import com.example.ai.edge.eliza.ai.rag.data.VectorStorageDatabase
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 /**
- * Hilt module for RAG (Retrieval Augmented Generation) dependencies.
- * Binds RAG provider interfaces to their implementations.
+ * Hilt module for providing enhanced RAG dependencies.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RagModule {
-
-    /**
-     * Binds the RagProviderFactory interface to its implementation.
-     * This creates appropriate RAG providers based on chat context.
-     */
+    
     @Binds
-    @Singleton
     abstract fun bindRagProviderFactory(
         ragProviderFactoryImpl: RagProviderFactoryImpl
     ): RagProviderFactory
-} 
+    
+    companion object {
+        
+        @Provides
+        @Singleton
+        fun provideVectorStorageDatabase(
+            @ApplicationContext context: Context
+        ): VectorStorageDatabase {
+            return Room.databaseBuilder(
+                context,
+                VectorStorageDatabase::class.java,
+                "vector_storage_database"
+            )
+            .fallbackToDestructiveMigration() // For development only
+            .build()
+        }
+        
+        @Provides
+        fun provideContentChunkDao(
+            database: VectorStorageDatabase
+        ): ContentChunkDao {
+            return database.contentChunkDao()
+        }
+        
+        @Provides
+        fun provideVectorIndexMetadataDao(
+            database: VectorStorageDatabase
+        ): VectorIndexMetadataDao {
+            return database.vectorIndexMetadataDao()
+        }
+    }
+}

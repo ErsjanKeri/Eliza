@@ -85,6 +85,7 @@ fun ModelSelectorChip(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
+                // TODO: MaterialTheme.colorScheme.surfaceVariant?  
                 .background(MaterialTheme.colorScheme.surfaceContainer)
                 .clickable {
                     scope.launch {

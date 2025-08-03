@@ -22,33 +22,44 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.ai.edge.eliza.feature.chat.ui.ChatView
+import com.example.ai.edge.eliza.feature.chat.ui.EnhancedChapterChatView
+import com.example.ai.edge.eliza.feature.chat.ui.EnhancedExerciseHelpChatView
 import com.example.ai.edge.eliza.feature.chat.ui.ExerciseHelpChatView
 
 const val CHAT_ROUTE = "chat_route"
+const val CHAPTER_CHAT_ROUTE = "chapter_chat_route"
 const val EXERCISE_HELP_CHAT_ROUTE = "exercise_help_chat_route"
 
 /**
- * Navigation to chat screen
+ * Navigation to general chat screen (legacy)
  */
 fun NavController.navigateToChat(title: String) {
     this.navigate("$CHAT_ROUTE/$title")
 }
 
 /**
- * Navigation to exercise help chat  
+ * Navigation to chapter-based chat with full context
+ */
+fun NavController.navigateToChapterChat(
+    courseId: String,
+    chapterId: String,
+    readingProgress: Float = 0f
+) {
+    this.navigate("$CHAPTER_CHAT_ROUTE/$courseId/$chapterId/$readingProgress")
+}
+
+/**
+ * Navigation to exercise help chat with enhanced context
  */
 fun NavController.navigateToExerciseHelpChat(
-    exerciseNumber: Int,
-    questionText: String,
-    userAnswer: String,
-    correctAnswer: String
+    courseId: String,
+    chapterId: String,
+    exerciseId: String,
+    userAnswer: String? = null,
+    isTestQuestion: Boolean = false
 ) {
-    // URL encode the parameters to handle special characters
-    val encodedQuestion = java.net.URLEncoder.encode(questionText, "UTF-8")
-    val encodedUserAnswer = java.net.URLEncoder.encode(userAnswer, "UTF-8") 
-    val encodedCorrectAnswer = java.net.URLEncoder.encode(correctAnswer, "UTF-8")
-    
-    this.navigate("$EXERCISE_HELP_CHAT_ROUTE/$exerciseNumber/$encodedQuestion/$encodedUserAnswer/$encodedCorrectAnswer")
+    val encodedUserAnswer = userAnswer?.let { java.net.URLEncoder.encode(it, "UTF-8") } ?: "null"
+    this.navigate("$EXERCISE_HELP_CHAT_ROUTE/$courseId/$chapterId/$exerciseId/$encodedUserAnswer/$isTestQuestion")
 }
 
 /**
@@ -57,7 +68,7 @@ fun NavController.navigateToExerciseHelpChat(
 fun NavGraphBuilder.chatSection(
     onNavigateUp: () -> Unit
 ) {
-    // General chat screen
+    // Legacy general chat screen
     composable(
         route = "$CHAT_ROUTE/{title}",
         arguments = listOf(
@@ -72,31 +83,52 @@ fun NavGraphBuilder.chatSection(
         )
     }
     
-    // Exercise help chat screen  
+    // Enhanced chapter-based chat screen
     composable(
-        route = "$EXERCISE_HELP_CHAT_ROUTE/{exerciseNumber}/{questionText}/{userAnswer}/{correctAnswer}",
+        route = "$CHAPTER_CHAT_ROUTE/{courseId}/{chapterId}/{readingProgress}",
         arguments = listOf(
-            navArgument("exerciseNumber") { type = NavType.IntType },
-            navArgument("questionText") { type = NavType.StringType },
-            navArgument("userAnswer") { type = NavType.StringType },
-            navArgument("correctAnswer") { type = NavType.StringType }
+            navArgument("courseId") { type = NavType.StringType },
+            navArgument("chapterId") { type = NavType.StringType },
+            navArgument("readingProgress") { type = NavType.FloatType }
         )
     ) { backStackEntry ->
-        val exerciseNumber = backStackEntry.arguments?.getInt("exerciseNumber") ?: 1
-        val questionText = backStackEntry.arguments?.getString("questionText") ?: ""
-        val userAnswer = backStackEntry.arguments?.getString("userAnswer") ?: ""
-        val correctAnswer = backStackEntry.arguments?.getString("correctAnswer") ?: ""
+        val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+        val chapterId = backStackEntry.arguments?.getString("chapterId") ?: ""
+        val readingProgress = backStackEntry.arguments?.getFloat("readingProgress") ?: 0f
         
-        // URL decode the parameters
-        val decodedQuestion = java.net.URLDecoder.decode(questionText, "UTF-8")
-        val decodedUserAnswer = java.net.URLDecoder.decode(userAnswer, "UTF-8")
-        val decodedCorrectAnswer = java.net.URLDecoder.decode(correctAnswer, "UTF-8")
+        EnhancedChapterChatView(
+            courseId = courseId,
+            chapterId = chapterId,
+            readingProgress = readingProgress,
+            onNavigateUp = onNavigateUp
+        )
+    }
+    
+    // Enhanced exercise help chat screen  
+    composable(
+        route = "$EXERCISE_HELP_CHAT_ROUTE/{courseId}/{chapterId}/{exerciseId}/{userAnswer}/{isTestQuestion}",
+        arguments = listOf(
+            navArgument("courseId") { type = NavType.StringType },
+            navArgument("chapterId") { type = NavType.StringType },
+            navArgument("exerciseId") { type = NavType.StringType },
+            navArgument("userAnswer") { type = NavType.StringType },
+            navArgument("isTestQuestion") { type = NavType.BoolType }
+        )
+    ) { backStackEntry ->
+        val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+        val chapterId = backStackEntry.arguments?.getString("chapterId") ?: ""
+        val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: ""
+        val userAnswer = backStackEntry.arguments?.getString("userAnswer")?.let {
+            if (it == "null") null else java.net.URLDecoder.decode(it, "UTF-8")
+        }
+        val isTestQuestion = backStackEntry.arguments?.getBoolean("isTestQuestion") ?: false
         
-        ExerciseHelpChatView(
-            exerciseNumber = exerciseNumber,
-            questionText = decodedQuestion,
-            userAnswer = decodedUserAnswer,
-            correctAnswer = decodedCorrectAnswer,
+        EnhancedExerciseHelpChatView(
+            courseId = courseId,
+            chapterId = chapterId,
+            exerciseId = exerciseId,
+            userAnswer = userAnswer,
+            isTestQuestion = isTestQuestion,
             onNavigateUp = onNavigateUp
         )
     }

@@ -63,6 +63,7 @@ import com.example.ai.edge.eliza.core.model.ModelDownloadStatus
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
 import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
+import com.example.ai.edge.eliza.ai.modelmanager.manager.ModelInitializationStatusType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -85,6 +86,9 @@ fun ModelDownloadPanel(
     // Gallery's exact status derivation pattern
     val downloadStatus by remember {
         derivedStateOf { uiState.modelDownloadStatus[model.name] }
+    }
+    val initStatus by remember {
+        derivedStateOf { uiState.modelInitializationStatus[model.name] }
     }
     
     // Gallery's exact conditional display pattern with delays
@@ -129,13 +133,33 @@ fun ModelDownloadPanel(
     ) {
         when (downloadStatus?.status) {
             ModelDownloadStatusType.SUCCEEDED -> {
-                // Model is ready - show success message
-                Text(
-                    text = "✅ ${model.name} is ready",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center
-                )
+                // Check if model is also initialized
+                if (initStatus?.status == ModelInitializationStatusType.INITIALIZED && model.instance != null) {
+                    // Model is fully ready - this case should not be reached as ChatView handles this
+                    Text(
+                        text = "Eliza is ready!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    // Model downloaded but not initialized - show loader
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(32.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Eliza is getting ready...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
             
             else -> {

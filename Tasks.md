@@ -16,35 +16,83 @@
 - ✅ Navigation loop fixes and enhanced flow
 - ✅ Real-time progress tracking across test attempts
 
-## **🚨 CRITICAL NEW PRIORITY: Exercise Help Chat System Overhaul**
+## **🚀 NEXT MAJOR DEVELOPMENT PHASES: Chat Enhancement Project**
+
+### **PHASE 1: Enhanced RAG Infrastructure with Google AI Edge** ✨ **NEW HIGH PRIORITY**
+**Task**: Implement Google AI Edge RAG SDK with Gecko embeddings for superior on-device context retrieval  
+**Owner**: Backend + AI Specialist  
+**Estimated**: 16 hours (Phase 1)  
+**Status**: Ready to Start  
+**Dependencies**: Google AI Edge SDK integration
+
+#### **Phase 1 Deliverables:**
+- ✅ Google AI Edge RAG SDK integration with Gecko embeddings (110m-en)
+- ✅ ScaNN (Scalable Nearest Neighbors) vector search implementation  
+- ✅ Paragraph-level chunking with semantic boundaries (200-400 tokens)
+- ✅ Multi-vector retrieval system (summaries + detail chunks)
+- ✅ Exercise help context injection (chapter + exercise + user history)
+- ✅ SQLite vector storage with Room integration
+
+### **PHASE 2: Toggleable Chat Sidebar with Hierarchical Organization** ✨ **NEW HIGH PRIORITY**
+**Task**: Implement toggleable sidebar with auto-expanding hierarchical chat navigation  
+**Owner**: Frontend + UI/UX Specialist  
+**Estimated**: 14 hours (Phase 2)  
+**Status**: Ready to Start (after Phase 1)  
+**Dependencies**: Enhanced RAG system from Phase 1
+
+#### **Phase 2 Deliverables:**
+- ✅ Toggleable sidebar (slide in/out) with [≡] button in top-right
+- ✅ Auto-expansion logic (Course → Chapter → Exercise context)
+- ✅ Hierarchical session organization: 💬 General / ❓ Exercise Help / 📝 Text Questions  
+- ✅ Session numbering system for multiple exercise help sessions: (2), (3), etc.
+- ✅ Context-aware navigation state preservation
+- ✅ Chat session data model enhancement with ChatType enum
+
+### **PHASE 3: AI-Powered Exercise Generation with Difficulty Selection** ✨ **NEW HIGH PRIORITY**
+**Task**: Implement local exercise generation using Gemma 3n with selectable difficulty levels  
+**Owner**: AI Specialist + Backend Developer  
+**Estimated**: 18 hours (Phase 3)  
+**Status**: Ready to Start (after Phases 1 & 2)  
+**Dependencies**: Enhanced RAG + UI framework from previous phases
+
+#### **Phase 3 Deliverables:**
+- ✅ Exercise generation with Gemma 3n (same concept, different numbers)
+- ✅ Difficulty selection system: EASIER / SAME / HARDER with smart prompting
+- ✅ Question generation UI with preview and regeneration options
+- ✅ Practice question interface (distinct from test questions)
+- ✅ Generated question validation and quality assurance
+- ✅ Integration with existing Trial data model and test system
+
+## **🚨 CRITICAL LEGACY PRIORITY: Exercise Help Chat System Overhaul (ON HOLD)**
 
 ### **URGENT Task: Remove Split-Screen Exercise Help and Implement Gallery Chat Integration**
 **Task**: Complete architectural redesign of exercise help system  
 **Owner**: Full Team (Frontend + Backend + Chat Specialist)  
 **Estimated**: 12 hours (High Priority)  
+**Status**: ON HOLD - Will be superseded by new 3-phase approach above
 **Dependencies**: Gallery chat analysis required  
 
 #### **What Needs to be Done - Step by Step:**
 
 **STEP 1: Remove Current Split-Screen Logic (2 hours)**
-- [ ] **DELETE** the current `ExerciseHelpInterface` component completely
-- [ ] **REMOVE** split-screen layout from exercise help UI
-- [ ] **DELETE** old exercise help navigation components
-- [ ] **CLEAN UP** any references to split-screen exercise help
-- [ ] **REMOVE** old "Generate New Trial" | "Ask for Explanation" side-by-side layout
-- [ ] **VERIFY** that test results screen no longer uses old help interface
+- [X] **DELETE** the current `ExerciseHelpInterface` component completely
+- [X] **REMOVE** split-screen layout from exercise help UI
+- [X] **DELETE** old exercise help navigation components
+- [X] **CLEAN UP** any references to split-screen exercise help
+- [X] **REMOVE** old "Generate New Trial" | "Ask for Explanation" side-by-side layout
+- [X] **VERIFY** that test results screen no longer uses old help interface
 
 **STEP 2: Study and Copy Gallery Chat Interface (3 hours)**
-- [ ] **ANALYZE** gallery chat UI components extensively
-- [ ] **IDENTIFY** exact chat interface components from gallery project
-- [ ] **COPY** gallery chat composables 100% exactly (layout, styling, behavior)
-- [ ] **UNDERSTAND** gallery chat message types, especially video messages
-- [ ] **DOCUMENT** gallery chat navigation patterns
-- [ ] **MAP** gallery chat state management to our exercise context
+- [X] **ANALYZE** gallery chat UI components extensively
+- [X] **IDENTIFY** exact chat interface components from gallery project
+- [X] **COPY** gallery chat composables 100% exactly (layout, styling, behavior)
+- [X] **UNDERSTAND** gallery chat message types, especially video messages
+- [X] **DOCUMENT** gallery chat navigation patterns
+- [X] **MAP** gallery chat state management to our exercise context
 
 **STEP 3: Create Exercise-Specific Chat System (4 hours)**
-- [ ] **CREATE** new chat session type: `EXERCISE_HELP`
-- [ ] **IMPLEMENT** automatic chat session creation for exercise help
+- [X] **CREATE** new chat session type: `EXERCISE_HELP`
+- [X] **IMPLEMENT** automatic chat session creation for exercise help
 - [ ] **ADD** exercise context to chat sessions (questionText, userAnswer, correctAnswer)
 - [ ] **INTEGRATE** chapter markdown as RAG context for exercise chats
 - [ ] **CREATE** chat title format: `"Exercise #1 Help: Solve 2x + 5 = 15"`

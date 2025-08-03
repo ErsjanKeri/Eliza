@@ -72,6 +72,10 @@ dependencies {
     // Image loading
     implementation("io.coil-kt:coil-compose:2.6.0")
     
+    // Markdown rendering (shared across features)
+    implementation("com.halilibo.compose-richtext:richtext-ui-material3:1.0.0-alpha02")
+    implementation("com.halilibo.compose-richtext:richtext-commonmark:1.0.0-alpha02")
+    
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.androidx.ui.test.junit4)

@@ -51,6 +51,7 @@ dependencies {
     // AI modules
     implementation(projects.ai.service)
     implementation(projects.ai.modelmanager)
+    implementation(projects.ai.rag)
     
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))

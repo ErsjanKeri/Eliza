@@ -33,6 +33,7 @@ import com.example.ai.edge.eliza.feature.chapter.navigation.navigateToChapterTes
 import com.example.ai.edge.eliza.feature.chapter.navigation.CHAPTER_ROUTE
 import com.example.ai.edge.eliza.feature.chat.navigation.chatSection
 import com.example.ai.edge.eliza.feature.chat.navigation.navigateToChat
+import com.example.ai.edge.eliza.feature.chat.navigation.navigateToChapterChat
 import com.example.ai.edge.eliza.feature.chat.navigation.navigateToExerciseHelpChat
 import com.example.ai.edge.eliza.ui.ElizaAppState
 
@@ -78,8 +79,8 @@ fun ElizaNavHost(
             onNavigateToTest = { chapterId ->
                 navController.navigateToChapterTest(chapterId)
             },
-            onNavigateToChat = { chapterId, chapterTitle ->
-                navController.navigateToChat(chapterTitle)
+            onNavigateToChat = { courseId, chapterId ->
+                navController.navigateToChapterChat(courseId, chapterId)
             }
         )
         
@@ -127,9 +128,15 @@ fun ElizaNavHost(
                     }
                 )
             },
-            onNavigateToExerciseHelp = { exerciseNumber, questionText, userAnswer, correctAnswer ->
-                // Navigate to exercise help chat
-                navController.navigateToExerciseHelpChat(exerciseNumber, questionText, userAnswer, correctAnswer)
+            onNavigateToExerciseHelp = { chapterId, exerciseNumber, questionText, userAnswer, correctAnswer ->
+                // Navigate to exercise help chat with real chapter data
+                navController.navigateToExerciseHelpChat(
+                    courseId = "loading", // Will be resolved by EnhancedChatViewModel from chapterId
+                    chapterId = chapterId,
+                    exerciseId = "exercise-$exerciseNumber",
+                    userAnswer = userAnswer,
+                    isTestQuestion = true
+                )
             }
         )
         

@@ -39,7 +39,7 @@ fun MessageBodyInfo(message: ChatMessageInfo, smallFontSize: Boolean = true) {
     Box(
       modifier =
         Modifier.clip(RoundedCornerShape(16.dp))
-          .background(MaterialTheme.colorScheme.surfaceContainer)
+          .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
       Text(
         text = message.content,

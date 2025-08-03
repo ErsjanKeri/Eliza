@@ -164,24 +164,26 @@ Course: Algebra Basics
       • "How to solve complex equations?" (from text selection)
 ```
 
-#### Story 1.9: Advanced RAG Context System ✨ **NEW**
+#### Story 1.9: Advanced RAG Context System ✨ **ENHANCED WITH GOOGLE AI EDGE**
 **As a** student  
 **I want** the AI to automatically understand the context of my learning and provide relevant responses  
 **So that** I get personalized, contextually appropriate explanations without manual setup
 
 **Acceptance Criteria:**
-- WHEN a user chats within a chapter THE SYSTEM SHALL automatically inject chapter content as RAG context
-- WHEN discussing a specific question THE SYSTEM SHALL include question, exercise, and related material in context
-- WHEN user asks follow-up questions THE SYSTEM SHALL maintain conversation context across chat history
-- WHEN switching between different chapter chats THE SYSTEM SHALL update RAG context appropriately
-- WHEN providing responses THE SYSTEM SHALL reference specific sections, examples, or concepts from chapter content
-- WHEN context is ambiguous THE SYSTEM SHALL ask clarifying questions to better target assistance
+- WHEN a user chats within a chapter THE SYSTEM SHALL automatically inject chapter content as RAG context using Google AI Edge RAG SDK
+- WHEN discussing a specific question THE SYSTEM SHALL include question, exercise, and related material in context via Gecko embeddings
+- WHEN user asks follow-up questions THE SYSTEM SHALL maintain conversation context using paragraph-level chunking
+- WHEN switching between different chapter chats THE SYSTEM SHALL update RAG context using ScaNN vector search
+- WHEN providing responses THE SYSTEM SHALL reference specific sections using multi-vector retrieval (summaries + detail chunks)
+- WHEN context is ambiguous THE SYSTEM SHALL ask clarifying questions with confidence scoring (threshold: 0.7)
 
-**Technical Questions for Implementation:**
-- How granular should RAG context be? (entire chapter vs specific sections vs question-only)
-- What is the optimal context window size for effective RAG responses?
-- How should the system handle context conflicts when discussing multiple topics?
-- Should RAG context include previous chat history, test attempts, or user progress data?
+**Technical Implementation Decisions:**
+- **RAG Architecture**: Google AI Edge RAG SDK + Gecko embeddings (110m-en) for on-device processing
+- **Chunking Strategy**: Paragraph-level (200-400 tokens) with semantic boundaries and 50-token overlap  
+- **Vector Search**: ScaNN (Scalable Nearest Neighbors) with SQLite vector storage
+- **Context Window**: 2048 tokens (matching Gemma 3n optimization)
+- **Retrieval Method**: Multi-vector approach with summary-level + detail-level chunks
+- **Exercise Context**: Full chapter + exercise details + user attempt history (NO related exercises from same chapter)
 
 #### Story 1.10: Image-Based Problem Solving
 **As a** student  

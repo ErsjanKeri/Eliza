@@ -26,6 +26,7 @@ import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_CHAT
 import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_EXERCISE_HELP
 import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 // Import Gallery-compatible Model class from core.model
+import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.Model
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -36,42 +37,61 @@ import javax.inject.Inject
 private const val TAG = "ElizaChatViewModel"
 
 /**
- * Gallery-style chat ViewModel for Eliza
- * Copied exactly from Gallery's LlmChatViewModelBase pattern
+ * Gallery-style chat ViewModel for Eliza with RAG enhancement
+ * Copied exactly from Gallery's LlmChatViewModelBase pattern, enhanced with RAG
  */
 @HiltViewModel
-open class ElizaChatViewModel @Inject constructor() : ViewModel() {
+open class ElizaChatViewModel @Inject constructor(
+    private val ragEnhancedChatService: RagEnhancedChatService
+) : ViewModel() {
     
     /**
-     * Generate response using Gallery's exact pattern
-     * Direct copy from Gallery's LlmChatViewModelBase.generateResponse
+     * Generate response using Gallery's exact pattern with RAG enhancement
+     * Enhanced version that uses RagEnhancedChatService when context is available
      */
     fun generateResponse(
         model: Model,
         input: String,
+        context: ChatContext? = null,
         images: List<Bitmap> = listOf(),
         resultListener: (String, Boolean) -> Unit,
         onError: () -> Unit = {}
     ) {
         viewModelScope.launch(Dispatchers.Default) {
             Log.d(TAG, "Starting inference for: ${input.take(50)}...")
+            Log.d(TAG, "Model name: ${model.name}, instance: ${model.instance}")
             
             try {
                 // Wait for instance to be initialized (Gallery pattern)
+                var waitTime = 0
                 while (model.instance == null) {
+                    if (waitTime > 30000) { // 30 second timeout
+                        Log.e(TAG, "Model instance is null after 30 seconds - initialization failed")
+                        resultListener("Model initialization failed - instance is null", true)
+                        onError()
+                        return@launch
+                    }
+                    Log.d(TAG, "Waiting for model instance... (${waitTime}ms)")
                     delay(100)
+                    waitTime += 100
                 }
                 delay(500) // Gallery's initialization delay
                 
-                // Run inference using Gallery's exact pattern
-                LlmChatModelHelper.runInference(
+                Log.d(TAG, "Model instance available, starting inference...")
+                
+                // Use RAG-enhanced chat service for intelligent response generation
+                ragEnhancedChatService.generateEnhancedResponse(
                     model = model,
                     input = input,
+                    context = context,
                     images = images,
-                    audioClips = listOf(), // No audio support for now
-                    resultListener = resultListener,
-                    cleanUpListener = {
-                        Log.d(TAG, "Model cleanup triggered during inference")
+                    resultListener = { partialResult, done ->
+                        Log.d(TAG, "Enhanced inference callback - done: $done, length: ${partialResult.length}")
+                        resultListener(partialResult, done)
+                    },
+                    onError = {
+                        Log.e(TAG, "Enhanced inference failed")
+                        onError()
                     }
                 )
                 
@@ -102,9 +122,36 @@ open class ElizaChatViewModel @Inject constructor() : ViewModel() {
     }
     
     /**
-     * Simple RAG wrapper - for now just passes context as part of prompt
-     * TODO: Implement proper RAG context injection
+     * Enhanced message generation with RAG context awareness.
+     * Automatically uses RAG when context is provided and enhanced RAG is enabled.
      */
+    suspend fun sendMessageWithChatContext(
+        model: Model,
+        message: String,
+        chatContext: ChatContext?,
+        images: List<Bitmap> = emptyList(),
+        resultListener: (String, Boolean) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.Default) {
+            ragEnhancedChatService.generateEnhancedResponse(
+                model = model,
+                input = message,
+                context = chatContext,
+                images = images,
+                resultListener = resultListener,
+                onError = {
+                    Log.w(TAG, "RAG-enhanced generation failed, falling back to basic")
+                    // Fallback handled by the service
+                }
+            )
+        }
+    }
+    
+    /**
+     * Simple RAG wrapper - for now just passes context as part of prompt
+     * DEPRECATED: Use sendMessageWithChatContext for better RAG integration
+     */
+    @Deprecated("Use sendMessageWithChatContext for enhanced RAG integration")
     suspend fun sendMessageWithContext(
         model: Model,
         message: String,
@@ -122,13 +169,34 @@ open class ElizaChatViewModel @Inject constructor() : ViewModel() {
         
         sendMessage(model, enhancedPrompt, images, resultListener)
     }
+    
+    /**
+     * Check if enhanced RAG is available for the current session.
+     */
+    fun isEnhancedRagAvailable(): Boolean {
+        return ragEnhancedChatService.isEnhancedRagAvailable()
+    }
+    
+    /**
+     * Get contextual suggestions for the user based on their current context.
+     */
+    suspend fun getContextualSuggestions(
+        query: String,
+        chatContext: ChatContext
+    ): List<String> {
+        return ragEnhancedChatService.getContextSuggestions(query, chatContext)
+    }
 }
 
 /**
  * Specialized ViewModels for different tasks - Gallery pattern
  */
 @HiltViewModel 
-class ElizaChatChatViewModel @Inject constructor() : ElizaChatViewModel()
+class ElizaChatChatViewModel @Inject constructor(
+    ragEnhancedChatService: RagEnhancedChatService
+) : ElizaChatViewModel(ragEnhancedChatService)
 
 @HiltViewModel
-class ElizaExerciseHelpViewModel @Inject constructor() : ElizaChatViewModel() 
+class ElizaExerciseHelpViewModel @Inject constructor(
+    ragEnhancedChatService: RagEnhancedChatService
+) : ElizaChatViewModel(ragEnhancedChatService) 

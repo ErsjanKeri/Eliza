@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
-import com.example.ai.edge.eliza.feature.chapter.component.ElizaMarkdownRenderer
+import com.example.ai.edge.eliza.core.designsystem.component.ElizaMarkdownRenderer
 
 /**
  * Chapter screen that displays markdown content and provides test functionality.
@@ -69,7 +69,7 @@ fun ChapterScreen(
     onNavigateToTest: () -> Unit,
     onNavigateToResults: () -> Unit = onNavigateToTest, // Default to same as test for backward compatibility
     onRetakeTest: () -> Unit = onNavigateToTest, // Default to same as test for backward compatibility  
-    onNavigateToChat: (String) -> Unit, // Navigate to full-screen chat with chapter title
+    onNavigateToChat: (String, String) -> Unit, // Navigate to chapter-specific chat with (courseId, chapterId)
     modifier: Modifier = Modifier,
     viewModel: ChapterViewModel = hiltViewModel()
 ) {
@@ -87,9 +87,10 @@ fun ChapterScreen(
                 title = uiState.chapter?.title ?: "Chapter",
                 onBackClick = onBackClick,
                 onChatClick = { 
-                    // Navigate to full-screen chat instead of split view
-                    val chapterTitle = uiState.chapter?.title ?: "Chapter"
-                    onNavigateToChat(chapterTitle)
+                    // Navigate to chapter-specific chat with proper context
+                    uiState.chapter?.let { chapter ->
+                        onNavigateToChat(chapter.courseId, chapter.id)
+                    }
                 }
             )
         }

@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,9 +49,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_CHAT
 // Import Gallery-compatible ModelDownloadStatusType from core.model
+import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import com.example.ai.edge.eliza.ai.service.ElizaChatViewModel
+import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 
 /**
  * Full-screen ChatView that replicates Gallery's chat interface exactly.
@@ -63,13 +66,15 @@ fun ChatView(
     onNavigateUp: () -> Unit,
     modifier: Modifier = Modifier,
     initialMessages: List<ChatMessage> = emptyList(),
+    chatContext: ChatContext? = null,
     chatViewModel: ElizaChatViewModel = hiltViewModel(),
     modelManager: ElizaModelManager = hiltViewModel()
 ) {
     val uiState by modelManager.uiState.collectAsState()
     val context = LocalContext.current
-    var messages by remember { mutableStateOf(initialMessages) }
+    var messages by remember { mutableStateOf(initialMessages.toMutableList()) }
     var isLoading by remember { mutableStateOf(false) }
+    var currentStreamingMessage by remember { mutableStateOf<ChatMessageText?>(null) }
     
     // Get the selected model for the chat task
     val task = TASK_ELIZA_CHAT
@@ -77,7 +82,10 @@ fun ChatView(
     val modelsForTask = taskData?.models ?: emptyList()
     val selectedModel = uiState.selectedModel ?: modelsForTask.firstOrNull()
     val downloadStatus = selectedModel?.let { uiState.modelDownloadStatus[it.name] }
-    val isModelReady = downloadStatus?.status == ModelDownloadStatusType.SUCCEEDED
+    val initStatus = selectedModel?.let { uiState.modelInitializationStatus[it.name] }
+    val isModelReady = downloadStatus?.status == ModelDownloadStatusType.SUCCEEDED && 
+                      initStatus?.status == com.example.ai.edge.eliza.ai.modelmanager.manager.ModelInitializationStatusType.INITIALIZED &&
+                      selectedModel?.instance != null
     
     // Initialize model if available
     LaunchedEffect(selectedModel) {
@@ -111,7 +119,7 @@ fun ChatView(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    // containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
@@ -139,54 +147,91 @@ fun ChatView(
                 }
             )
             
-            // Main content area
-            Box(modifier = Modifier.weight(1f)) {
-                if (isModelReady && selectedModel != null) {
-                    // Show chat interface when model is ready
-                    ChatPanel(
-                        messages = messages,
-                        onSendMessage = { messageText ->
-                            if (messageText.isNotBlank() && !isLoading) {
-                                isLoading = true
-                                val userMessage = ChatMessageText(
-                                    content = messageText,
-                                    side = ChatSide.USER
-                                )
-                                messages = messages + userMessage
-                                
-                                // Add loading message
-                                val loadingMessage = ChatMessageLoading()
-                                messages = messages + loadingMessage
-                                
-                                // Generate AI response
-                                chatViewModel.generateResponse(
-                                    model = selectedModel,
-                                    input = messageText,
-                                    resultListener = { response, isComplete ->
-                                        if (isComplete) {
-                                            // Remove loading message and add AI response
-                                            messages = messages.dropLast(1) + ChatMessageText(
-                                                content = response,
-                                                side = ChatSide.AGENT
-                                            )
-                                            isLoading = false
-                                        }
-                                    },
-                                    onError = {
-                                        // Remove loading message and show error
-                                        messages = messages.dropLast(1) + ChatMessageText(
-                                            content = "Sorry, I encountered an error. Please try again.",
+            // RAG Enhancement Toggle
+            RagToggleComponent(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            
+            // Main content area - Gallery's exact pattern
+            if (isModelReady && selectedModel != null) {
+                // Show chat interface when model is ready - Gallery's exact pattern
+                ChatPanel(
+                    modifier = Modifier.weight(1f),
+                    messages = messages,
+                    onSendMessage = { messageText ->
+                        if (messageText.isNotBlank() && !isLoading && selectedModel != null) {
+                            isLoading = true
+                            
+                            // Add user message
+                            val userMessage = ChatMessageText(
+                                content = messageText,
+                                side = ChatSide.USER
+                            )
+                            messages = (messages + userMessage).toMutableList()
+                            
+                            // Add loading message (Gallery pattern)
+                            val loadingMessage = ChatMessageLoading()
+                            messages = (messages + loadingMessage).toMutableList()
+                            
+                            // Use provided chatContext or create basic one for RAG enhancement
+                            val contextToUse = chatContext ?: ChatContext.GeneralTutoring(
+                                subject = "General",
+                                grade = null,
+                                previousTopics = messages.map { msg ->
+                                    when (msg) {
+                                        is ChatMessageText -> msg.content.take(50) // Extract topics from previous messages
+                                        else -> ""
+                                    }
+                                }.filter { it.isNotBlank() }
+                            )
+                            
+                            // Generate AI response with streaming and RAG enhancement
+                            chatViewModel.generateResponse(
+                                model = selectedModel,
+                                input = messageText,
+                                context = contextToUse,
+                                resultListener = { partialResponse, isComplete ->
+                                    if (currentStreamingMessage == null) {
+                                        // First token - replace loading with streaming message (Gallery pattern)
+                                        val streamingMessage = ChatMessageText(
+                                            content = partialResponse, // First token
                                             side = ChatSide.AGENT
                                         )
+                                        currentStreamingMessage = streamingMessage
+                                        messages = (messages.dropLast(1) + streamingMessage).toMutableList()
+                                    } else {
+                                        // Append new token to existing content (Gallery pattern)
+                                        val accumulatedContent = currentStreamingMessage!!.content + partialResponse
+                                        val updatedMessage = ChatMessageText(
+                                            content = accumulatedContent, // Accumulate tokens
+                                            side = ChatSide.AGENT
+                                        )
+                                        currentStreamingMessage = updatedMessage
+                                        messages = (messages.dropLast(1) + updatedMessage).toMutableList()
+                                    }
+                                    
+                                    if (isComplete) {
+                                        // Reset state
+                                        currentStreamingMessage = null
                                         isLoading = false
                                     }
-                                )
-                            }
-                        },
-                        navigateUp = onNavigateUp,
-                        isLoading = isLoading,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                                },
+                                onError = {
+                                    // Remove loading/streaming message and show error
+                                    val errorMessage = ChatMessageText(
+                                        content = "Sorry, I encountered an error. Please try again.",
+                                        side = ChatSide.AGENT
+                                    )
+                                    messages = (messages.dropLast(1) + errorMessage).toMutableList()
+                                    currentStreamingMessage = null
+                                    isLoading = false
+                                }
+                            )
+                        }
+                    },
+                    navigateUp = onNavigateUp,
+                    isLoading = isLoading
+                )
                 } else {
                     // Show model download panel when model isn't ready
                     selectedModel?.let { model ->
@@ -210,7 +255,6 @@ fun ChatView(
                         }
                     }
                 }
-            }
         }
     }
 }
@@ -249,4 +293,159 @@ fun ExerciseHelpChatView(
         chatViewModel = chatViewModel,
         modifier = modifier
     )
+}
+
+/**
+ * Enhanced ChatView for chapter reading with full RAG context.
+ */
+@Composable
+fun EnhancedChapterChatView(
+    courseId: String,
+    chapterId: String,
+    readingProgress: Float = 0f,
+    onNavigateUp: () -> Unit,
+    modifier: Modifier = Modifier,
+    chatViewModel: ElizaChatViewModel = hiltViewModel(),
+    enhancedViewModel: EnhancedChatViewModel = hiltViewModel()
+) {
+    val uiState by enhancedViewModel.uiState.collectAsState()
+    
+    // Load real course and chapter data from repository
+    LaunchedEffect(courseId, chapterId, readingProgress) {
+        enhancedViewModel.loadChapterContext(courseId, chapterId, readingProgress)
+    }
+    when {
+        uiState.isLoading -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        uiState.error != null -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Error loading chapter",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        text = uiState.error ?: "Unknown error",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        uiState.chatContext != null -> {
+            EnhancedChatInterface(
+                title = uiState.title,
+                chatContext = uiState.chatContext,
+                onNavigateUp = onNavigateUp,
+                modifier = modifier,
+                chatViewModel = chatViewModel
+            )
+        }
+    }
+}
+
+/**
+ * Enhanced ChatView for exercise help with comprehensive context.
+ */
+@Composable
+fun EnhancedExerciseHelpChatView(
+    courseId: String,
+    chapterId: String,
+    exerciseId: String,
+    userAnswer: String? = null,
+    isTestQuestion: Boolean = false,
+    onNavigateUp: () -> Unit,
+    modifier: Modifier = Modifier,
+    chatViewModel: ElizaChatViewModel = hiltViewModel(),
+    enhancedViewModel: EnhancedChatViewModel = hiltViewModel()
+) {
+    val uiState by enhancedViewModel.uiState.collectAsState()
+    
+    // Load real exercise context data from repository
+    LaunchedEffect(courseId, chapterId, exerciseId, userAnswer, isTestQuestion) {
+        enhancedViewModel.loadExerciseContext(courseId, chapterId, exerciseId, userAnswer, isTestQuestion)
+    }
+    when {
+        uiState.isLoading -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        uiState.error != null -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Error loading exercise",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        text = uiState.error ?: "Unknown error",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        uiState.chatContext != null -> {
+            val initialMessages = uiState.initialMessage?.let { message ->
+                listOf(ChatMessageInfo(content = message))
+            } ?: emptyList()
+            
+            EnhancedChatInterface(
+                title = uiState.title,
+                chatContext = uiState.chatContext,
+                initialMessages = initialMessages,
+                onNavigateUp = onNavigateUp,
+                modifier = modifier,
+                chatViewModel = chatViewModel
+            )
+        }
+    }
+}
+
+/**
+ * Shared enhanced chat interface that integrates RAG context with Gallery chat UI.
+ */
+@Composable
+private fun EnhancedChatInterface(
+    title: String,
+    chatContext: ChatContext?,
+    onNavigateUp: () -> Unit,
+    modifier: Modifier = Modifier,
+    initialMessages: List<ChatMessage> = emptyList(),
+    chatViewModel: ElizaChatViewModel = hiltViewModel()
+) {
+    // Use the existing ChatView but with enhanced context awareness
+    // The ChatViewModel will automatically use RAG when chatContext is provided
+    ChatView(
+        title = title,
+        onNavigateUp = onNavigateUp,
+        initialMessages = initialMessages,
+        chatContext = chatContext,
+        chatViewModel = chatViewModel,
+        modifier = modifier
+    )
+    
+    // TODO: In future iterations, this can be enhanced to:
+    // 1. Display RAG toggle status
+    // 2. Show context suggestions
+    // 3. Provide context-aware input hints
+    // 4. Display relevance scores for responses
 } 

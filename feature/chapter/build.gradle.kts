@@ -92,13 +92,6 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     
-    // Markdown rendering (following Gallery approach)
-    implementation("com.halilibo.compose-richtext:richtext-ui-material3:1.0.0-alpha02")
-    implementation("com.halilibo.compose-richtext:richtext-commonmark:1.0.0-alpha02")
-    
-    // Image loading for markdown images
-    implementation("io.coil-kt:coil-compose:2.6.0")
-    
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.androidx.ui.test.junit4)
