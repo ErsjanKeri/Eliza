@@ -61,6 +61,19 @@ interface ChatDao {
     @Query("SELECT * FROM chat_sessions WHERE chapterId = :chapterId AND userId = :userId AND isActive = 1 ORDER BY lastMessageAt DESC LIMIT 1")
     fun getActiveSessionForChapterAndUser(chapterId: String, userId: String): Flow<ChatSessionEntity?>
     
+    // NEW: Type-based session queries for sidebar organization
+    @Query("SELECT * FROM chat_sessions WHERE chapterId = :chapterId AND chatType = :chatType ORDER BY lastMessageAt DESC")
+    fun getChatSessionsByChapterAndType(chapterId: String, chatType: String): Flow<List<ChatSessionEntity>>
+    
+    @Query("SELECT * FROM chat_sessions WHERE chapterId = :chapterId AND userId = :userId AND chatType = :chatType ORDER BY lastMessageAt DESC")
+    fun getChatSessionsByChapterUserAndType(chapterId: String, userId: String, chatType: String): Flow<List<ChatSessionEntity>>
+    
+    @Query("SELECT * FROM chat_sessions WHERE chapterId = :chapterId AND userId = :userId ORDER BY chatType ASC, lastMessageAt DESC")
+    fun getChatSessionsForGrouping(chapterId: String, userId: String): Flow<List<ChatSessionEntity>>
+    
+    @Query("SELECT COUNT(*) FROM chat_sessions WHERE sourceContext = :exerciseId AND userId = :userId AND chatType = 'EXERCISE_HELP'")
+    fun getExerciseHelpSessionCount(exerciseId: String, userId: String): Flow<Int>
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChatSession(session: ChatSessionEntity)
     

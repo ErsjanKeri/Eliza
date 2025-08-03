@@ -19,8 +19,19 @@ package com.example.ai.edge.eliza.core.model
 import kotlinx.serialization.Serializable
 
 /**
+ * Types of chat sessions for sidebar organization.
+ * NEW: Enables hierarchical chat organization by purpose.
+ */
+@Serializable
+enum class ChatType {
+    GENERAL_CHAPTER,    // 💬 General Chapter Discussion
+    EXERCISE_HELP,      // ❓ Exercise Help (from test results)
+    TEXT_SELECTION      // 📝 Text Questions (from markdown selection)
+}
+
+/**
  * Represents a chat session with the AI tutor.
- * UPDATED: Now chapter-centric with multiple sessions per chapter support.
+ * UPDATED: Now chapter-centric with multiple sessions per chapter support and type classification.
  */
 @Serializable
 data class ChatSession(
@@ -29,6 +40,9 @@ data class ChatSession(
     val chapterId: String, // REQUIRED: Always linked to a chapter
     val courseId: String,
     val userId: String, // NEW: User-specific sessions
+    val chatType: ChatType = ChatType.GENERAL_CHAPTER, // NEW: Session type for sidebar organization
+    val sourceContext: String? = null, // NEW: Exercise ID or selected text context
+    val metadata: String = "{}", // NEW: Additional context data as JSON string
     val createdAt: Long = System.currentTimeMillis(),
     val lastMessageAt: Long = System.currentTimeMillis(),
     val isActive: Boolean = true,

@@ -18,6 +18,7 @@ package com.example.ai.edge.eliza.core.data.repository
 
 import com.example.ai.edge.eliza.core.model.ChatMessage
 import com.example.ai.edge.eliza.core.model.ChatSession
+import com.example.ai.edge.eliza.core.model.ChatType
 import com.example.ai.edge.eliza.core.model.ImageMathProblem
 import com.example.ai.edge.eliza.core.model.MathStep
 import com.example.ai.edge.eliza.core.model.ModelState
@@ -46,12 +47,21 @@ interface ChatRepository {
     fun getChatSessionsByUser(userId: String): Flow<List<ChatSession>>
     fun getActiveSessionForChapterAndUser(chapterId: String, userId: String): Flow<ChatSession?>
     
-    // UPDATED: Chapter-based session creation
+    // NEW: Type-based session operations for sidebar organization
+    fun getChatSessionsByChapterAndType(chapterId: String, chatType: ChatType): Flow<List<ChatSession>>
+    fun getChatSessionsByChapterUserAndType(chapterId: String, userId: String, chatType: ChatType): Flow<List<ChatSession>>
+    fun getChatSessionsGroupedByType(chapterId: String, userId: String): Flow<Map<ChatType, List<ChatSession>>>
+    fun getExerciseHelpSessionCount(exerciseId: String, userId: String): Flow<Int>
+    
+    // UPDATED: Chapter-based session creation with type classification
     suspend fun createChatSession(
         title: String,
         chapterId: String, // REQUIRED: Always linked to a chapter
         courseId: String,
-        userId: String // REQUIRED: User-specific sessions
+        userId: String, // REQUIRED: User-specific sessions
+        chatType: ChatType = ChatType.GENERAL_CHAPTER, // NEW: Session type for sidebar organization
+        sourceContext: String? = null, // NEW: Exercise ID or selected text context
+        metadata: String = "{}" // NEW: Additional context data as JSON string
     ): ChatSession
     
     suspend fun updateChatSession(session: ChatSession)

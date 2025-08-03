@@ -79,10 +79,11 @@ import com.example.ai.edge.eliza.core.database.entity.ExerciseHelpEntity
         LearningStatsEntity::class,
         WeeklyProgressEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
     autoMigrations = [
-        AutoMigration(from = 2, to = 3)
+        AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 3, to = 4) // NEW: Add ChatType fields to ChatSessionEntity
     ]
 )
 @TypeConverters(Converters::class)

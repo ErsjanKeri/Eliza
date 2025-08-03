@@ -20,10 +20,12 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -54,6 +56,7 @@ import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import com.example.ai.edge.eliza.ai.service.ElizaChatViewModel
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
+import com.example.ai.edge.eliza.feature.chat.ui.sidebar.ChatSidebar
 
 /**
  * Full-screen ChatView that replicates Gallery's chat interface exactly.
@@ -68,9 +71,12 @@ fun ChatView(
     initialMessages: List<ChatMessage> = emptyList(),
     chatContext: ChatContext? = null,
     chatViewModel: ElizaChatViewModel = hiltViewModel(),
-    modelManager: ElizaModelManager = hiltViewModel()
+    modelManager: ElizaModelManager = hiltViewModel(),
+    enhancedChatViewModel: EnhancedChatViewModel = hiltViewModel(),
+    showSidebarToggle: Boolean = false
 ) {
     val uiState by modelManager.uiState.collectAsState()
+    val sidebarState by enhancedChatViewModel.sidebarState.collectAsState()
     val context = LocalContext.current
     var messages by remember { mutableStateOf(initialMessages.toMutableList()) }
     var isLoading by remember { mutableStateOf(false) }
@@ -118,6 +124,20 @@ fun ChatView(
                         )
                     }
                 },
+                actions = {
+                    // Sidebar toggle button (≡)
+                    if (showSidebarToggle) {
+                        IconButton(
+                            onClick = { enhancedChatViewModel.toggleSidebar() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Toggle chat sidebar",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     // containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
@@ -126,12 +146,18 @@ fun ChatView(
             )
         }
     ) { paddingValues ->
-        Column(
+        Row(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
         ) {
+            // Main chat content area
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
+            ) {
             // Model selector chip - Gallery's exact pattern
             ModelSelectorChip(
                 task = task,
@@ -255,6 +281,25 @@ fun ChatView(
                         }
                     }
                 }
+            }
+            
+            // Chat Sidebar
+            ChatSidebar(
+                sidebarState = sidebarState,
+                onToggleSidebar = { enhancedChatViewModel.toggleSidebar() },
+                onExpandCourse = { courseId -> 
+                    enhancedChatViewModel.toggleCourseExpansion(courseId)
+                },
+                onExpandChapter = { chapterId -> 
+                    enhancedChatViewModel.toggleChapterExpansion(chapterId)
+                },
+                onSelectChatSession = { session -> 
+                    enhancedChatViewModel.selectChatSession(session)
+                },
+                onCreateNewChat = { chatType -> 
+                    enhancedChatViewModel.createNewChatSession(chatType)
+                }
+            )
         }
     }
 }
@@ -313,6 +358,8 @@ fun EnhancedChapterChatView(
     // Load real course and chapter data from repository
     LaunchedEffect(courseId, chapterId, readingProgress) {
         enhancedViewModel.loadChapterContext(courseId, chapterId, readingProgress)
+        // Initialize sidebar context for auto-expansion
+        enhancedViewModel.initializeSidebarContext(courseId, chapterId)
     }
     when {
         uiState.isLoading -> {
@@ -374,6 +421,8 @@ fun EnhancedExerciseHelpChatView(
     // Load real exercise context data from repository
     LaunchedEffect(courseId, chapterId, exerciseId, userAnswer, isTestQuestion) {
         enhancedViewModel.loadExerciseContext(courseId, chapterId, exerciseId, userAnswer, isTestQuestion)
+        // Initialize sidebar context for auto-expansion (exercise help context)
+        enhancedViewModel.initializeSidebarContext(courseId, chapterId)
     }
     when {
         uiState.isLoading -> {

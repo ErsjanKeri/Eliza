@@ -245,7 +245,7 @@ fun NavGraphBuilder.chapterTestResultScreen(
     onNavigateToTest: (String) -> Unit,
     onContinueLearning: () -> Unit,
     onNavigateToHome: () -> Unit,
-    onNavigateToExerciseHelp: (String, Int, String, String, String) -> Unit,
+    onNavigateToExerciseHelp: (String, String, String, String, String) -> Unit,
 ) {
     composable(
         route = "$CHAPTER_TEST_RESULT_ROUTE/{$CHAPTER_ID_ARG}/{$TEST_SCORE_ARG}/{$TEST_CORRECT_ARG}/{$TEST_TOTAL_ARG}",
@@ -306,8 +306,7 @@ fun NavGraphBuilder.chapterTestResultScreen(
             onContinueLearning = onContinueLearning,
             onNavigateToHome = onNavigateToHome,
             onRequestLocalHelp = { exercise ->
-                // Navigate to exercise help chat with local AI
-                val exerciseNumber = testResult.exercises.indexOf(exercise) + 1
+                // Navigate to exercise help chat with local AI using actual exercise ID
                 val userAnswerText = testResult.userAnswers.getOrNull(testResult.exercises.indexOf(exercise))?.let { answerIndex ->
                     if (answerIndex >= 0 && answerIndex < exercise.options.size) {
                         exercise.options[answerIndex]
@@ -317,11 +316,12 @@ fun NavGraphBuilder.chapterTestResultScreen(
                 } ?: "No answer"
                 val correctAnswerText = exercise.options[exercise.correctAnswerIndex]
                 
-                onNavigateToExerciseHelp(testResult.chapterId, exerciseNumber, exercise.questionText, userAnswerText, correctAnswerText)
+                // Use actual exercise.id instead of constructing artificial ID
+                onNavigateToExerciseHelp(testResult.chapterId, exercise.id, exercise.questionText, userAnswerText, correctAnswerText)
             },
+            // TODO: this will need to be deleted! 
             onRequestVideoHelp = { exercise ->
-                // Navigate to exercise help chat with video request (same as local for now)
-                val exerciseNumber = testResult.exercises.indexOf(exercise) + 1
+                // Navigate to exercise help chat with video request using actual exercise ID
                 val userAnswerText = testResult.userAnswers.getOrNull(testResult.exercises.indexOf(exercise))?.let { answerIndex ->
                     if (answerIndex >= 0 && answerIndex < exercise.options.size) {
                         exercise.options[answerIndex]
@@ -331,7 +331,8 @@ fun NavGraphBuilder.chapterTestResultScreen(
                 } ?: "No answer"
                 val correctAnswerText = exercise.options[exercise.correctAnswerIndex]
                 
-                onNavigateToExerciseHelp(testResult.chapterId, exerciseNumber, exercise.questionText, userAnswerText, correctAnswerText)
+                // Use actual exercise.id instead of constructing artificial ID
+                onNavigateToExerciseHelp(testResult.chapterId, exercise.id, exercise.questionText, userAnswerText, correctAnswerText)
             },
             onGenerateNewQuestion = { exercise ->
                 // NEW: Wire to ViewModel's generation functionality

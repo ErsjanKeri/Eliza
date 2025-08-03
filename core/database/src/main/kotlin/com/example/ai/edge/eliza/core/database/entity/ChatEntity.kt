@@ -16,6 +16,7 @@
 
 package com.example.ai.edge.eliza.core.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
@@ -23,7 +24,7 @@ import com.example.ai.edge.eliza.core.database.converter.Converters
 
 /**
  * Room entity for chat sessions.
- * UPDATED: Now chapter-centric with user-specific sessions.
+ * UPDATED: Now chapter-centric with user-specific sessions and type classification.
  */
 @Entity(
     tableName = "chat_sessions",
@@ -36,6 +37,7 @@ import com.example.ai.edge.eliza.core.database.converter.Converters
         )
     ]
 )
+@TypeConverters(Converters::class)
 data class ChatSessionEntity(
     @PrimaryKey
     val id: String,
@@ -43,6 +45,11 @@ data class ChatSessionEntity(
     val chapterId: String, // REQUIRED: Always linked to a chapter
     val courseId: String,
     val userId: String, // NEW: User-specific sessions
+    @ColumnInfo(defaultValue = "GENERAL_CHAPTER")
+    val chatType: String = "GENERAL_CHAPTER", // NEW: ChatType enum as string for sidebar organization
+    val sourceContext: String? = null, // NEW: Exercise ID or selected text context
+    @ColumnInfo(defaultValue = "{}")
+    val metadata: String = "{}", // NEW: Additional context data as JSON string
     val createdAt: Long = System.currentTimeMillis(),
     val lastMessageAt: Long = System.currentTimeMillis(),
     val isActive: Boolean = true,

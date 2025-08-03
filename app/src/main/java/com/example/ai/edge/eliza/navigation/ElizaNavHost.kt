@@ -128,12 +128,12 @@ fun ElizaNavHost(
                     }
                 )
             },
-            onNavigateToExerciseHelp = { chapterId, exerciseNumber, questionText, userAnswer, correctAnswer ->
+            onNavigateToExerciseHelp = { chapterId, exerciseId, questionText, userAnswer, correctAnswer ->
                 // Navigate to exercise help chat with real chapter data
                 navController.navigateToExerciseHelpChat(
                     courseId = "loading", // Will be resolved by EnhancedChatViewModel from chapterId
                     chapterId = chapterId,
-                    exerciseId = "exercise-$exerciseNumber",
+                    exerciseId = exerciseId, // Now using actual exercise ID instead of constructing artificial one
                     userAnswer = userAnswer,
                     isTestQuestion = true
                 )

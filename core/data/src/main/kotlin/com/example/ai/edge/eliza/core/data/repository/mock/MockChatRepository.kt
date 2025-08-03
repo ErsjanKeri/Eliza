@@ -28,6 +28,7 @@ import com.example.ai.edge.eliza.core.data.repository.ModelDownloadStatus
 import com.example.ai.edge.eliza.core.data.repository.ModelInitializationResult
 import com.example.ai.edge.eliza.core.model.ChatMessage
 import com.example.ai.edge.eliza.core.model.ChatSession
+import com.example.ai.edge.eliza.core.model.ChatType
 import com.example.ai.edge.eliza.core.model.ImageMathProblem
 import com.example.ai.edge.eliza.core.model.MathStep
 import com.example.ai.edge.eliza.core.model.MessageStatus
@@ -105,12 +106,30 @@ class MockChatRepository @Inject constructor() : ChatRepository {
     override fun getActiveSessionForChapterAndUser(chapterId: String, userId: String): Flow<ChatSession?> = 
         flowOf(chatSessions.find { it.chapterId == chapterId && it.userId == userId && it.isActive })
     
-    // UPDATED: Chapter-based session creation
+    // NEW: Type-based session operations for sidebar organization
+    override fun getChatSessionsByChapterAndType(chapterId: String, chatType: ChatType): Flow<List<ChatSession>> = 
+        flowOf(chatSessions.filter { it.chapterId == chapterId && it.chatType == chatType }.sortedByDescending { it.lastMessageAt })
+    
+    override fun getChatSessionsByChapterUserAndType(chapterId: String, userId: String, chatType: ChatType): Flow<List<ChatSession>> = 
+        flowOf(chatSessions.filter { it.chapterId == chapterId && it.userId == userId && it.chatType == chatType }.sortedByDescending { it.lastMessageAt })
+    
+    override fun getChatSessionsGroupedByType(chapterId: String, userId: String): Flow<Map<ChatType, List<ChatSession>>> = 
+        flowOf(chatSessions.filter { it.chapterId == chapterId && it.userId == userId }
+            .groupBy { it.chatType }
+            .mapValues { (_, sessions) -> sessions.sortedByDescending { it.lastMessageAt } })
+    
+    override fun getExerciseHelpSessionCount(exerciseId: String, userId: String): Flow<Int> = 
+        flowOf(chatSessions.count { it.sourceContext == exerciseId && it.userId == userId && it.chatType == ChatType.EXERCISE_HELP })
+    
+    // UPDATED: Chapter-based session creation with type classification
     override suspend fun createChatSession(
         title: String,
         chapterId: String,
         courseId: String,
-        userId: String
+        userId: String,
+        chatType: ChatType,
+        sourceContext: String?,
+        metadata: String
     ): ChatSession {
         val session = ChatSession(
             id = "session_${UUID.randomUUID()}",
@@ -118,6 +137,9 @@ class MockChatRepository @Inject constructor() : ChatRepository {
             chapterId = chapterId,
             courseId = courseId,
             userId = userId,
+            chatType = chatType,
+            sourceContext = sourceContext,
+            metadata = metadata,
             createdAt = System.currentTimeMillis(),
             lastMessageAt = System.currentTimeMillis(),
             isActive = true,
@@ -469,27 +491,95 @@ class MockChatRepository @Inject constructor() : ChatRepository {
         imageMathProblems.clear()
         videoExplanations.clear()
         
-        // Create mock chat sessions for demo
-        val demoSession = ChatSession(
-            id = "session_demo_linear",
-            title = "Understanding Linear Equations",
-            chapterId = "chapter_linear_eq",
-            courseId = "course_algebra_1",
-            userId = "user_demo",
-            createdAt = System.currentTimeMillis() - 3600000L, // 1 hour ago
-            lastMessageAt = System.currentTimeMillis() - 600000L, // 10 minutes ago
-            isActive = true,
-            messageCount = 4,
-            videoCount = 1
+        // Create mock chat sessions for demo with different types for sidebar testing
+        val demoSessions = listOf(
+            // General chapter discussion
+            ChatSession(
+                id = "session_demo_linear_general",
+                title = "Understanding Linear Equations",
+                chapterId = "chapter_linear_eq",
+                courseId = "course_algebra_1",
+                userId = "user_demo",
+                chatType = ChatType.GENERAL_CHAPTER,
+                sourceContext = null,
+                metadata = "{}",
+                createdAt = System.currentTimeMillis() - 3600000L, // 1 hour ago
+                lastMessageAt = System.currentTimeMillis() - 600000L, // 10 minutes ago
+                isActive = true,
+                messageCount = 4,
+                videoCount = 1
+            ),
+            // Exercise help sessions
+            ChatSession(
+                id = "session_demo_exercise_help_1",
+                title = "Exercise #1 Help: Solve 2x + 5 = 15",
+                chapterId = "chapter_linear_eq",
+                courseId = "course_algebra_1",
+                userId = "user_demo",
+                chatType = ChatType.EXERCISE_HELP,
+                sourceContext = "exercise_linear_eq_1",
+                metadata = "{\"exerciseNumber\":\"1\",\"questionType\":\"equation\"}",
+                createdAt = System.currentTimeMillis() - 7200000L, // 2 hours ago
+                lastMessageAt = System.currentTimeMillis() - 1800000L, // 30 minutes ago
+                isActive = true,
+                messageCount = 6,
+                videoCount = 0
+            ),
+            ChatSession(
+                id = "session_demo_exercise_help_2",
+                title = "Exercise #1 Help: Solve 2x + 5 = 15 (2)",
+                chapterId = "chapter_linear_eq",
+                courseId = "course_algebra_1",
+                userId = "user_demo",
+                chatType = ChatType.EXERCISE_HELP,
+                sourceContext = "exercise_linear_eq_1",
+                metadata = "{\"exerciseNumber\":\"1\",\"sessionNumber\":\"2\"}",
+                createdAt = System.currentTimeMillis() - 1800000L, // 30 minutes ago
+                lastMessageAt = System.currentTimeMillis() - 900000L, // 15 minutes ago
+                isActive = true,
+                messageCount = 3,
+                videoCount = 1
+            ),
+            ChatSession(
+                id = "session_demo_exercise_help_3",
+                title = "Exercise #3 Help: Find x in 3x - 7 = 14",
+                chapterId = "chapter_linear_eq",
+                courseId = "course_algebra_1",
+                userId = "user_demo",
+                chatType = ChatType.EXERCISE_HELP,
+                sourceContext = "exercise_linear_eq_3",
+                metadata = "{\"exerciseNumber\":\"3\",\"questionType\":\"equation\"}",
+                createdAt = System.currentTimeMillis() - 5400000L, // 1.5 hours ago
+                lastMessageAt = System.currentTimeMillis() - 3600000L, // 1 hour ago
+                isActive = true,
+                messageCount = 4,
+                videoCount = 0
+            ),
+            // Text selection chat
+            ChatSession(
+                id = "session_demo_text_selection",
+                title = "What is the slope-intercept form?",
+                chapterId = "chapter_linear_eq",
+                courseId = "course_algebra_1",
+                userId = "user_demo",
+                chatType = ChatType.TEXT_SELECTION,
+                sourceContext = "The slope-intercept form is y = mx + b where m is the slope and b is the y-intercept.",
+                metadata = "{\"selectedText\":\"slope-intercept form\",\"sectionTitle\":\"Linear Equation Forms\"}",
+                createdAt = System.currentTimeMillis() - 10800000L, // 3 hours ago
+                lastMessageAt = System.currentTimeMillis() - 7200000L, // 2 hours ago
+                isActive = true,
+                messageCount = 5,
+                videoCount = 0
+            )
         )
         
-        chatSessions.add(demoSession)
+        chatSessions.addAll(demoSessions)
         
         // Create mock messages
         val demoMessages = listOf(
             ChatMessage(
                 id = "msg_demo_1",
-                sessionId = "session_demo_linear",
+                sessionId = "session_demo_linear_general",
                 content = "I'm having trouble understanding how to solve linear equations. Can you help?",
                 isUser = true,
                 timestamp = System.currentTimeMillis() - 3600000L,
@@ -497,7 +587,7 @@ class MockChatRepository @Inject constructor() : ChatRepository {
             ),
             ChatMessage(
                 id = "msg_demo_2", 
-                sessionId = "session_demo_linear",
+                sessionId = "session_demo_linear_general",
                 content = "I'd be happy to help you with linear equations! A linear equation is an equation where the variable has a power of 1. The basic goal is to isolate the variable on one side of the equation.",
                 isUser = false,
                 timestamp = System.currentTimeMillis() - 3550000L,
@@ -506,7 +596,7 @@ class MockChatRepository @Inject constructor() : ChatRepository {
             ),
             ChatMessage(
                 id = "msg_demo_3",
-                sessionId = "session_demo_linear",
+                sessionId = "session_demo_linear_general",
                 content = "Can you show me a visual example?",
                 isUser = true,
                 timestamp = System.currentTimeMillis() - 1800000L,
@@ -538,7 +628,7 @@ class MockChatRepository @Inject constructor() : ChatRepository {
         // Add video message
         val videoMessage = ChatMessage(
             id = "msg_demo_4",
-            sessionId = "session_demo_linear",
+            sessionId = "session_demo_linear_general",
             content = "Here's a visual explanation of linear equations that should help clarify the concept!",
             isUser = false,
             timestamp = System.currentTimeMillis() - 1200000L,

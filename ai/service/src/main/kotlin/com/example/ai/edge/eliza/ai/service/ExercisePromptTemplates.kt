@@ -40,10 +40,12 @@ object ExercisePromptTemplates {
             difficultyAchieved: ${difficulty.name.lowercase()}
             
             RULES:
+            - ANSWER must be correct! this is very important! make sure it is correct before generating the question! 
             - Change numbers but keep same concept
             - One answer per line
             - No colons in answers (use = instead)
             - Follow format exactly
+
         """.trimIndent()
     }
     
