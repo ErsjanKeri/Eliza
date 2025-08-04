@@ -376,12 +376,14 @@ private fun rotateBitmapIfNeeded(
 }
 
 private fun createTempPictureUri(context: android.content.Context): Uri {
-    val tempFile = java.io.File(
-        context.externalCacheDir,
-        "temp_photo_${System.currentTimeMillis()}.jpg"
-    )
+    val tempFile = java.io.File.createTempFile(
+        "picture_${System.currentTimeMillis()}",
+        ".jpg",
+        context.cacheDir
+    ).apply { createNewFile() }
+    
     return androidx.core.content.FileProvider.getUriForFile(
-        context,
+        context.applicationContext,
         "${context.packageName}.fileprovider",
         tempFile
     )

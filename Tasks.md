@@ -15,8 +15,8 @@
 
 - [X] exercise generation bug, the memory dialod should be displayed there as well!!
 
-- [ ] **Camera not working** - camera not working but the select image yes!, additionally would like this to have white background (consider other cards, currently it is pinkish!)
-
+- [X] **Camera not working** - camera not working but the select image yes!, additionally would like this to have white background (consider other cards, currently it is pinkish!)
+- [ ] Camera and model picker card should be white
 
 ## 🎨 **CATEGORY 1: UI/UX DESIGN & STYLING FIXES**
 *Priority: CRITICAL - User Experience*

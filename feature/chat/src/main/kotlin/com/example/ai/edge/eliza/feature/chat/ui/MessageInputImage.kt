@@ -49,13 +49,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.exifinterface.media.ExifInterface
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 private const val TAG = "ElizaMessageInputImage"
 
@@ -194,8 +188,10 @@ private fun handleImageSelected(
       val tmpBitmap = BitmapFactory.decodeStream(inputStream)
       inputStream?.close()
       
-      if (rotateForPortrait && tmpBitmap != null) {
-        rotateBitmapIfNeeded(tmpBitmap, uri, context)
+      if (rotateForPortrait && tmpBitmap != null && tmpBitmap.width > tmpBitmap.height) {
+        val matrix = Matrix()
+        matrix.postRotate(90f)
+        Bitmap.createBitmap(tmpBitmap, 0, 0, tmpBitmap.width, tmpBitmap.height, matrix, true)
       } else {
         tmpBitmap
       }
@@ -211,53 +207,18 @@ private fun handleImageSelected(
 
 /**
  * Helper function to create a temporary picture URI.
- * Follows Gallery's pattern for camera image capture.
+ * Matches Gallery's exact implementation using cacheDir.
  */
-private fun createTempPictureUri(context: Context): Uri {
-  val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-  val imageFileName = "ELIZA_${timeStamp}_"
-  val storageDir = context.getExternalFilesDir("Pictures")
-  
-  return try {
-    val imageFile = File.createTempFile(imageFileName, ".jpg", storageDir)
-    androidx.core.content.FileProvider.getUriForFile(
-      context,
-      "${context.packageName}.fileprovider",
-      imageFile
-    )
-  } catch (e: IOException) {
-    Log.e(TAG, "Error creating temp file", e)
-    Uri.EMPTY
-  }
-}
+private fun createTempPictureUri(
+  context: Context,
+  fileName: String = "picture_${System.currentTimeMillis()}",
+  fileExtension: String = ".jpg"
+): Uri {
+  val tempFile = File.createTempFile(fileName, fileExtension, context.cacheDir).apply { createNewFile() }
 
-/**
- * Helper function to rotate bitmap based on EXIF data.
- * Matches Gallery's image rotation logic.
- */
-private fun rotateBitmapIfNeeded(bitmap: Bitmap, uri: Uri, context: Context): Bitmap {
-  return try {
-    val inputStream = context.contentResolver.openInputStream(uri)
-    val exif = ExifInterface(inputStream!!)
-    val orientation = exif.getAttributeInt(
-      ExifInterface.TAG_ORIENTATION,
-      ExifInterface.ORIENTATION_UNDEFINED
-    )
-    inputStream.close()
-
-    val matrix = Matrix()
-    when (orientation) {
-      ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
-      ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
-      ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
-      ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.preScale(-1.0f, 1.0f)
-      ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.preScale(1.0f, -1.0f)
-      else -> return bitmap // No rotation needed
-    }
-
-    Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-  } catch (e: Exception) {
-    Log.e(TAG, "Error rotating bitmap", e)
-    bitmap // Return original bitmap if rotation fails
-  }
+  return androidx.core.content.FileProvider.getUriForFile(
+    context.applicationContext,
+    "${context.packageName}.fileprovider",
+    tempFile,
+  )
 }
