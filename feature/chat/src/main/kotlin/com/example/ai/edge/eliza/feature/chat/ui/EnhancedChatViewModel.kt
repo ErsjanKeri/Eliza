@@ -102,6 +102,17 @@ class EnhancedChatViewModel @Inject constructor(
                     chapter = chapter
                 )
 
+                // Update sidebar state with real course and chapter names
+                _sidebarState.value = _sidebarState.value.copy(
+                    currentCourseId = course.id,
+                    currentChapterId = chapter.id,
+                    currentCourseName = course.title,
+                    currentChapterName = chapter.title
+                )
+
+                // Load chat sessions for the sidebar
+                loadChatSessionsForSidebar(chapter.id)
+
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -376,6 +387,31 @@ class EnhancedChatViewModel @Inject constructor(
         _sidebarState.value = _sidebarState.value.copy(
             expandedChapterIds = expandedChapters
         )
+    }
+
+    /**
+     * Load chat sessions for sidebar display, grouped by type.
+     */
+    private fun loadChatSessionsForSidebar(chapterId: String) {
+        viewModelScope.launch {
+            try {
+                val userId = _sidebarState.value.userId
+                
+                // Load sessions grouped by type from repository
+                chatRepository.getChatSessionsGroupedByType(chapterId, userId).collect { sessionsByType ->
+                    _sidebarState.value = _sidebarState.value.copy(
+                        chatSessionsByType = sessionsByType,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            } catch (e: Exception) {
+                _sidebarState.value = _sidebarState.value.copy(
+                    isLoading = false,
+                    error = "Failed to load chat sessions: ${e.message}"
+                )
+            }
+        }
     }
 
     /**

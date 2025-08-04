@@ -133,31 +133,56 @@ fun ModelDownloadPanel(
     ) {
         when (downloadStatus?.status) {
             ModelDownloadStatusType.SUCCEEDED -> {
-                // Check if model is also initialized
-                if (initStatus?.status == ModelInitializationStatusType.INITIALIZED && model.instance != null) {
-                    // Model is fully ready - this case should not be reached as ChatView handles this
-                    Text(
-                        text = "Eliza is ready!",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center
-                    )
-                } else {
-                    // Model downloaded but not initialized - show loader
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(32.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "Eliza is getting ready...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center
-                        )
+                // Check initialization status
+                when (initStatus?.status) {
+                    ModelInitializationStatusType.INITIALIZED -> {
+                        if (model.instance != null) {
+                            // Model is fully ready - this case should not be reached as ChatView handles this
+                            Text(
+                                text = "Eliza is ready!",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                    ModelInitializationStatusType.CANCELLED_DUE_TO_MEMORY -> {
+                        // User cancelled due to memory warning
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cannot run",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Text(
+                                text = "Eliza cannot run on this device :(",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                    else -> {
+                        // Model downloaded but not initialized - show loader
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(32.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Eliza is getting ready...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -55,6 +56,7 @@ fun MemoryWarningDialog(
     AlertDialog(
         onDismissRequest = onCancel,
         modifier = modifier,
+        shape = RoundedCornerShape(0.dp), // Square corners like rest of app
         icon = {
             Icon(
                 imageVector = Icons.Default.Warning,
@@ -71,9 +73,9 @@ fun MemoryWarningDialog(
         title = {
             Text(
                 text = when (compatibility.riskLevel) {
-                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> "⚠️ HIGH CRASH RISK"
-                    DeviceCapabilityChecker.RiskLevel.CRITICAL -> "⚠️ MEMORY WARNING"
-                    DeviceCapabilityChecker.RiskLevel.WARNING -> "⚠️ HIGH MEMORY USAGE"
+                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> "High Memory Usage Detected"
+                    DeviceCapabilityChecker.RiskLevel.CRITICAL -> "Memory Warning"
+                    DeviceCapabilityChecker.RiskLevel.WARNING -> "High Memory Usage"
                     else -> "Memory Information"
                 },
                 style = MaterialTheme.typography.headlineSmall.copy(
@@ -253,6 +255,7 @@ fun QuickMemoryWarningDialog(
     AlertDialog(
         onDismissRequest = onCancel,
         modifier = modifier,
+        shape = RoundedCornerShape(0.dp), // Square corners like rest of app
         icon = {
             Icon(
                 imageVector = Icons.Default.Warning,
@@ -268,7 +271,7 @@ fun QuickMemoryWarningDialog(
         title = {
             Text(
                 text = when (riskLevel) {
-                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> "High Crash Risk"
+                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> "High Memory Usage Detected"
                     DeviceCapabilityChecker.RiskLevel.CRITICAL -> "Memory Warning"
                     else -> "High Memory Usage"
                 },

@@ -23,12 +23,15 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -38,8 +41,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.QuestionAnswer
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -57,6 +66,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaOutlinedButton
@@ -105,7 +115,7 @@ fun ChatSidebar(
                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
                     shape = RoundedCornerShape(0.dp) // Square design consistency
                 ),
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f), // Light blue background
             shadowElevation = 0.dp, // Clean flat design - no shadows
             shape = RoundedCornerShape(0.dp) // Square design consistency
         ) {
@@ -164,13 +174,24 @@ private fun SidebarHeader(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        Text(
-            text = "💬 Chat Sessions",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold
-            ),
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Chat,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = "Chat Sessions",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
         
         Spacer(modifier = Modifier.height(8.dp))
         
@@ -217,7 +238,7 @@ private fun ChatHierarchyContent(
                 // Course level (auto-expanded for current course)
                 CourseItem(
                     courseId = sidebarState.currentCourseId,
-                    courseName = "📚 Algebra Basics", // TODO: Get from repository
+                    courseName = sidebarState.currentCourseName ?: "Loading Course...",
                     isExpanded = true, // Auto-expanded for current course
                     onToggleExpanded = { onExpandCourse(sidebarState.currentCourseId) }
                 )
@@ -227,7 +248,7 @@ private fun ChatHierarchyContent(
                 // Chapter level (auto-expanded for current chapter)
                 ChapterItem(
                     chapterId = sidebarState.currentChapterId,
-                    chapterName = "📖 Linear Equations", // TODO: Get from repository
+                    chapterName = sidebarState.currentChapterName ?: "Loading Chapter...",
                     isExpanded = true, // Auto-expanded for current chapter
                     onToggleExpanded = { onExpandChapter(sidebarState.currentChapterId) },
                     modifier = Modifier.padding(start = 16.dp)
@@ -246,12 +267,26 @@ private fun ChatHierarchyContent(
         } else {
             item {
                 // No chapter context - show message
-                Text(
-                    text = "🔍 Open a chapter to view related chat sessions",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(16.dp)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Open a chapter to view related chat sessions",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
@@ -268,24 +303,35 @@ private fun CourseItem(
     onToggleExpanded: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElizaTextButton(
-        onClick = onToggleExpanded,
-        modifier = modifier,
-        text = {
-            Text(
-                text = courseName,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "Collapse" else "Expand"
-            )
-        }
-    )
+    Row(
+        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+            contentDescription = if (isExpanded) "Collapse" else "Expand",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.Default.School,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = courseName,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onToggleExpanded() }
+        )
+    }
 }
 
 /**
@@ -299,24 +345,35 @@ private fun ChapterItem(
     onToggleExpanded: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElizaTextButton(
-        onClick = onToggleExpanded,
-        modifier = modifier,
-        text = {
-            Text(
-                text = chapterName,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "Collapse" else "Expand"
-            )
-        }
-    )
+    Row(
+        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+            contentDescription = if (isExpanded) "Collapse" else "Expand",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.Default.MenuBook,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = chapterName,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onToggleExpanded() }
+        )
+    }
 }
 /**
  * List of chat types and their sessions.
@@ -331,7 +388,7 @@ private fun ChatTypesList(
     Column(modifier = modifier) {
         // General Chapter Discussion
         ChatTypeSection(
-            title = "💬 General Chapter Discussion",
+            title = "General Chapter Discussion",
             chatType = ChatType.GENERAL_CHAPTER,
             sessions = sidebarState.chatSessionsByType[ChatType.GENERAL_CHAPTER] ?: emptyList(),
             activeSessionId = sidebarState.activeSessionId,
@@ -343,7 +400,7 @@ private fun ChatTypesList(
         
         // Exercise Help
         ChatTypeSection(
-            title = "❓ Exercise Help",
+            title = "Exercise Help",
             chatType = ChatType.EXERCISE_HELP,
             sessions = sidebarState.chatSessionsByType[ChatType.EXERCISE_HELP] ?: emptyList(),
             activeSessionId = sidebarState.activeSessionId,
@@ -356,7 +413,7 @@ private fun ChatTypesList(
         
         // Text Questions
         ChatTypeSection(
-            title = "📝 Text Questions",
+            title = "Text Questions",
             chatType = ChatType.TEXT_SELECTION,
             sessions = sidebarState.chatSessionsByType[ChatType.TEXT_SELECTION] ?: emptyList(),
             activeSessionId = sidebarState.activeSessionId,

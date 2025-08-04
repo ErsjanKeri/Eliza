@@ -165,17 +165,17 @@ fun ChatView(
                     .fillMaxSize()
             ) {
                 // Top bar with RAG toggle, model picker, and proper spacing
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     // RAG toggle - left position
-                    SimpleRagToggle()
+                    SimpleRagToggle(
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    )
                     
-                    // Model selector chip - center position with device compatibility indicators
+                    // Model selector chip - centered position
                     ModelSelectorChip(
                         task = task,
                         selectedModel = selectedModel,
@@ -191,12 +191,10 @@ fun ChatView(
                             )
                         },
                         deviceCapabilityChecker = modelManager.getDeviceCapabilityChecker(),
-                        modifier = Modifier.weight(1f) // Take available space in center
+                        modifier = Modifier.align(Alignment.Center) // Perfectly centered
                     )
                     
-                    // Sidebar toggle is in TopAppBar actions (right position)
-                    // This space reserved for better balance
-                    Spacer(modifier = Modifier.width(48.dp))
+                    // Sidebar toggle is in TopAppBar actions (right position) - no need for spacer
                 }
             
             // Main content area - Gallery's exact pattern
@@ -363,7 +361,7 @@ fun ChatView(
                     modelManager.switchToSaferModel(context, task)
                 },
                 onCancel = {
-                    modelManager.hideMemoryWarning()
+                    modelManager.cancelDueToMemoryWarning()
                 }
             )
         }

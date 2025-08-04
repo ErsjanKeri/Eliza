@@ -28,6 +28,8 @@ data class SidebarUiState(
     val isLoading: Boolean = false,
     val currentChapterId: String? = null,
     val currentCourseId: String? = null,
+    val currentCourseName: String? = null, // NEW: Course name from repository
+    val currentChapterName: String? = null, // NEW: Chapter name from repository
     val userId: String = "user_demo", // TODO: Replace with actual user system
     val expandedCourseIds: Set<String> = emptySet(),
     val expandedChapterIds: Set<String> = emptySet(),

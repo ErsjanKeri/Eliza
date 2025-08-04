@@ -144,7 +144,7 @@ class DeviceCapabilityChecker @Inject constructor() {
         val (riskLevel, recommendation, warnings) = when {
             memoryUtilization > 1.0f -> Triple(
                 RiskLevel.DANGEROUS,
-                "⚠️ DANGEROUS: This model requires ${String.format("%.1f", modelMemoryRequirement / (1024f * 1024f * 1024f))} GB but your device only has ${String.format("%.1f", deviceInfo.usableMemoryGB)} GB usable. Very likely to crash!",
+                "DANGEROUS: This model requires ${String.format("%.1f", modelMemoryRequirement / (1024f * 1024f * 1024f))} GB but your device only has ${String.format("%.1f", deviceInfo.usableMemoryGB)} GB usable. Very likely to crash!",
                 listOf(
                     "App will likely crash during model loading",
                     "Consider using the smaller 2B model instead",
@@ -153,7 +153,7 @@ class DeviceCapabilityChecker @Inject constructor() {
             )
             memoryUtilization > MEMORY_CRITICAL_THRESHOLD -> Triple(
                 RiskLevel.CRITICAL,
-                "⛔ CRITICAL: This model will use ${String.format("%.0f", memoryUtilization * 100)}% of your available memory. High crash risk!",
+                "CRITICAL: This model will use ${String.format("%.0f", memoryUtilization * 100)}% of your available memory. High crash risk!",
                 listOf(
                     "Very high memory usage may cause crashes",
                     "Close other apps before proceeding",
@@ -162,7 +162,7 @@ class DeviceCapabilityChecker @Inject constructor() {
             )
             memoryUtilization > MEMORY_WARNING_THRESHOLD -> Triple(
                 RiskLevel.WARNING,
-                "⚠️ WARNING: This model will use ${String.format("%.0f", memoryUtilization * 100)}% of your available memory.",
+                "WARNING: This model will use ${String.format("%.0f", memoryUtilization * 100)}% of your available memory.",
                 listOf(
                     "High memory usage - close other apps first",
                     "Performance may be affected",
@@ -171,7 +171,7 @@ class DeviceCapabilityChecker @Inject constructor() {
             )
             else -> Triple(
                 RiskLevel.SAFE,
-                "✅ SAFE: This model will use ${String.format("%.0f", memoryUtilization * 100)}% of your available memory.",
+                "SAFE: This model will use ${String.format("%.0f", memoryUtilization * 100)}% of your available memory.",
                 emptyList()
             )
         }

@@ -65,6 +65,7 @@ enum class ModelInitializationStatusType {
     INITIALIZING,
     INITIALIZED,
     ERROR,
+    CANCELLED_DUE_TO_MEMORY, // NEW: User cancelled due to memory warning
 }
 
 /** Model initialization status with error information - copied from Gallery. */
@@ -580,6 +581,22 @@ constructor(
                 memoryWarningCompatibility = null,
                 memoryWarningDeviceInfo = null
             )
+        }
+    }
+
+    /**
+     * Cancel model loading due to memory warning.
+     */
+    fun cancelDueToMemoryWarning() {
+        val model = uiState.value.memoryWarningModel
+        if (model != null) {
+            Log.d(TAG, "❌ User cancelled model loading due to memory warning: ${model.name}")
+            updateModelInitializationStatus(
+                model = model,
+                status = ModelInitializationStatusType.CANCELLED_DUE_TO_MEMORY,
+                error = "Model loading cancelled due to device memory constraints"
+            )
+            hideMemoryWarning()
         }
     }
 

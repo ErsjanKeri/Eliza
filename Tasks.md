@@ -5,6 +5,19 @@
 
 ---
 
+## **Cosmetics** 
+- [X] Check whether the added functionality and stylings work! -> works, but needs some stylings refining 
+- [X] Toggle for RAG leads to that the model picker in the middle is not centereed anymore! need to re-center it! 
+
+- [X] **Proper Sidebar styling and functionality** - sidebar now has proper light blue background, Material Icons (no more emojis), real data loading from CourseRepository, and proper chat session grouping by type!
+
+- [X] ModelPicker cancel functionality fixed! now properly shows "Eliza cannot run on this device :(" when cancelled. Still needs: replacement of emojis with icons and styling improvements
+
+- [X] exercise generation bug, the memory dialod should be displayed there as well!!
+
+- [ ] **Camera not working** - camera not working but the select image yes!, additionally would like this to have white background (consider other cards, currently it is pinkish!)
+
+
 ## 🎨 **CATEGORY 1: UI/UX DESIGN & STYLING FIXES**
 *Priority: CRITICAL - User Experience*
 
@@ -16,6 +29,9 @@
 - [X] **Completely redesign retake question UI** - Remove horrible shadows from retake question interface, redesign to match rest of application styling, ensure consistent design language with other components, simplify and clean up the retake UI elements
 
 - [X] **Standardize app-wide color scheme** - Establish and enforce slight blue and white theme across all screens, create color guidelines documentation, remove any color inconsistencies, ensure Eliza chat responses maintain pinkish theme while everything else uses blue/white
+
+
+
 
 
 ---
@@ -41,10 +57,10 @@
 ### HIGHEST PRIO: 
 - [X] **Model size according to device** with the highest priority! we should have a model manager which decides which is the most reasonable variant locally! since there are mobile phones who cannot handle the 4b model and thus should suggest to use the 2b model instead! 
 - [X] When app crashes, automatically switch to the 2b!!! 
-- [ ] Check whether the added functionality and stylings work! 
 
 
-- [ ] **Mock repository got an upgrade!**
+
+- [X] **Mock repository got an upgrade!**
 adjust the mock repository and the connection with the app to reflect the added stuff
 
 
@@ -63,23 +79,23 @@ adjust the mock repository and the connection with the app to reflect the added 
 
 - [X] **Remove current RAG toggle background styling** - Replace current large background RAG component with simple toggle, clean up excessive styling, ensure minimal and clean design
 
-- [ ] Toggle for RAG leads to that the model picker in the middle is not centereed anymore! need to re-center it! 
+
 
 
 ### **Chat Functionality**
 
-- [ ] **Implement exercise context as system prompt together with RAG** - Add question text and answer options as system prompt context for exercise help, ensure AI recognizes both question and selected answer, modify prompt engineering to include exercise context directly (for example opening a chat in the get exercise help, the model should know the exercise and alternatives and its solution and what the user had chosen from the context!!), and currently need to make sure the RAG for exercise works! !
+- [X] **System prompt and context** - When RAG toggle is off, Eliza seems to have NO CLUE about the context of the chapter or the exercise (despite this should be a default information!) RAG enabled should enhance the context, but the bare minimum it should always know! Additionally when RAG is enabled  
 
-- [ ] **Add stop button to chat interface** - Implement stop/cancel button for ongoing AI responses, add proper response cancellation logic, provide immediate response stopping when button is pressed (search here exactly how Gallery does it! and copy them!)
+- [X] **Implement exercise context as system prompt together with RAG** - Add question text and answer options as system prompt context for exercise help, ensure AI recognizes both question and selected answer, modify prompt engineering to include exercise context directly (for example opening a chat in the get exercise help, the model should know the exercise and alternatives and its solution and what the user had chosen from the context!!), and currently need to make sure the RAG for exercise works! !
 
-- [ ] **Add image upload functionality in the chat!** - chat messages from user should support image upload (this will require augmentation to the messages data types as well) but this is a very easy feature, Gallery provides an example with image upload in the chat! 
+- [X] **Add stop button to chat interface** - Implement stop/cancel button for ongoing AI responses, add proper response cancellation logic, provide immediate response stopping when button is pressed (search here exactly how Gallery does it! and copy them!)
 
-
-
-- [ ] **Ensure RAG slider positioning works** - Verify RAG toggle functions properly in new left position, maintain RAG enhancement functionality, ensure toggle state persistence, or does RAG persist between chats? 
+- [X] **Add image upload functionality in the chat!** - chat messages from user should support image upload (this will require augmentation to the messages data types as well) but this is a very easy feature, Gallery provides an example with image upload in the chat! 
 
 
-- [ ] **Proper Sidebar styling and functionality** - sidebar is currently ugly, having icons and accordion functionality and connection with the database not properly set up! Chat messages not properly connected with the app! requires replacement of the emojis with proper icons and styling! and proper data managing!
+
+- [X] **Ensure RAG slider positioning works** - Verify RAG toggle functions properly in new left position, maintain RAG enhancement functionality, ensure toggle state persistence, or does RAG persist between chats? 
+
 
 
 - [ ] **Request video button** whenever an image is included in the input chat from student, the button to request a video must be disabled! 

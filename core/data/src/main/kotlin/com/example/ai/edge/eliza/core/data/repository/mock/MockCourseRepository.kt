@@ -353,18 +353,18 @@
      // Initialize mock data
      private fun initializeMockData() {
          // Create mock courses
-         val algebraCourse = Course(
-             id = "course_algebra_1",
-             title = "Algebra I Fundamentals",
-             subject = Subject.ALGEBRA,
-             grade = "9th Grade",
-             description = "Master the fundamentals of algebra including linear equations, polynomials, and factoring.",
-             chapters = emptyList(), // Will be populated separately
-             totalChapters = 5,
-             estimatedHours = 50,
-             imageUrl = null,
-             isDownloaded = true
-         )
+                 val algebraCourse = Course(
+            id = "course_algebra_1",
+            title = "Algebra I Fundamentals",
+            subject = Subject.ALGEBRA,
+            grade = "9th Grade",
+            description = "Master the fundamentals of algebra including linear equations, polynomials, and factoring.",
+            chapters = emptyList(), // Will be populated separately
+            totalChapters = 3,
+            estimatedHours = 20,
+            imageUrl = null,
+            isDownloaded = true
+        )
          
          val geometryCourse = Course(
              id = "course_geometry_1",
@@ -619,11 +619,11 @@
              )
          )
  
-         val linearEquationsChapter = Chapter(
-             id = "chapter_linear_eq",
-             courseId = "course_algebra_1",
-             chapterNumber = 1,
-             title = "Foundations for Algebra",
+                 val linearEquationsChapter = Chapter(
+            id = "chapter_linear_eq",
+            courseId = "course_algebra_1",
+            chapterNumber = 1,
+            title = "Linear Equations",
              markdownContent = """
                  # Linear Equations
                  
@@ -646,14 +646,31 @@
              isCompleted = false
          )
          
-         val quadraticsChapter = Chapter(
-             id = "chapter_quadratics",
-             courseId = "course_algebra_1",
-             chapterNumber = 2,
-             title = "Quadratic Equations",
-             markdownContent = """
- 
-             """.trimIndent(),
+                 val quadraticsChapter = Chapter(
+            id = "chapter_quadratics",
+            courseId = "course_algebra_1",
+            chapterNumber = 2,
+            title = "Quadratic Equations",
+            markdownContent = """
+                # Quadratic Equations
+                
+                A quadratic equation is a polynomial equation of degree 2.
+                
+                ## Standard Form
+                The standard form is: **ax² + bx + c = 0**
+                
+                ## Solving Methods
+                1. Factoring
+                2. Quadratic Formula
+                3. Completing the Square
+                
+                ## Examples
+                1. Solve: x² - 5x + 6 = 0
+                   - Factor: (x - 2)(x - 3) = 0
+                   - Solutions: x = 2 or x = 3
+                
+                2. Using the quadratic formula: x = (-b ± √(b² - 4ac)) / 2a
+            """.trimIndent(),
              exercises = quadraticExercises,
              estimatedReadingTime = 20,
              isCompleted = false

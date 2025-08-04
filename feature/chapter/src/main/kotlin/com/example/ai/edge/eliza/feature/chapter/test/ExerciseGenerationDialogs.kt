@@ -58,6 +58,7 @@ import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
 import com.example.ai.edge.eliza.core.model.RelativeDifficulty
 import com.example.ai.edge.eliza.core.model.Trial
 import com.example.ai.edge.eliza.feature.chat.ui.ModelSelectorChip
+import com.example.ai.edge.eliza.feature.chat.ui.MemoryWarningDialog
 
 /**
  * Dialog for selecting difficulty level for exercise generation.
@@ -86,6 +87,7 @@ fun DifficultySelectionDialog(
     val isModelReady = downloadStatus?.status == ModelDownloadStatusType.SUCCEEDED && 
                       initStatus?.status == ModelInitializationStatusType.INITIALIZED &&
                       selectedModel?.instance != null
+    val isModelCancelled = initStatus?.status == ModelInitializationStatusType.CANCELLED_DUE_TO_MEMORY
     
     // Initialize model if available (same as ChatView)
     LaunchedEffect(selectedModel) {
@@ -187,20 +189,34 @@ fun DifficultySelectionDialog(
         confirmButton = {
             Surface(
                 shape = RoundedCornerShape(0.dp), // Square corners like home page
-                color = if (isModelReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                color = when {
+                    isModelCancelled -> MaterialTheme.colorScheme.errorContainer
+                    isModelReady -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.surfaceVariant
+                },
                 modifier = Modifier.height(48.dp)
             ) {
                 Button(
                     onClick = { 
-                        selectedModel?.let { model ->
-                            onDifficultySelected(selectedDifficulty, model)
+                        if (!isModelCancelled) {
+                            selectedModel?.let { model ->
+                                onDifficultySelected(selectedDifficulty, model)
+                            }
                         }
                     },
-                    enabled = isModelReady,
+                    enabled = isModelReady && !isModelCancelled,
                     shape = RoundedCornerShape(0.dp), // Square corners like home page
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isModelReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = if (isModelReady) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        containerColor = when {
+                            isModelCancelled -> MaterialTheme.colorScheme.errorContainer
+                            isModelReady -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        },
+                        contentColor = when {
+                            isModelCancelled -> MaterialTheme.colorScheme.onErrorContainer
+                            isModelReady -> MaterialTheme.colorScheme.onPrimary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -209,13 +225,25 @@ fun DifficultySelectionDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = if (isModelReady) Icons.Filled.Build else Icons.Filled.Info,
+                            imageVector = when {
+                                isModelCancelled -> Icons.Filled.Close
+                                isModelReady -> Icons.Filled.Build
+                                else -> Icons.Filled.Info
+                            },
                             contentDescription = null,
-                            tint = if (isModelReady) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = when {
+                                isModelCancelled -> MaterialTheme.colorScheme.onErrorContainer
+                                isModelReady -> MaterialTheme.colorScheme.onPrimary
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            },
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = if (isModelReady) "Generate Question" else "Eliza is getting ready...",
+                            text = when {
+                                isModelCancelled -> "Eliza cannot run on this device :("
+                                isModelReady -> "Generate Question"
+                                else -> "Eliza is getting ready..."
+                            },
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -247,6 +275,32 @@ fun DifficultySelectionDialog(
         },
         modifier = modifier
     )
+    
+    // Memory Warning Dialog - Same pattern as ChatView.kt lines 349-369
+    val warningModel = uiState.memoryWarningModel
+    val warningCompatibility = uiState.memoryWarningCompatibility
+    val warningDeviceInfo = uiState.memoryWarningDeviceInfo
+    
+    if (uiState.showMemoryWarning && 
+        warningModel != null && 
+        warningCompatibility != null && 
+        warningDeviceInfo != null) {
+        
+        MemoryWarningDialog(
+            model = warningModel,
+            compatibility = warningCompatibility,
+            deviceInfo = warningDeviceInfo,
+            onProceedAnyway = {
+                modelManager.proceedWithMemoryWarning(context, task)
+            },
+            onSwitchToSaferModel = {
+                modelManager.switchToSaferModel(context, task)
+            },
+            onCancel = {
+                modelManager.cancelDueToMemoryWarning()
+            }
+        )
+    }
 }
 
 /**

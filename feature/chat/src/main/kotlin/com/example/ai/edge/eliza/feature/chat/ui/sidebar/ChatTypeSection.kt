@@ -35,8 +35,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -316,15 +319,17 @@ private fun EmptySessionsMessage(
         modifier = modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val (emoji, message) = when (chatType) {
-            ChatType.GENERAL_CHAPTER -> "💭" to "Start a conversation about this chapter"
-            ChatType.EXERCISE_HELP -> "🤔" to "Get help when you need it during exercises"
-            ChatType.TEXT_SELECTION -> "❓" to "Ask questions about selected text"
+        val (icon, message) = when (chatType) {
+            ChatType.GENERAL_CHAPTER -> Icons.Default.Chat to "Start a conversation about this chapter"
+            ChatType.EXERCISE_HELP -> Icons.Default.Help to "Get help when you need it during exercises"
+            ChatType.TEXT_SELECTION -> Icons.Default.QuestionAnswer to "Ask questions about selected text"
         }
         
-        Text(
-            text = emoji,
-            style = MaterialTheme.typography.headlineMedium
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            modifier = Modifier.size(32.dp)
         )
         
         Spacer(modifier = Modifier.height(8.dp))
