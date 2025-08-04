@@ -17,6 +17,7 @@
 package com.example.ai.edge.eliza.feature.chat.ui
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,6 +62,7 @@ import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import com.example.ai.edge.eliza.ai.service.ElizaChatViewModel
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 import com.example.ai.edge.eliza.feature.chat.ui.sidebar.ChatSidebar
+// MemoryWarningDialog is now in the same package
 
 /**
  * Full-screen ChatView that replicates Gallery's chat interface exactly.
@@ -173,7 +175,7 @@ fun ChatView(
                     // RAG toggle - left position
                     SimpleRagToggle()
                     
-                    // Model selector chip - center position
+                    // Model selector chip - center position with device compatibility indicators
                     ModelSelectorChip(
                         task = task,
                         selectedModel = selectedModel,
@@ -188,6 +190,7 @@ fun ChatView(
                                 model = model
                             )
                         },
+                        deviceCapabilityChecker = modelManager.getDeviceCapabilityChecker(),
                         modifier = Modifier.weight(1f) // Take available space in center
                     )
                     
@@ -202,20 +205,26 @@ fun ChatView(
                 ChatPanel(
                     modifier = Modifier.weight(1f),
                     messages = messages,
-                    onSendMessage = { messageText ->
-                        if (messageText.isNotBlank() && !isLoading && selectedModel != null) {
+                    onSendMessage = { chatMessages ->
+                        if (chatMessages.isNotEmpty() && !isLoading && selectedModel != null) {
                             isLoading = true
                             
-                            // Add user message
-                            val userMessage = ChatMessageText(
-                                content = messageText,
-                                side = ChatSide.USER
-                            )
-                            messages = (messages + userMessage).toMutableList()
+                            // Add all user messages (text + images) - Gallery's exact pattern
+                            messages = (messages + chatMessages).toMutableList()
                             
                             // Add loading message (Gallery pattern)
                             val loadingMessage = ChatMessageLoading()
                             messages = (messages + loadingMessage).toMutableList()
+                            
+                            // Extract text and images from the messages for AI processing
+                            var messageText = ""
+                            val images = mutableListOf<Bitmap>()
+                            for (message in chatMessages) {
+                                when (message) {
+                                    is ChatMessageText -> messageText = message.content
+                                    is ChatMessageImage -> images.add(message.bitmap)
+                                }
+                            }
                             
                             // Use provided chatContext or create basic one for RAG enhancement
                             val contextToUse = chatContext ?: ChatContext.GeneralTutoring(
@@ -234,6 +243,7 @@ fun ChatView(
                                 model = selectedModel,
                                 input = messageText,
                                 context = contextToUse,
+                                images = images,
                                 resultListener = { partialResponse, isComplete ->
                                     if (currentStreamingMessage == null) {
                                         // First token - replace loading with streaming message (Gallery pattern)
@@ -274,7 +284,19 @@ fun ChatView(
                         }
                     },
                     navigateUp = onNavigateUp,
-                    isLoading = isLoading
+                    isLoading = isLoading,
+                    onStopButtonClicked = { 
+                        selectedModel?.let { model ->
+                            chatViewModel.stopResponse(model)
+                            // Clean up UI state immediately - Gallery pattern
+                            if (messages.lastOrNull() is ChatMessageLoading) {
+                                messages = messages.dropLast(1).toMutableList()
+                            }
+                            currentStreamingMessage = null
+                            isLoading = false
+                        }
+                    },
+                    showStopButtonWhenInProgress = true
                 )
                 } else {
                     // Show model download panel when model isn't ready
@@ -316,6 +338,32 @@ fun ChatView(
                 },
                 onCreateNewChat = { chatType -> 
                     enhancedChatViewModel.createNewChatSession(chatType)
+                }
+            )
+        }
+        
+        // Memory Warning Dialog - Gallery's proven pattern
+        val warningModel = uiState.memoryWarningModel
+        val warningCompatibility = uiState.memoryWarningCompatibility
+        val warningDeviceInfo = uiState.memoryWarningDeviceInfo
+        
+        if (uiState.showMemoryWarning && 
+            warningModel != null && 
+            warningCompatibility != null && 
+            warningDeviceInfo != null) {
+            
+            MemoryWarningDialog(
+                model = warningModel,
+                compatibility = warningCompatibility,
+                deviceInfo = warningDeviceInfo,
+                onProceedAnyway = {
+                    modelManager.proceedWithMemoryWarning(context, task)
+                },
+                onSwitchToSaferModel = {
+                    modelManager.switchToSaferModel(context, task)
+                },
+                onCancel = {
+                    modelManager.hideMemoryWarning()
                 }
             )
         }

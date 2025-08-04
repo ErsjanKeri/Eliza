@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -60,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -81,12 +83,14 @@ enum class ChatInputType {
 @Composable
 fun ChatPanel(
   messages: List<ChatMessage>,
-  onSendMessage: (String) -> Unit,
+  onSendMessage: (List<ChatMessage>) -> Unit,
   navigateUp: () -> Unit,
   modifier: Modifier = Modifier,
   isLoading: Boolean = false,
   onImageSelected: (Bitmap) -> Unit = {},
   chatInputType: ChatInputType = ChatInputType.TEXT,
+  onStopButtonClicked: () -> Unit = {},
+  showStopButtonWhenInProgress: Boolean = false,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
@@ -216,12 +220,22 @@ fun ChatPanel(
 
                 // Image message.
                 is ChatMessageImage -> {
+                  // Use Gallery's aspect ratio calculation for better image display
+                  val bitmapWidth = message.bitmap.width
+                  val bitmapHeight = message.bitmap.height
+                  val imageWidth =
+                    if (bitmapWidth >= bitmapHeight) 200 else (200f / bitmapHeight * bitmapWidth).toInt()
+                  val imageHeight =
+                    if (bitmapHeight >= bitmapWidth) 200 else (200f / bitmapWidth * bitmapHeight).toInt()
+
                   androidx.compose.foundation.Image(
                     bitmap = message.imageBitMap,
                     contentDescription = "User image",
                     modifier = Modifier
-                      .size(200.dp)
-                      .padding(8.dp)
+                      .width(imageWidth.dp)
+                      .height(imageHeight.dp)
+                      .padding(8.dp),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                   )
                 }
 
@@ -261,15 +275,40 @@ fun ChatPanel(
           curMessage = curMessage,
           inProgress = isLoading,
           onValueChanged = { curMessage = it },
-          onSendMessage = { text ->
-            onSendMessage(text)
+          onSendMessage = { messages ->
+            onSendMessage(messages)
             curMessage = ""
           },
+          onStopButtonClicked = onStopButtonClicked,
+          showStopButtonWhenInProgress = showStopButtonWhenInProgress,
+          onImageSelected = onImageSelected,
+          showImagePickerInMenu = true,
         )
       }
 
       ChatInputType.IMAGE -> {
-        // Image input placeholder - would go here when needed
+        MessageInputImage(
+          disableButtons = isLoading,
+          onImageSelected = { bitmap ->
+            // Create ChatMessageImage following Gallery's exact pattern
+            val imageMessage = ChatMessageImage(
+              bitmap = bitmap,
+              imageBitMap = bitmap.asImageBitmap(),
+              side = ChatSide.USER,
+            )
+            // Send the image message (this would need to be connected to actual sending logic)
+            onImageSelected(bitmap)
+          },
+          onStreamImage = { bitmap ->
+            // Image streaming support (for future live camera functionality)
+            // For now, treat it the same as regular image selection
+            onImageSelected(bitmap)
+          },
+          onStreamEnd = { averageFps ->
+            // Live camera streaming ended - for future implementation
+            // Could show info message about camera session
+          },
+        )
       }
     }
   }

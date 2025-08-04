@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.material3)
+    implementation(libs.material.icon.extended)
     implementation(libs.androidx.ui.tooling.preview)
     
     // Additional Compose dependencies
@@ -77,4 +78,7 @@ dependencies {
     
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    
+    // Image handling
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
 } 

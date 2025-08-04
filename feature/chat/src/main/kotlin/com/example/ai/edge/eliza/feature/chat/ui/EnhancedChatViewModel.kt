@@ -158,25 +158,19 @@ class EnhancedChatViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Find exercise number within chapter
-                val exerciseNumber = chapter.exercises.indexOfFirst { it.id == exerciseId } + 1
-
-                // Create proper ChatContext from real data
-                val chatContext = ChatContext.ExerciseSolving(
-                    exerciseId = exercise.id,
-                    exerciseNumber = exerciseNumber,
-                    questionText = exercise.questionText,
+                // Create proper ChatContext from real data using factory method
+                // Let the factory method handle all logic consistently
+                val chatContext = ChatContext.createExerciseSolving(
+                    course = course,
+                    chapter = chapter,
+                    exercise = exercise,
                     userAnswer = userAnswer,
-                    correctAnswer = exercise.options[exercise.correctAnswerIndex],
-                    chapterId = chapter.id,
-                    chapterTitle = chapter.title,
-                    chapterContent = chapter.markdownContent,
-                    courseId = realCourseId,
-                    courseTitle = course.title,
-                    courseSubject = course.subject.name,
-                    difficulty = exercise.difficulty.name,
+                    userAnswerIndex = null, // Let factory resolve this from userAnswer
                     isTestQuestion = isTestQuestion
                 )
+                
+                // Get exercise number from the created context (single source of truth)
+                val exerciseNumber = chatContext.exerciseNumber
 
                 // Create initial context message
                 val exerciseContext = """

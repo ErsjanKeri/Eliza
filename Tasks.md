@@ -38,14 +38,18 @@
 ### **Model Management**
 - [X] **Fix model switching functionality** - Implement proper model switching in ElizaModelManager, ensure selected model persists across app sessions, add loading indicators during model switching, handle model initialization correctly after switching, currently the model picker does not work on switching! upon clicking the alternative to gemma-3n-4b which is the gemma-3n-2b nothing changes! Here focus on gallery how they do it! 
 
-### **Test System Data Flow** DATA FLOW is a huge task, this will be final as it takes a lot of time! 
-- [ ] **Fix test retaking answer persistence** - Ensure test answers properly save to database when retaking tests, fix UserAnswer record updates, implement proper data flow for retaken tests, ensure "best attempt" progress tracking works correctly
-This is very important! a proper data flow is what makes the app working, make sure the chat messages and sessions are also stored and created! currently there are no data updates throughout the app! 
+### HIGHEST PRIO: 
+- [X] **Model size according to device** with the highest priority! we should have a model manager which decides which is the most reasonable variant locally! since there are mobile phones who cannot handle the 4b model and thus should suggest to use the 2b model instead! 
+- [X] When app crashes, automatically switch to the 2b!!! 
+- [ ] Check whether the added functionality and stylings work! 
 
-- [] Toggle for RAG leads to that the model picker in the middle is not centereed anymore! need to re-center it! 
 
-### **Exercise Context System**
-- [ ] **Implement exercise context as system prompt together with RAG** - Add question text and answer options as system prompt context for exercise help, ensure AI recognizes both question and selected answer, modify prompt engineering to include exercise context directly, remove RAG dependency for exercise context, currently I am unsure whether the RAG toggle works!
+- [ ] **Mock repository got an upgrade!**
+adjust the mock repository and the connection with the app to reflect the added stuff
+
+
+
+
 
 ---
 
@@ -53,18 +57,32 @@ This is very important! a proper data flow is what makes the app working, make s
 *Priority: HIGH - Core User Interface*
 
 ### **Sidebar Implementation**
-- [ ] **Implement proper chat sidebar functionality** - The sidebar button is currently not showing! not sure if it works properly! 
+- [X] **Implement proper chat sidebar functionality** - The sidebar button is currently not showing! not sure if it works properly! 
 
-- [ ] **Redesign top chat bar layout** - Position RAG toggle on far left (simple toggle saying "RAG enhanced"), place model picker in center, place sidebar button on far right, all in same row with proper spacing and alignment
+- [X] **Redesign top chat bar layout** - Position RAG toggle on far left (simple toggle saying "RAG enhanced"), place model picker in center, place sidebar button on far right, all in same row with proper spacing and alignment
 
-- [ ] **Remove current RAG toggle background styling** - Replace current large background RAG component with simple toggle, clean up excessive styling, ensure minimal and clean design
+- [X] **Remove current RAG toggle background styling** - Replace current large background RAG component with simple toggle, clean up excessive styling, ensure minimal and clean design
+
+- [ ] Toggle for RAG leads to that the model picker in the middle is not centereed anymore! need to re-center it! 
 
 
 ### **Chat Functionality**
+
+- [ ] **Implement exercise context as system prompt together with RAG** - Add question text and answer options as system prompt context for exercise help, ensure AI recognizes both question and selected answer, modify prompt engineering to include exercise context directly (for example opening a chat in the get exercise help, the model should know the exercise and alternatives and its solution and what the user had chosen from the context!!), and currently need to make sure the RAG for exercise works! !
+
 - [ ] **Add stop button to chat interface** - Implement stop/cancel button for ongoing AI responses, add proper response cancellation logic, provide immediate response stopping when button is pressed (search here exactly how Gallery does it! and copy them!)
 
+- [ ] **Add image upload functionality in the chat!** - chat messages from user should support image upload (this will require augmentation to the messages data types as well) but this is a very easy feature, Gallery provides an example with image upload in the chat! 
 
-- [ ] **Ensure RAG slider positioning works** - Verify RAG toggle functions properly in new left position, maintain RAG enhancement functionality, ensure toggle state persistence
+
+
+- [ ] **Ensure RAG slider positioning works** - Verify RAG toggle functions properly in new left position, maintain RAG enhancement functionality, ensure toggle state persistence, or does RAG persist between chats? 
+
+
+- [ ] **Proper Sidebar styling and functionality** - sidebar is currently ugly, having icons and accordion functionality and connection with the database not properly set up! Chat messages not properly connected with the app! requires replacement of the emojis with proper icons and styling! and proper data managing!
+
+
+- [ ] **Request video button** whenever an image is included in the input chat from student, the button to request a video must be disabled! 
 
 ---
 
@@ -78,6 +96,9 @@ This is very important! a proper data flow is what makes the app working, make s
 
 
 ---
+
+
+
 
 ## 🌍 **CATEGORY 5: LANGUAGE SYSTEM IMPLEMENTATION**
 *Priority: HIGH - Core Feature Requirement*
@@ -110,6 +131,13 @@ This is very important! a proper data flow is what makes the app working, make s
 
 
 ---
+
+
+### **Test System Data Flow LAST TASK** DATA FLOW is a huge task, this will be final as it takes a lot of time! 
+- [ ] **Fix test retaking answer persistence** - Ensure test answers properly save to database when retaking tests, fix UserAnswer record updates, implement proper data flow for retaken tests, ensure "best attempt" progress tracking works correctly
+This is very important! a proper data flow is what makes the app working, make sure the chat messages and sessions are also stored and created! currently there are no data updates throughout the app! 
+
+
 
 ## 📝 **DEVELOPMENT NOTES**
 

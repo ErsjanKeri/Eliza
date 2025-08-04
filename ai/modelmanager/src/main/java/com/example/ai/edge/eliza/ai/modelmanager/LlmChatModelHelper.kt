@@ -130,6 +130,21 @@ object LlmChatModelHelper {
         }
     }
 
+    fun stopResponse(model: Model) {
+        Log.d(TAG, "Stopping response for model ${model.name}...")
+        try {
+            val instance = model.instance as LlmModelInstance?
+            if (instance != null) {
+                instance.session.cancelGenerateResponseAsync()
+                Log.d(TAG, "Successfully cancelled response for model ${model.name}")
+            } else {
+                Log.w(TAG, "Model instance is null, cannot cancel response")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping response for model ${model.name}", e)
+        }
+    }
+
     fun cleanUp(model: Model) {
         if (model.instance == null) {
             return

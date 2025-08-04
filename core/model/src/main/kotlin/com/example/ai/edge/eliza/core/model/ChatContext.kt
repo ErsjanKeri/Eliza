@@ -82,8 +82,11 @@ sealed class ChatContext {
         val exerciseId: String,
         val exerciseNumber: Int,
         val questionText: String,
+        val options: List<String> = emptyList(), // All multiple choice options (A, B, C, D)
         val userAnswer: String? = null,
         val correctAnswer: String? = null,
+        val userAnswerIndex: Int? = null, // Index of selected option (0-3)
+        val correctAnswerIndex: Int? = null, // Index of correct option (0-3)
         val chapterId: String,
         val chapterTitle: String,
         val chapterContent: String? = null, // Chapter content for context
@@ -132,16 +135,25 @@ sealed class ChatContext {
             chapter: Chapter,
             exercise: Exercise,
             userAnswer: String? = null,
+            userAnswerIndex: Int? = null,
             isTestQuestion: Boolean = false,
             attempts: Int = 0,
             previousAttempts: List<String> = emptyList()
         ): ExerciseSolving {
+            // If userAnswerIndex is provided, use that; otherwise try to find it from userAnswer
+            val resolvedUserAnswerIndex = userAnswerIndex ?: userAnswer?.let { answer ->
+                exercise.options.indexOfFirst { it == answer }.takeIf { it >= 0 }
+            }
+            
             return ExerciseSolving(
                 exerciseId = exercise.id,
-                exerciseNumber = chapter.exercises.indexOf(exercise) + 1,
+                exerciseNumber = chapter.exercises.indexOfFirst { it.id == exercise.id } + 1,
                 questionText = exercise.questionText,
+                options = exercise.options,
                 userAnswer = userAnswer,
                 correctAnswer = exercise.options.getOrNull(exercise.correctAnswerIndex),
+                userAnswerIndex = resolvedUserAnswerIndex,
+                correctAnswerIndex = exercise.correctAnswerIndex,
                 chapterId = chapter.id,
                 chapterTitle = chapter.title,
                 chapterContent = chapter.markdownContent,

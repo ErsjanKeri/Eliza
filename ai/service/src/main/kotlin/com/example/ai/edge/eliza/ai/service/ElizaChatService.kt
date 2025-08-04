@@ -28,6 +28,7 @@ import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 // Import Gallery-compatible Model class from core.model
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.Model
+
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -168,6 +169,16 @@ open class ElizaChatViewModel @Inject constructor(
         """.trimIndent()
         
         sendMessage(model, enhancedPrompt, images, resultListener)
+    }
+    
+    /**
+     * Stop ongoing response generation
+     */
+    fun stopResponse(model: Model) {
+        Log.d(TAG, "Stopping response for model ${model.name}...")
+        viewModelScope.launch(Dispatchers.Default) {
+            LlmChatModelHelper.stopResponse(model)
+        }
     }
     
     /**

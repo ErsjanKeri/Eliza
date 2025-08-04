@@ -36,7 +36,6 @@ import javax.inject.Singleton
 
 private const val TAG = "ElizaInferenceHelperImpl"
 
-// EXACT COPY of Gallery's typealias from LlmChatModelHelper.kt line 38
 typealias ResultListener = (partialResult: String, done: Boolean) -> Unit
 
 typealias CleanUpListener = () -> Unit

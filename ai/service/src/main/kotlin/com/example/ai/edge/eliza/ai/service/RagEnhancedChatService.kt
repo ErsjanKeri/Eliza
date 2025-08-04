@@ -78,7 +78,7 @@ class RagEnhancedChatService @Inject constructor(
                         },
                         onError = {
                             Log.w(TAG, "Enhanced RAG generation failed, falling back to basic")
-                            generateBasicResponse(model, input, images, resultListener, onError)
+                            generateBasicResponse(model, input, images, resultListener, onError, context)
                         }
                     )
                     return
@@ -93,33 +93,60 @@ class RagEnhancedChatService @Inject constructor(
                 }
             }
             
-            // Fall back to basic generation
-            generateBasicResponse(model, input, images, resultListener, onError)
+            // Fall back to basic generation  
+            generateBasicResponse(model, input, images, resultListener, onError, context)
             
         } catch (e: Exception) {
             Log.e(TAG, "Error in enhanced response generation", e)
-            generateBasicResponse(model, input, images, resultListener, onError)
+            generateBasicResponse(model, input, images, resultListener, onError, context)
         }
     }
     
     /**
-     * Generate response using direct model inference (no RAG).
+     * Generate response using basic RAG providers (context-aware but no vector search).
      */
     private fun generateBasicResponse(
         model: Model,
         input: String,
         images: List<Bitmap>,
         resultListener: (String, Boolean) -> Unit,
-        onError: () -> Unit
+        onError: () -> Unit,
+        context: ChatContext? = null
     ) {
-        Log.d(TAG, "Using basic response generation via LlmChatModelHelper")
+        Log.d(TAG, "Using basic response generation")
         Log.d(TAG, "Model: ${model.name}, Input length: ${input.length}, Images: ${images.size}")
+        Log.d(TAG, "Context: ${context?.javaClass?.simpleName ?: "None"}")
         
         try {
-            // Call LlmChatModelHelper directly to avoid infinite loop
+            val finalPrompt = if (context != null) {
+                Log.d(TAG, "Processing context with basic RAG provider")
+                
+                try {
+                    // Get the appropriate basic RAG provider for this context
+                    val ragProvider = ragProviderFactory.createBasicProvider(context)
+                    
+                    // Enhance the prompt with context and system instructions
+                    val enhancementResult = kotlinx.coroutines.runBlocking {
+                        ragProvider.enhancePrompt(input, context)
+                    }
+                    
+                    Log.d(TAG, "Basic RAG enhancement completed (confidence: ${enhancementResult.confidence})")
+                    Log.d(TAG, "Enhanced prompt preview: ${enhancementResult.enhancedPrompt.enhancedPrompt.take(200)}...")
+                    
+                    enhancementResult.enhancedPrompt.enhancedPrompt
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in basic RAG enhancement, using raw input", e)
+                    input
+                }
+            } else {
+                Log.d(TAG, "No context provided, using raw input")
+                input
+            }
+            
+            // Call LlmChatModelHelper with the processed prompt
             LlmChatModelHelper.runInference(
                 model = model,
-                input = input,
+                input = finalPrompt,
                 resultListener = { response, isComplete ->
                     Log.d(TAG, "Basic inference callback - complete: $isComplete, response length: ${response.length}")
                     resultListener(response, isComplete)

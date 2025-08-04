@@ -61,6 +61,7 @@ interface RagProvider {
 interface RagProviderFactory {
     fun createProvider(context: ChatContext): RagProvider
     fun createEnhancedProvider(context: ChatContext): RagProvider
+    fun createBasicProvider(context: ChatContext): RagProvider
     fun setUseEnhancedRag(enabled: Boolean)
     fun isEnhancedRagEnabled(): Boolean
 } 
@@ -69,7 +70,8 @@ interface RagProviderFactory {
  * RAG provider for chapter reading context.
  */
 class ChapterRagProvider @Inject constructor(
-    private val courseRepository: CourseRepository
+    private val courseRepository: CourseRepository,
+    private val systemInstructionProvider: SystemInstructionProvider
 ) : RagProvider {
     
     override suspend fun getRelevantContent(
@@ -127,12 +129,7 @@ class ChapterRagProvider @Inject constructor(
     }
     
     override suspend fun getSystemInstructions(context: ChatContext): String {
-        return """
-            You are an AI tutor helping a student with their current chapter reading.
-            The student is reading a specific lesson and may ask questions about the content.
-            Provide clear, educational explanations that build on the chapter content.
-            Use examples and step-by-step explanations when helpful.
-        """.trimIndent()
+        return systemInstructionProvider.getSystemInstructions(context, isEnhancedRag = false)
     }
 }
 
@@ -215,7 +212,9 @@ class RevisionRagProvider @Inject constructor(
 /**
  * RAG provider for general tutoring context.
  */
-class GeneralRagProvider @Inject constructor() : RagProvider {
+class GeneralRagProvider @Inject constructor(
+    private val systemInstructionProvider: SystemInstructionProvider
+) : RagProvider {
     
     override suspend fun getRelevantContent(
         query: String,
@@ -264,12 +263,7 @@ class GeneralRagProvider @Inject constructor() : RagProvider {
     }
     
     override suspend fun getSystemInstructions(context: ChatContext): String {
-        return """
-            You are an AI tutor providing general math tutoring.
-            The student may ask questions about various math topics.
-            Provide clear, step-by-step explanations and examples.
-            Be patient and encouraging, adapting to the student's level.
-        """.trimIndent()
+        return systemInstructionProvider.getSystemInstructions(context, isEnhancedRag = false)
     }
 }
 
@@ -277,7 +271,8 @@ class GeneralRagProvider @Inject constructor() : RagProvider {
  * RAG provider for exercise solving context.
  */
 class ExerciseRagProvider @Inject constructor(
-    private val courseRepository: CourseRepository
+    private val courseRepository: CourseRepository,
+    private val systemInstructionProvider: SystemInstructionProvider
 ) : RagProvider {
     
     override suspend fun getRelevantContent(
@@ -315,13 +310,65 @@ class ExerciseRagProvider @Inject constructor(
         val enhancedPrompt = EnhancedPrompt(
             originalPrompt = prompt,
             enhancedPrompt = buildString {
-                append("Exercise solving context:\n")
+                append("EXERCISE CONTEXT:\n")
                 if (context is ChatContext.ExerciseSolving) {
-                    append("Exercise ID: ${context.exerciseId}\n")
-                    append("Attempts: ${context.attempts}\n")
-                    append("Hints used: ${context.hintsUsed}\n")
+                    append("Course: ${context.courseTitle} (${context.courseSubject})\n")
+                    append("Chapter: ${context.chapterTitle}\n")
+                    append("Exercise #${context.exerciseNumber}\n\n")
+                    
+                    append("QUESTION: ${context.questionText}\n\n")
+                    
+                    if (context.options.isNotEmpty()) {
+                        append("MULTIPLE CHOICE OPTIONS:\n")
+                        context.options.forEachIndexed { index, option ->
+                            val label = when(index) {
+                                0 -> "A"
+                                1 -> "B" 
+                                2 -> "C"
+                                3 -> "D"
+                                else -> "${index + 1}"
+                            }
+                            append("$label) $option\n")
+                        }
+                        append("\n")
+                    }
+                    
+                    if (context.correctAnswerIndex != null && context.correctAnswer != null) {
+                        val correctLabel = when(context.correctAnswerIndex) {
+                            0 -> "A"
+                            1 -> "B"
+                            2 -> "C" 
+                            3 -> "D"
+                            else -> "${context.correctAnswerIndex!! + 1}"
+                        }
+                        append("CORRECT ANSWER: $correctLabel) ${context.correctAnswer}\n\n")
+                    }
+                    
+                    if (context.userAnswerIndex != null && context.userAnswer != null) {
+                        val userLabel = when(context.userAnswerIndex) {
+                            0 -> "A"
+                            1 -> "B"
+                            2 -> "C"
+                            3 -> "D" 
+                            else -> "${context.userAnswerIndex!! + 1}"
+                        }
+                        append("USER'S SELECTED ANSWER: $userLabel) ${context.userAnswer}\n")
+                        
+                        val isCorrect = context.userAnswerIndex == context.correctAnswerIndex
+                        append("USER'S ANSWER STATUS: ${if (isCorrect) "CORRECT" else "INCORRECT"}\n\n")
+                    }
+                    
+                    append("Exercise Context:\n")
+                    append("- Exercise ID: ${context.exerciseId}\n")
+                    append("- Difficulty: ${context.difficulty}\n")
+                    append("- Attempts: ${context.attempts}\n")
+                    append("- Hints used: ${context.hintsUsed}\n")
+                    if (context.isTestQuestion) {
+                        append("- Type: Test Question\n")
+                    }
+                    append("\n")
                 }
-                append("User question: $prompt")
+                append("USER QUESTION: $prompt")
             },
             context = context,
             retrievedChunks = chunks,
@@ -330,19 +377,14 @@ class ExerciseRagProvider @Inject constructor(
         
         return PromptEnhancementResult(
             enhancedPrompt = enhancedPrompt,
-            confidence = 0.8f,
+            confidence = 0.9f, // Higher confidence due to comprehensive context
             processingTime = System.currentTimeMillis() - startTime,
             chunksUsed = chunks.size
         )
     }
     
     override suspend fun getSystemInstructions(context: ChatContext): String {
-        return """
-            You are an AI tutor helping a student solve an exercise.
-            The student is working on a specific problem and may need guidance.
-            Provide hints rather than direct answers when possible.
-            Encourage problem-solving thinking and step-by-step approaches.
-        """.trimIndent()
+        return systemInstructionProvider.getSystemInstructions(context, isEnhancedRag = false)
     }
 }
 
@@ -385,7 +427,7 @@ class RagProviderFactoryImpl @Inject constructor(
     /**
      * Create basic (non-vector) RAG provider.
      */
-    private fun createBasicProvider(context: ChatContext): RagProvider {
+    override fun createBasicProvider(context: ChatContext): RagProvider {
         return when (context) {
             is ChatContext.ChapterReading -> chapterRagProvider
             is ChatContext.Revision -> revisionRagProvider

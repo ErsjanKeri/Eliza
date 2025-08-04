@@ -45,12 +45,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 // Import Gallery-compatible Model class from core.model
 import com.example.ai.edge.eliza.core.model.Model
 import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
+import com.example.ai.edge.eliza.ai.modelmanager.device.DeviceCapabilityChecker
 import kotlinx.coroutines.launch
 
 /**
@@ -64,7 +66,8 @@ fun ModelSelectorChip(
     selectedModel: Model?,
     modelManager: ElizaModelManager,
     onModelSelected: (Model) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    deviceCapabilityChecker: DeviceCapabilityChecker? = null
 ) {
     val uiState by modelManager.uiState.collectAsState()
     val scope = rememberCoroutineScope()
@@ -72,6 +75,12 @@ fun ModelSelectorChip(
     var showModelPicker by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp.dp
+    val context = LocalContext.current
+    
+    // Device compatibility analysis for selected model
+    val compatibility = selectedModel?.let { model ->
+        deviceCapabilityChecker?.assessModelCompatibility(context, model)
+    }
 
     // Model selector chip
     Box(
@@ -81,12 +90,19 @@ fun ModelSelectorChip(
         contentAlignment = Alignment.Center
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
-                // TODO: MaterialTheme.colorScheme.surfaceVariant?  
-                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .background(
+                    when (compatibility?.riskLevel) {
+                        DeviceCapabilityChecker.RiskLevel.DANGEROUS -> MaterialTheme.colorScheme.errorContainer
+                        DeviceCapabilityChecker.RiskLevel.CRITICAL -> MaterialTheme.colorScheme.errorContainer
+                        DeviceCapabilityChecker.RiskLevel.WARNING -> MaterialTheme.colorScheme.primaryContainer
+                        DeviceCapabilityChecker.RiskLevel.SAFE -> MaterialTheme.colorScheme.surfaceContainer
+                        else -> MaterialTheme.colorScheme.surfaceContainer
+                    }
+                )
                 .clickable {
                     scope.launch {
                         showModelPicker = true
@@ -98,13 +114,39 @@ fun ModelSelectorChip(
             val downloadStatus = selectedModel?.let { uiState.modelDownloadStatus[it.name] }
             ModelStatusIcon(downloadStatus = downloadStatus)
             
-            // Model name
+            // Device compatibility indicator
+            // if (compatibility != null) {
+            //     Text(
+            //         text = when (compatibility.riskLevel) {
+            //             DeviceCapabilityChecker.RiskLevel.SAFE -> "✅"
+            //             DeviceCapabilityChecker.RiskLevel.WARNING -> "⚠️"
+            //             DeviceCapabilityChecker.RiskLevel.CRITICAL -> "❌"
+            //             DeviceCapabilityChecker.RiskLevel.DANGEROUS -> "🚫"
+            //         },
+            //         style = MaterialTheme.typography.labelMedium,
+            //         modifier = Modifier.size(16.dp)
+            //     )
+            // }
+            
+            // Model name with memory usage
+            val memoryText = if (compatibility != null) {
+                "${selectedModel?.name ?: "Select Model"} (${String.format("%.0f", compatibility.memoryUtilization * 100)}%)"
+            } else {
+                selectedModel?.name ?: "Select Model"
+            }
+            
             Text(
-                selectedModel?.name ?: "Select Model",
+                text = memoryText,
                 style = MaterialTheme.typography.labelLarge,
+                color = when (compatibility?.riskLevel) {
+                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> MaterialTheme.colorScheme.onErrorContainer
+                    DeviceCapabilityChecker.RiskLevel.CRITICAL -> MaterialTheme.colorScheme.onErrorContainer
+                    DeviceCapabilityChecker.RiskLevel.WARNING -> MaterialTheme.colorScheme.onPrimaryContainer
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
                 modifier = Modifier
-                    .padding(start = 4.dp)
-                    .widthIn(0.dp, screenWidthDp - 250.dp),
+                    .padding(start = 2.dp)
+                    .widthIn(0.dp, screenWidthDp - 300.dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -114,6 +156,12 @@ fun ModelSelectorChip(
                 Icons.Rounded.ArrowDropDown,
                 modifier = Modifier.size(20.dp),
                 contentDescription = "Select model",
+                tint = when (compatibility?.riskLevel) {
+                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> MaterialTheme.colorScheme.onErrorContainer
+                    DeviceCapabilityChecker.RiskLevel.CRITICAL -> MaterialTheme.colorScheme.onErrorContainer
+                    DeviceCapabilityChecker.RiskLevel.WARNING -> MaterialTheme.colorScheme.onPrimaryContainer
+                    else -> MaterialTheme.colorScheme.onSurface
+                }
             )
         }
     }

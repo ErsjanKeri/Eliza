@@ -39,7 +39,8 @@ class EnhancedRagProvider @Inject constructor(
     private val textEmbeddingService: TextEmbeddingService,
     private val contentChunkDao: ContentChunkDao,
     private val ragIndexingService: RagIndexingService,
-    private val courseRepository: CourseRepository
+    private val courseRepository: CourseRepository,
+    private val systemInstructionProvider: com.example.ai.edge.eliza.ai.rag.SystemInstructionProvider
 ) : RagProvider {
     
     companion object {
@@ -130,37 +131,7 @@ class EnhancedRagProvider @Inject constructor(
      * Get context-aware system instructions.
      */
     override suspend fun getSystemInstructions(context: ChatContext): String {
-        return when (context) {
-            is ChatContext.ChapterReading -> """
-                You are an AI tutor helping a student with their current chapter reading.
-                The student is reading "${context.chapterTitle}" and may ask questions about the content.
-                Use the provided context from the chapter to give accurate, educational explanations.
-                Break down complex concepts into simple steps and provide examples when helpful.
-                If the context doesn't contain enough information, acknowledge the limitation.
-            """.trimIndent()
-            
-            is ChatContext.ExerciseSolving -> """
-                You are an AI tutor helping a student solve a practice exercise.
-                The student is working on exercise "${context.exerciseId}" with difficulty "${context.difficulty}".
-                They have made ${context.attempts} attempts and used ${context.hintsUsed} hints so far.
-                Provide step-by-step guidance without giving away the complete answer immediately.
-                Use the provided chapter context to explain underlying concepts.
-            """.trimIndent()
-            
-            is ChatContext.Revision -> """
-                You are an AI tutor helping a student review previously learned material.
-                The student is revising topics from ${context.completedChapterIds.size} completed chapters.
-                Focus on connecting concepts across different chapters and identifying patterns.
-                Help the student identify and strengthen their understanding of weak areas.
-            """.trimIndent()
-            
-            is ChatContext.GeneralTutoring -> """
-                You are an AI tutor providing general academic support.
-                Subject: ${context.subject ?: "General"}
-                Grade Level: ${context.grade ?: "Not specified"}
-                Provide clear, age-appropriate explanations and encourage good learning habits.
-            """.trimIndent()
-        }
+        return systemInstructionProvider.getSystemInstructions(context, isEnhancedRag = true)
     }
     
     /**
@@ -281,11 +252,67 @@ class EnhancedRagProvider @Inject constructor(
     ): String {
         val contextBuilder = StringBuilder()
         
-        // Add context header
-        contextBuilder.append("# Relevant Context\n\n")
+        // Add exercise-specific context first if this is an exercise
+        if (context is ChatContext.ExerciseSolving) {
+            contextBuilder.append("# EXERCISE CONTEXT\n\n")
+            contextBuilder.append("**Course**: ${context.courseTitle} (${context.courseSubject})\n")
+            contextBuilder.append("**Chapter**: ${context.chapterTitle}\n")
+            contextBuilder.append("**Exercise**: #${context.exerciseNumber}\n\n")
+            
+            contextBuilder.append("## QUESTION\n")
+            contextBuilder.append("${context.questionText}\n\n")
+            
+            if (context.options.isNotEmpty()) {
+                contextBuilder.append("## MULTIPLE CHOICE OPTIONS\n")
+                context.options.forEachIndexed { index, option ->
+                    val label = when(index) {
+                        0 -> "A"
+                        1 -> "B" 
+                        2 -> "C"
+                        3 -> "D"
+                        else -> "${index + 1}"
+                    }
+                    contextBuilder.append("$label) $option\n")
+                }
+                contextBuilder.append("\n")
+            }
+            
+            if (context.correctAnswerIndex != null && context.options.isNotEmpty()) {
+                val correctLabel = when(context.correctAnswerIndex) {
+                    0 -> "A"
+                    1 -> "B"
+                    2 -> "C" 
+                    3 -> "D"
+                    else -> "${context.correctAnswerIndex!! + 1}"
+                }
+                val correctAnswer = context.options.getOrNull(context.correctAnswerIndex!!) ?: ""
+                contextBuilder.append("## CORRECT ANSWER\n")
+                contextBuilder.append("$correctLabel) $correctAnswer\n\n")
+            }
+            
+            if (context.userAnswerIndex != null && context.options.isNotEmpty()) {
+                val userLabel = when(context.userAnswerIndex) {
+                    0 -> "A"
+                    1 -> "B"
+                    2 -> "C"
+                    3 -> "D"
+                    else -> "${context.userAnswerIndex!! + 1}"
+                }
+                val userAnswer = context.options.getOrNull(context.userAnswerIndex!!) ?: ""
+                contextBuilder.append("## STUDENT'S ANSWER\n")
+                contextBuilder.append("$userLabel) $userAnswer\n\n")
+                
+                // Add performance context
+                contextBuilder.append("**Attempts made**: ${context.attempts}\n")
+                contextBuilder.append("**Hints used**: ${context.hintsUsed}\n\n")
+            }
+        }
+        
+        // Add vector-retrieved context from chapter content
+        contextBuilder.append("# RELEVANT CHAPTER CONTENT\n\n")
         
         if (chunks.isEmpty()) {
-            contextBuilder.append("No specific context found for this query.\n\n")
+            contextBuilder.append("No additional context found from chapter content.\n\n")
         } else {
             chunks.forEachIndexed { index, chunk ->
                 contextBuilder.append("## Context ${index + 1}: ${chunk.title}\n")
@@ -303,7 +330,7 @@ class EnhancedRagProvider @Inject constructor(
         }
         
         // Add the original question
-        contextBuilder.append("# Student Question\n")
+        contextBuilder.append("# STUDENT QUESTION\n")
         contextBuilder.append(originalPrompt)
         
         return contextBuilder.toString()

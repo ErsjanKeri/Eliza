@@ -33,6 +33,8 @@ import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 import com.example.ai.edge.eliza.ai.modelmanager.data.TaskType
 import com.example.ai.edge.eliza.ai.modelmanager.data.processTasks
 import com.example.ai.edge.eliza.ai.modelmanager.download.ModelDownloadRepository
+// Device capability checking using Gallery's proven pattern
+import com.example.ai.edge.eliza.ai.modelmanager.device.DeviceCapabilityChecker
 // DataStore for token management (OAuth removed - using direct API tokens)
 import com.example.ai.edge.eliza.core.data.repository.DataStoreRepository
 import com.example.ai.edge.eliza.core.data.repository.AccessTokenData
@@ -80,6 +82,11 @@ data class ModelManagerUiState(
     val modelDownloadStatus: Map<String, ModelDownloadStatus> = emptyMap(),
     val modelInitializationStatus: Map<String, ModelInitializationStatus> = emptyMap(),
     val textInputHistory: List<String> = emptyList(),
+    // NEW: Memory warning dialog state
+    val showMemoryWarning: Boolean = false,
+    val memoryWarningModel: Model? = null,
+    val memoryWarningCompatibility: DeviceCapabilityChecker.ModelCompatibility? = null,
+    val memoryWarningDeviceInfo: DeviceCapabilityChecker.DeviceMemoryInfo? = null,
 )
 
 /**
@@ -93,19 +100,34 @@ constructor(
     @ApplicationContext private val context: Context,
     private val modelDownloadRepository: ModelDownloadRepository,
     private val dataStoreRepository: DataStoreRepository, // Fixed: Use app-level DataStore
+    private val deviceCapabilityChecker: DeviceCapabilityChecker, // NEW: Device-aware model management
 ) : ViewModel() {
     
     // Direct API token management (OAuth removed for simplicity)
     private var curAccessToken: String? = null
+    
+    // Crash detection state
+    private var hasPreviouslyCrashed: Boolean = false
+    private var crashedModelName: String? = null
+    
+    // User preference overrides
+    private var userOverridesDeviceRecommendations: Boolean = false
+    private var skipMemoryWarnings: Boolean = false
 
     private val _uiState = MutableStateFlow(createUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
-        // Load models using Gallery's exact pattern
+        // STEP 1: Load user preferences first
+        loadUserPreferences()
+        
+        // STEP 2: Check for previous crashes and adjust strategy
+        checkForPreviousCrashes()
+        
+        // STEP 3: Load models using Gallery's exact pattern (now crash-aware and user-preference-aware)
         loadElizaModels()
         
-        //  Initialize HuggingFace API token for easy authentication
+        // STEP 4: Initialize HuggingFace API token for easy authentication
         initializeDirectApiToken()
     }
 
@@ -116,6 +138,71 @@ constructor(
     fun refreshModels() {
         Log.d(TAG, "Refreshing models to fix any state corruption...")
         loadElizaModels()
+    }
+
+    /**
+     * Public accessor for device capability checker.
+     * Allows UI components to assess model compatibility.
+     */
+    fun getDeviceCapabilityChecker(): DeviceCapabilityChecker = deviceCapabilityChecker
+
+    /**
+     * Advanced user preference: Override device recommendations.
+     * When enabled, users can manually select any model regardless of device capabilities.
+     */
+    fun setUserOverridesDeviceRecommendations(override: Boolean) {
+        Log.d(TAG, "User device override setting changed: $override")
+        userOverridesDeviceRecommendations = override
+        
+        // Save preference to SharedPreferences
+        try {
+            val prefs = context.getSharedPreferences("eliza_user_preferences", Context.MODE_PRIVATE)
+            prefs.edit().putBoolean("override_device_recommendations", override).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save user override preference", e)
+        }
+    }
+
+    /**
+     * Advanced user preference: Skip memory warnings.
+     * When enabled, users won't see memory warning dialogs.
+     */
+    fun setSkipMemoryWarnings(skip: Boolean) {
+        Log.d(TAG, "Skip memory warnings setting changed: $skip")
+        skipMemoryWarnings = skip
+        
+        // Save preference to SharedPreferences
+        try {
+            val prefs = context.getSharedPreferences("eliza_user_preferences", Context.MODE_PRIVATE)
+            prefs.edit().putBoolean("skip_memory_warnings", skip).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save skip warnings preference", e)
+        }
+    }
+
+    /**
+     * Get current user override settings.
+     */
+    fun getUserOverridesDeviceRecommendations(): Boolean = userOverridesDeviceRecommendations
+    fun getSkipMemoryWarnings(): Boolean = skipMemoryWarnings
+
+    /**
+     * Load user preferences from SharedPreferences.
+     */
+    private fun loadUserPreferences() {
+        try {
+            val prefs = context.getSharedPreferences("eliza_user_preferences", Context.MODE_PRIVATE)
+            userOverridesDeviceRecommendations = prefs.getBoolean("override_device_recommendations", false)
+            skipMemoryWarnings = prefs.getBoolean("skip_memory_warnings", false)
+            
+            Log.d(TAG, "Loaded user preferences:")
+            Log.d(TAG, "  Override device recommendations: $userOverridesDeviceRecommendations")
+            Log.d(TAG, "  Skip memory warnings: $skipMemoryWarnings")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load user preferences", e)
+            userOverridesDeviceRecommendations = false
+            skipMemoryWarnings = false
+        }
     }
 
     /**
@@ -148,12 +235,68 @@ constructor(
         // STEP 3: Process all tasks (Gallery's pattern)
         processTasks()
         
-        // STEP 4: Update UI state
+        // STEP 4: Intelligent device-aware model selection 
+        selectOptimalModelForDevice()
+        
+        // STEP 5: Update UI state
         _uiState.update { createUiState() }
         
         Log.d(TAG, "Successfully loaded Eliza models. Total tasks: ${ELIZA_TASKS.size}")
         ELIZA_TASKS.forEach { task ->
             Log.d(TAG, "Task ${task.type} has ${task.models.size} models")
+        }
+    }
+
+    /**
+     * Check for previous app crashes and adjust model selection strategy.
+     * Critical for preventing repeated crashes on app restart.
+     */
+    private fun checkForPreviousCrashes() {
+        try {
+            val prefs = context.getSharedPreferences("eliza_crash_detection", Context.MODE_PRIVATE)
+            hasPreviouslyCrashed = prefs.getBoolean("has_crashed", false)
+            crashedModelName = prefs.getString("last_crashed_model", null)
+            val crashTimestamp = prefs.getLong("crash_timestamp", 0L)
+            val crashError = prefs.getString("crash_error", null)
+            
+            if (hasPreviouslyCrashed && crashedModelName != null) {
+                val crashAge = System.currentTimeMillis() - crashTimestamp
+                val crashAgeHours = crashAge / (1000 * 60 * 60)
+                
+                Log.w(TAG, "🚨 CRASH DETECTION: Previous crash detected!")
+                Log.w(TAG, "  Crashed model: $crashedModelName")
+                Log.w(TAG, "  Crash age: ${crashAgeHours}h ago")
+                Log.w(TAG, "  Error: $crashError")
+                
+                // Clear old crash info (older than 24 hours) to allow retry
+                if (crashAgeHours > 24) {
+                    Log.d(TAG, "🔄 Crash info is >24h old, clearing to allow retry")
+                    clearCrashInfo()
+                    hasPreviouslyCrashed = false
+                    crashedModelName = null
+                } else {
+                    Log.w(TAG, "🚫 Recent crash detected - will avoid problematic model")
+                }
+            } else {
+                Log.d(TAG, "✅ No previous crashes detected")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to check crash info", e)
+            hasPreviouslyCrashed = false
+            crashedModelName = null
+        }
+    }
+
+    /**
+     * Clear crash information (used for 24h reset logic).
+     */
+    private fun clearCrashInfo() {
+        try {
+            val prefs = context.getSharedPreferences("eliza_crash_detection", Context.MODE_PRIVATE)
+            prefs.edit().clear().apply()
+            Log.d(TAG, "🧹 Cleared crash detection info")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to clear crash info", e)
         }
     }
 
@@ -224,11 +367,6 @@ constructor(
         // Pre-process the model (Gallery's pattern)
         gemmaE4BModel.preProcess()
         
-        // Set as default selected model
-        _uiState.update { currentState ->
-            currentState.copy(selectedModel = gemmaE4BModel)
-        }
-        
         Log.d(TAG, "Added exact Gallery Gemma-3n-E4B-it-int4 model to tasks")
     }
     
@@ -296,7 +434,220 @@ constructor(
         Log.d(TAG, "Added exact Gallery Gemma-3n-E2B-it-int4 model to tasks")
     }
 
+    /**
+     * Device-aware model selection using Gallery's memory detection pattern.
+     * Automatically selects the optimal model based on device capabilities.
+     * Respects user preference overrides for advanced users.
+     */
+    private fun selectOptimalModelForDevice() {
+        Log.d(TAG, "Performing device-aware model selection...")
+        
+        // Check if user has overridden device recommendations
+        if (userOverridesDeviceRecommendations) {
+            Log.d(TAG, "⚠️ User has overridden device recommendations - skipping automatic selection")
+            Log.d(TAG, "User will manually select models via UI")
+            
+            // Still select a default model, but don't apply device filtering
+            val availableModels = ELIZA_TASKS.firstOrNull()?.models ?: emptyList()
+            if (availableModels.isNotEmpty()) {
+                // Select the first available model (typically the 4B model)
+                val defaultModel = availableModels.first()
+                _uiState.update { currentState ->
+                    currentState.copy(selectedModel = defaultModel)
+                }
+                Log.d(TAG, "Selected default model for user override: ${defaultModel.name}")
+            }
+            return
+        }
+        
+        // Get all available models from the first task (both tasks have same models)
+        val availableModels = ELIZA_TASKS.firstOrNull()?.models ?: emptyList()
+        if (availableModels.isEmpty()) {
+            Log.w(TAG, "No models available for device-aware selection")
+            return
+        }
+        
+        Log.d(TAG, "Available models: ${availableModels.map { "${it.name} (${String.format("%.1f", (it.estimatedPeakMemoryInBytes ?: 0L) / (1024f * 1024f * 1024f))} GB)" }}")
+        
+        // 🚨 CRASH-AWARE FILTERING: Remove previously crashed models from consideration
+        val safeModels = if (hasPreviouslyCrashed && crashedModelName != null) {
+            Log.w(TAG, "🚫 Filtering out previously crashed model: $crashedModelName")
+            availableModels.filter { it.name != crashedModelName }
+        } else {
+            availableModels
+        }
+        
+        if (safeModels.isEmpty()) {
+            Log.e(TAG, "❌ No safe models available after crash filtering!")
+            return
+        }
+        
+        if (safeModels.size != availableModels.size) {
+            Log.w(TAG, "⚠️ Crash detection filtered models: ${availableModels.size} → ${safeModels.size}")
+            Log.w(TAG, "Safe models: ${safeModels.map { it.name }}")
+        }
+        
+        // Get device memory info
+        val deviceMemoryInfo = deviceCapabilityChecker.getDeviceMemoryInfo(context)
+        Log.d(TAG, "Device memory analysis:")
+        Log.d(TAG, "  Device: ${deviceMemoryInfo.deviceModel}")
+        Log.d(TAG, "  Total RAM: ${String.format("%.1f", deviceMemoryInfo.totalMemoryGB)} GB")
+        Log.d(TAG, "  Usable RAM: ${String.format("%.1f", deviceMemoryInfo.usableMemoryGB)} GB")
+        Log.d(TAG, "  Low RAM device: ${deviceMemoryInfo.isLowMemoryDevice}")
+        
+        // Get recommended model from SAFE models only
+        val recommendedModel = deviceCapabilityChecker.getRecommendedModel(context, safeModels)
+        
+        if (recommendedModel != null) {
+            val compatibility = deviceCapabilityChecker.assessModelCompatibility(context, recommendedModel)
+            
+            Log.d(TAG, "Device-recommended model: ${recommendedModel.name}")
+            Log.d(TAG, "  Memory requirement: ${String.format("%.1f", (recommendedModel.estimatedPeakMemoryInBytes ?: 0L) / (1024f * 1024f * 1024f))} GB")
+            Log.d(TAG, "  Memory utilization: ${String.format("%.1f", compatibility.memoryUtilization * 100)}%")
+            Log.d(TAG, "  Risk level: ${compatibility.riskLevel}")
+            Log.d(TAG, "  Recommendation: ${compatibility.recommendation}")
+            
+            // Set as selected model
+            _uiState.update { currentState ->
+                currentState.copy(selectedModel = recommendedModel)
+            }
+            
+            Log.d(TAG, "✅ Selected optimal model for device: ${recommendedModel.name}")
+        } else {
+            Log.w(TAG, "Could not determine optimal model - no model selection made")
+            
+            // Fallback: Select smallest SAFE model by memory requirement
+            val fallbackModel = safeModels.minByOrNull { it.estimatedPeakMemoryInBytes ?: Long.MAX_VALUE }
+            if (fallbackModel != null) {
+                _uiState.update { currentState ->
+                    currentState.copy(selectedModel = fallbackModel)
+                }
+                Log.w(TAG, "⚠️ Fallback to smallest model: ${fallbackModel.name}")
+            }
+        }
+    }
+
+    /**
+     * Check if model needs memory warning and show dialog if necessary.
+     * Returns true if warning should be shown, false if safe to proceed.
+     * Respects user preference to skip warnings.
+     */
+    fun checkAndShowMemoryWarning(context: Context, task: Task, model: Model): Boolean {
+        // Check if user has disabled memory warnings
+        if (skipMemoryWarnings) {
+            Log.d(TAG, "⚠️ User has disabled memory warnings - skipping warning for ${model.name}")
+            return false
+        }
+        
+        // Skip warning for models that are already safe
+        val compatibility = deviceCapabilityChecker.assessModelCompatibility(context, model)
+        
+        // Show warning for WARNING, CRITICAL, or DANGEROUS risk levels
+        val shouldWarn = when (compatibility.riskLevel) {
+            DeviceCapabilityChecker.RiskLevel.WARNING,
+            DeviceCapabilityChecker.RiskLevel.CRITICAL,
+            DeviceCapabilityChecker.RiskLevel.DANGEROUS -> true
+            DeviceCapabilityChecker.RiskLevel.SAFE -> false
+        }
+        
+        if (shouldWarn) {
+            Log.w(TAG, "🚨 Memory warning required for ${model.name}: ${compatibility.riskLevel}")
+            val deviceInfo = deviceCapabilityChecker.getDeviceMemoryInfo(context)
+            
+            _uiState.update { currentState ->
+                currentState.copy(
+                    showMemoryWarning = true,
+                    memoryWarningModel = model,
+                    memoryWarningCompatibility = compatibility,
+                    memoryWarningDeviceInfo = deviceInfo
+                )
+            }
+            return true
+        } else {
+            Log.d(TAG, "✅ No memory warning needed for ${model.name}: ${compatibility.riskLevel}")
+            return false
+        }
+    }
+
+    /**
+     * Hide memory warning dialog.
+     */
+    fun hideMemoryWarning() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                showMemoryWarning = false,
+                memoryWarningModel = null,
+                memoryWarningCompatibility = null,
+                memoryWarningDeviceInfo = null
+            )
+        }
+    }
+
+    /**
+     * Proceed with model initialization despite memory warning.
+     */
+    fun proceedWithMemoryWarning(context: Context, task: Task) {
+        val model = uiState.value.memoryWarningModel
+        if (model != null) {
+            Log.w(TAG, "⚠️ User chose to proceed with risky model: ${model.name}")
+            hideMemoryWarning()
+            initializeModelUnsafe(context, task, model, force = true)
+        }
+    }
+
+    /**
+     * Switch to safer model from memory warning dialog.
+     */
+    fun switchToSaferModel(context: Context, task: Task) {
+        val dangerousModel = uiState.value.memoryWarningModel
+        if (dangerousModel != null) {
+            Log.d(TAG, "🔄 User chose safer model instead of: ${dangerousModel.name}")
+            
+            // Find the 2B model as safer alternative
+            val availableModels = task.models
+            val saferModel = availableModels.find { 
+                it.name.contains("E2B", ignoreCase = true) && it != dangerousModel 
+            }
+            
+            if (saferModel != null) {
+                Log.d(TAG, "✅ Switching to safer model: ${saferModel.name}")
+                
+                // Update selected model
+                _uiState.update { currentState ->
+                    currentState.copy(selectedModel = saferModel)
+                }
+                
+                hideMemoryWarning()
+                
+                // Initialize the safer model (which should be safe)
+                initializeModel(context, task, saferModel, force = true)
+            } else {
+                Log.e(TAG, "❌ No safer model found!")
+                hideMemoryWarning()
+            }
+        }
+    }
+
+    /**
+     * Safe model initialization with memory warning check.
+     * This is the main entry point that should be used by UI components.
+     */
     fun initializeModel(context: Context, task: Task, model: Model, force: Boolean = false) {
+        // Check if we need to show memory warning first
+        if (!force && checkAndShowMemoryWarning(context, task, model)) {
+            Log.d(TAG, "⏸️ Model initialization paused for memory warning")
+            return // Wait for user decision via memory warning dialog
+        }
+        
+        // Proceed with unsafe initialization
+        initializeModelUnsafe(context, task, model, force)
+    }
+
+    /**
+     * Unsafe model initialization - bypasses memory warning.
+     * Only call this after memory warning has been handled.
+     */
+    private fun initializeModelUnsafe(context: Context, task: Task, model: Model, force: Boolean = false) {
         viewModelScope.launch(Dispatchers.Default) {
             // Skip if initialized already.
             if (
@@ -346,12 +697,15 @@ constructor(
                         cleanupModel(task = task, model = model)
                     }
                 } else if (error.isNotEmpty()) {
-                    Log.d(TAG, "Model '${model.name}' failed to initialize")
+                    Log.e(TAG, "Model '${model.name}' failed to initialize: $error")
                     updateModelInitializationStatus(
                         model = model,
                         status = ModelInitializationStatusType.ERROR,
                         error = error,
                     )
+                    
+                    // 🚨 CRITICAL: Auto-switch to smaller model on 4B failure (Gallery-inspired pattern)
+                    handleModelInitializationFailure(context, task, model, error)
                 }
             }
             
@@ -361,6 +715,95 @@ constructor(
                 TaskType.ELIZA_EXERCISE_HELP ->
                     LlmChatModelHelper.initialize(context = context, model = model, onDone = onDone)
             }
+        }
+    }
+
+    /**
+     * Handle model initialization failure with intelligent fallback.
+     * Critical feature: Auto-switch to 2B model when 4B model crashes.
+     */
+    private fun handleModelInitializationFailure(
+        context: Context, 
+        task: Task, 
+        failedModel: Model, 
+        error: String
+    ) {
+        Log.w(TAG, "🚨 Handling model initialization failure for: ${failedModel.name}")
+        Log.w(TAG, "Error details: $error")
+        
+        // Check if this was a memory-related crash (common patterns from TensorFlow Lite)
+        val isMemoryRelatedCrash = error.contains("Cannot reserve space", ignoreCase = true) ||
+                                  error.contains("OutOfMemoryError", ignoreCase = true) ||
+                                  error.contains("memory", ignoreCase = true) ||
+                                  error.contains("allocation", ignoreCase = true)
+        
+        // Check if the failed model is the 4B model
+        val is4BModel = failedModel.name.contains("E4B", ignoreCase = true)
+        
+        if (is4BModel && isMemoryRelatedCrash) {
+            Log.w(TAG, "🔄 Detected 4B model memory crash - attempting auto-switch to 2B model")
+            
+            // Find the 2B model as fallback
+            val availableModels = task.models
+            val fallback2BModel = availableModels.find { 
+                it.name.contains("E2B", ignoreCase = true) && it != failedModel 
+            }
+            
+            if (fallback2BModel != null) {
+                Log.w(TAG, "✅ Found 2B fallback model: ${fallback2BModel.name}")
+                
+                // Check if the 2B model is compatible with this device
+                val compatibility = deviceCapabilityChecker.assessModelCompatibility(context, fallback2BModel)
+                
+                if (compatibility.riskLevel != DeviceCapabilityChecker.RiskLevel.DANGEROUS) {
+                    Log.w(TAG, "🔄 Auto-switching to 2B model due to 4B model crash...")
+                    Log.w(TAG, "2B Model compatibility: ${compatibility.riskLevel} (${String.format("%.1f", compatibility.memoryUtilization * 100)}% memory usage)")
+                    
+                    // Update selected model to 2B
+                    _uiState.update { currentState ->
+                        currentState.copy(selectedModel = fallback2BModel)
+                    }
+                    
+                    // Save crash information for future prevention
+                    saveCrashInfo(failedModel, error)
+                    
+                    // Auto-initialize the 2B model
+                    viewModelScope.launch(Dispatchers.Default) {
+                        delay(1000) // Brief delay to let cleanup complete
+                        Log.w(TAG, "🚀 Auto-initializing 2B fallback model...")
+                        initializeModel(context, task, fallback2BModel, force = true)
+                    }
+                } else {
+                    Log.e(TAG, "❌ 2B model is also too large for this device - no automatic fallback possible")
+                    Log.e(TAG, "Device needs manual intervention or app may not be compatible")
+                }
+            } else {
+                Log.e(TAG, "❌ No 2B fallback model found - cannot auto-recover from 4B crash")
+            }
+        } else {
+            Log.w(TAG, "⚠️ Model failure not suitable for auto-fallback:")
+            Log.w(TAG, "  Is 4B model: $is4BModel")
+            Log.w(TAG, "  Is memory-related: $isMemoryRelatedCrash")
+            Log.w(TAG, "  Manual intervention may be required")
+        }
+    }
+
+    /**
+     * Save crash information to SharedPreferences for crash detection on app restart.
+     */
+    private fun saveCrashInfo(crashedModel: Model, error: String) {
+        try {
+            val prefs = context.getSharedPreferences("eliza_crash_detection", Context.MODE_PRIVATE)
+            prefs.edit()
+                .putString("last_crashed_model", crashedModel.name)
+                .putString("crash_error", error)
+                .putLong("crash_timestamp", System.currentTimeMillis())
+                .putBoolean("has_crashed", true)
+                .apply()
+            
+            Log.d(TAG, "💾 Saved crash info for future crash detection")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save crash info", e)
         }
     }
 
@@ -552,6 +995,11 @@ constructor(
             modelDownloadStatus = modelDownloadStatus,
             modelInitializationStatus = modelInstances,
             textInputHistory = emptyList(),
+            // Memory warning dialog defaults
+            showMemoryWarning = false,
+            memoryWarningModel = null,
+            memoryWarningCompatibility = null,
+            memoryWarningDeviceInfo = null,
         )
     }
 
