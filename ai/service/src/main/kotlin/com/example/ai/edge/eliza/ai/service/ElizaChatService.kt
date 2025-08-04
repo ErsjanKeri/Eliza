@@ -26,6 +26,7 @@ import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_CHAT
 import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_EXERCISE_HELP
 import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 // Import Gallery-compatible Model class from core.model
+import com.example.ai.edge.eliza.core.data.util.NetworkMonitor
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.Model
 
@@ -43,8 +44,13 @@ private const val TAG = "ElizaChatViewModel"
  */
 @HiltViewModel
 open class ElizaChatViewModel @Inject constructor(
-    private val ragEnhancedChatService: RagEnhancedChatService
+    private val ragEnhancedChatService: RagEnhancedChatService,
+    private val videoExplanationService: VideoExplanationService,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
+    
+    // Expose network state to UI
+    val isOnline = networkMonitor.isOnline
     
     /**
      * Generate response using Gallery's exact pattern with RAG enhancement
@@ -148,28 +154,6 @@ open class ElizaChatViewModel @Inject constructor(
         }
     }
     
-    /**
-     * Simple RAG wrapper - for now just passes context as part of prompt
-     * DEPRECATED: Use sendMessageWithChatContext for better RAG integration
-     */
-    @Deprecated("Use sendMessageWithChatContext for enhanced RAG integration")
-    suspend fun sendMessageWithContext(
-        model: Model,
-        message: String,
-        context: String,
-        images: List<Bitmap> = emptyList(),
-        resultListener: (String, Boolean) -> Unit
-    ) {
-        val enhancedPrompt = """
-            Context: $context
-            
-            Question: $message
-            
-            Please answer based on the provided context.
-        """.trimIndent()
-        
-        sendMessage(model, enhancedPrompt, images, resultListener)
-    }
     
     /**
      * Stop ongoing response generation
@@ -197,6 +181,23 @@ open class ElizaChatViewModel @Inject constructor(
     ): List<String> {
         return ragEnhancedChatService.getContextSuggestions(query, chatContext)
     }
+    
+    /**
+     * Request a video explanation for the given user question and context.
+     * Follows the same pattern as other service methods.
+     */
+    fun requestVideoExplanation(
+        userQuestion: String,
+        context: ChatContext?,
+        onStatusUpdated: (com.example.ai.edge.eliza.core.model.VideoExplanationStatus) -> Unit
+    ) {
+        Log.d(TAG, "Requesting video explanation for: ${userQuestion.take(50)}...")
+        videoExplanationService.requestVideoExplanation(
+            userQuestion = userQuestion,
+            context = context,
+            onStatusUpdated = onStatusUpdated
+        )
+    }
 }
 
 /**
@@ -204,10 +205,14 @@ open class ElizaChatViewModel @Inject constructor(
  */
 @HiltViewModel 
 class ElizaChatChatViewModel @Inject constructor(
-    ragEnhancedChatService: RagEnhancedChatService
-) : ElizaChatViewModel(ragEnhancedChatService)
+    ragEnhancedChatService: RagEnhancedChatService,
+    videoExplanationService: VideoExplanationService,
+    networkMonitor: NetworkMonitor
+) : ElizaChatViewModel(ragEnhancedChatService, videoExplanationService, networkMonitor)
 
 @HiltViewModel
 class ElizaExerciseHelpViewModel @Inject constructor(
-    ragEnhancedChatService: RagEnhancedChatService
-) : ElizaChatViewModel(ragEnhancedChatService) 
+    ragEnhancedChatService: RagEnhancedChatService,
+    videoExplanationService: VideoExplanationService,
+    networkMonitor: NetworkMonitor
+) : ElizaChatViewModel(ragEnhancedChatService, videoExplanationService, networkMonitor) 

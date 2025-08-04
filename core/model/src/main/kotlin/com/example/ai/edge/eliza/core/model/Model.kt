@@ -195,8 +195,66 @@ data class ModelDownloadStatus(
   val remainingMs: Long = 0,
 )
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Configs - EXACT COPY from Gallery
+/** Video explanation status types - follows ModelDownloadStatusType pattern */
+enum class VideoExplanationStatusType {
+  NOT_STARTED,
+  QUEUED,
+  GENERATING_SCRIPT,
+  RENDERING_VIDEO,
+  DOWNLOADING,
+  COMPLETED,
+  FAILED,
+}
+
+/** Video explanation status - follows ModelDownloadStatus pattern */
+data class VideoExplanationStatus(
+  val status: VideoExplanationStatusType,
+  val progress: Int = 0, // 0-100 percentage
+  val currentMessage: String = "",
+  val videoId: String = "",
+  val localFilePath: String? = null,
+  val durationSeconds: Int = 0,
+  val fileSizeBytes: Long = 0,
+  val errorMessage: String = "",
+  val startedAt: Long = System.currentTimeMillis(),
+  val errorInfo: VideoErrorInfo? = null, // Enhanced error information
+  val retryCount: Int = 0, // Number of retry attempts
+  val canRetry: Boolean = false, // Whether retry is possible
+  val lastRetryAt: Long = 0L // Timestamp of last retry attempt
+) {
+  
+  /**
+   * Create a new status with updated retry information.
+   */
+  fun withRetry(): VideoExplanationStatus {
+    return copy(
+      retryCount = retryCount + 1,
+      lastRetryAt = System.currentTimeMillis()
+    )
+  }
+  
+  /**
+   * Create a failed status with error information.
+   */
+  fun withError(errorInfo: VideoErrorInfo): VideoExplanationStatus {
+    return copy(
+      status = VideoExplanationStatusType.FAILED,
+      errorMessage = errorInfo.message,
+      errorInfo = errorInfo,
+      canRetry = errorInfo.isRetryable && retryCount < errorInfo.maxRetries,
+      currentMessage = errorInfo.message
+    )
+  }
+  
+  /**
+   * Check if enough time has passed since last retry to attempt again.
+   */
+  fun canRetryNow(): Boolean {
+    if (!canRetry || errorInfo == null) return false
+    val timeSinceLastRetry = System.currentTimeMillis() - lastRetryAt
+    return timeSinceLastRetry >= errorInfo.retryDelayMs
+  }
+}
 
 /**
  * The types of configuration editors available.

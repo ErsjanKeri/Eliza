@@ -48,6 +48,8 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Photo
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.rounded.VideoLibrary
+import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -89,6 +91,10 @@ fun MessageInputText(
     showStopButtonWhenInProgress: Boolean = false,
     onImageSelected: (Bitmap) -> Unit = {},
     showImagePickerInMenu: Boolean = true,
+    // NEW: Video request functionality
+    onRequestVideo: (String) -> Unit = {},
+    isOnline: Boolean = true,
+    showVideoButton: Boolean = true,
 ) {
     val context = LocalContext.current
     var showAddContentMenu by remember { mutableStateOf(false) }
@@ -284,6 +290,33 @@ fun MessageInputText(
                         )
                     }
                 } else if (curMessage.isNotEmpty() || pickedImages.isNotEmpty()) {
+                    // Video request button - shown when text present, no images, online, and video button enabled
+                    val canRequestVideo = curMessage.trim().isNotEmpty() && 
+                                         pickedImages.isEmpty() && 
+                                         isOnline && 
+                                         showVideoButton && 
+                                         !inProgress
+                    
+                    if (canRequestVideo) {
+                        // Video request button
+                        IconButton(
+                            onClick = { 
+                                onRequestVideo(curMessage.trim())
+                            },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                            ),
+                        ) {
+                            Icon(
+                                Icons.Rounded.VideoLibrary,
+                                contentDescription = "Request video explanation",
+                                tint = MaterialTheme.colorScheme.tertiary,
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    
                     // Send button. Shown when there's text or images to send.
                     IconButton(
                         enabled = !inProgress,
@@ -307,6 +340,22 @@ fun MessageInputText(
                             contentDescription = "Send message",
                             modifier = Modifier.offset(x = 2.dp),
                             tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                } else if (curMessage.trim().isNotEmpty() && !isOnline && showVideoButton) {
+                    // Show offline video button when user has text but is offline
+                    IconButton(
+                        onClick = { /* Disabled, no action */ },
+                        enabled = false,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                    ) {
+                        Icon(
+                            Icons.Rounded.WifiOff,
+                            contentDescription = "Videos unavailable offline",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

@@ -91,6 +91,13 @@ fun ChatPanel(
   chatInputType: ChatInputType = ChatInputType.TEXT,
   onStopButtonClicked: () -> Unit = {},
   showStopButtonWhenInProgress: Boolean = false,
+  // NEW: Video request functionality
+  onRequestVideo: (String) -> Unit = {},
+  onRetryVideoRequest: (String) -> Unit = {},
+  onCancelVideoRequest: (String) -> Unit = {},
+  onFallbackToTextChat: (String) -> Unit = {},
+  isOnline: Boolean = true,
+  showVideoButton: Boolean = true,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
@@ -239,6 +246,23 @@ fun ChatPanel(
                   )
                 }
 
+                // Video request message (status updates during generation).
+                is ChatMessageVideoRequest -> MessageBodyVideoRequest(
+                  message = message,
+                  onRetryRequest = onRetryVideoRequest,
+                  onCancelRequest = onCancelVideoRequest,
+                  onFallbackToTextChat = onFallbackToTextChat
+                )
+
+                // Video message (completed video).
+                is ChatMessageVideo -> MessageBodyVideo(
+                  message = message,
+                  onPlayVideo = { 
+                    // TODO: Implement video player when ready
+                    // For now, this will be a placeholder
+                  }
+                )
+
                 else -> {
                   // Fallback for other message types
                   MessageBodyText(message = ChatMessageText(content = "Unsupported message type", side = ChatSide.SYSTEM))
@@ -283,6 +307,13 @@ fun ChatPanel(
           showStopButtonWhenInProgress = showStopButtonWhenInProgress,
           onImageSelected = onImageSelected,
           showImagePickerInMenu = true,
+          // NEW: Video request functionality
+          onRequestVideo = { text ->
+            onRequestVideo(text)
+            curMessage = ""
+          },
+          isOnline = isOnline,
+          showVideoButton = showVideoButton,
         )
       }
 

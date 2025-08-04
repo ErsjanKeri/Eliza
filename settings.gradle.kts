@@ -33,6 +33,7 @@ include(":core:model")
 include(":core:database")
 include(":core:data")
 include(":core:designsystem")
+include(":core:network")
 
 // AI-specific modules
 include(":ai:modelmanager")

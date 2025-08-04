@@ -17,6 +17,8 @@
 package com.example.ai.edge.eliza.feature.chat.ui
 
 import android.graphics.Bitmap
+import com.example.ai.edge.eliza.core.model.VideoErrorInfo
+import com.example.ai.edge.eliza.core.network.model.VideoStatus
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.Dp
@@ -36,6 +38,8 @@ enum class ChatMessageType {
   BENCHMARK_RESULT,
   BENCHMARK_LLM_RESULT,
   PROMPT_TEMPLATES,
+  VIDEO_REQUEST,
+  VIDEO,
 }
 
 enum class ChatSide {
@@ -217,6 +221,147 @@ class ChatMessageImageWithHistory(
 data class Stat(val id: String, val label: String, val unit: String)
 
 data class Histogram(val buckets: List<Int>, val maxCount: Int, val highlightBucketIndex: Int = -1)
+
+/** Chat message for video generation requests with live status updates and error handling. */
+class ChatMessageVideoRequest(
+  val videoId: String,
+  val userPrompt: String,
+  val status: VideoStatus,
+  val progress: Int?,
+  val currentMessage: String,
+  val startedAt: Long = System.currentTimeMillis(),
+  val errorInfo: VideoErrorInfo? = null, // Enhanced error information
+  val retryCount: Int = 0, // Number of retry attempts
+  val canRetry: Boolean = false, // Whether retry is possible
+  override val side: ChatSide,
+  override val latencyMs: Float = 0f,
+) : ChatMessage(type = ChatMessageType.VIDEO_REQUEST, side = side, latencyMs = latencyMs) {
+  override fun clone(): ChatMessageVideoRequest {
+    return ChatMessageVideoRequest(
+      videoId = videoId,
+      userPrompt = userPrompt,
+      status = status,
+      progress = progress,
+      currentMessage = currentMessage,
+      startedAt = startedAt,
+      errorInfo = errorInfo,
+      retryCount = retryCount,
+      canRetry = canRetry,
+      side = side,
+      latencyMs = latencyMs,
+    )
+  }
+  
+  /**
+   * Create an updated version of this message with new status and progress.
+   */
+  fun withStatusUpdate(
+    videoId: String = this.videoId,
+    status: VideoStatus = this.status,
+    progress: Int? = this.progress,
+    currentMessage: String = this.currentMessage,
+    errorInfo: VideoErrorInfo? = this.errorInfo,
+    retryCount: Int = this.retryCount,
+    canRetry: Boolean = this.canRetry
+  ): ChatMessageVideoRequest {
+    return ChatMessageVideoRequest(
+      videoId = videoId,
+      userPrompt = userPrompt,
+      status = status,
+      progress = progress,
+      currentMessage = currentMessage,
+      startedAt = startedAt,
+      errorInfo = errorInfo,
+      retryCount = retryCount,
+      canRetry = canRetry,
+      side = side,
+      latencyMs = latencyMs,
+    )
+  }
+  
+  /**
+   * Create a failed version of this message with error information.
+   */
+  fun withError(errorInfo: VideoErrorInfo): ChatMessageVideoRequest {
+    return withStatusUpdate(
+      status = VideoStatus.FAILED,
+      currentMessage = errorInfo.message,
+      errorInfo = errorInfo,
+      canRetry = errorInfo.isRetryable && retryCount < errorInfo.maxRetries
+    )
+  }
+  
+  /**
+   * Create a retry version of this message.
+   */
+  fun withRetry(): ChatMessageVideoRequest {
+    return withStatusUpdate(
+      retryCount = retryCount + 1,
+      currentMessage = "Retrying video request...",
+      status = VideoStatus.QUEUED,
+      progress = 0
+    )
+  }
+  
+  /**
+   * Get elapsed time since video generation started.
+   */
+  fun getElapsedTimeSeconds(): Long {
+    return (System.currentTimeMillis() - startedAt) / 1000
+  }
+  
+  /**
+   * Check if the video generation is still in progress.
+   */
+  fun isInProgress(): Boolean {
+    return status == VideoStatus.QUEUED || 
+           status == VideoStatus.GENERATING_SCRIPT || 
+           status == VideoStatus.RENDERING_VIDEO
+  }
+}
+
+/** Chat message for completed video explanations. */
+class ChatMessageVideo(
+  val videoId: String,
+  val title: String,
+  val localFilePath: String,
+  val durationSeconds: Int,
+  val fileSizeBytes: Long,
+  override val side: ChatSide,
+  override val latencyMs: Float = 0f,
+) : ChatMessage(type = ChatMessageType.VIDEO, side = side, latencyMs = latencyMs) {
+  override fun clone(): ChatMessageVideo {
+    return ChatMessageVideo(
+      videoId = videoId,
+      title = title,
+      localFilePath = localFilePath,
+      durationSeconds = durationSeconds,
+      fileSizeBytes = fileSizeBytes,
+      side = side,
+      latencyMs = latencyMs,
+    )
+  }
+  
+  /**
+   * Get formatted duration string (e.g., "2:30").
+   */
+  fun getFormattedDuration(): String {
+    val minutes = durationSeconds / 60
+    val seconds = durationSeconds % 60
+    return "${minutes}:${seconds.toString().padStart(2, '0')}"
+  }
+  
+  /**
+   * Get formatted file size string (e.g., "1.2 MB").
+   */
+  fun getFormattedFileSize(): String {
+    return when {
+      fileSizeBytes < 1024 -> "${fileSizeBytes} B"
+      fileSizeBytes < 1024 * 1024 -> "${String.format("%.1f", fileSizeBytes / 1024.0)} KB"
+      else -> "${String.format("%.1f", fileSizeBytes / (1024.0 * 1024.0))} MB"
+    }
+  }
+}
 
 /** Chat message for showing LLM benchmark result. */
 class ChatMessageBenchmarkLlmResult(

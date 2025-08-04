@@ -55,6 +55,7 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:model"))
     implementation(project(":core:data"))
+    implementation(project(":core:network"))
     
     // AI modules
     implementation(project(":ai:inference"))
@@ -70,6 +71,11 @@ dependencies {
     
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    
+    // Network dependencies (for direct retrofit usage)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.okhttp)
     
     // Testing
     testImplementation(libs.junit)

@@ -28,6 +28,14 @@ coroutines = "1.8.0"
 # Serialization
 kotlinxSerialization = "1.6.3"
 
+# Media & Video
+media3 = "1.4.1"
+
+# Networking
+okhttp = "4.12.0"
+retrofit = "2.9.0"
+retrofitSerializationConverter = "1.0.0"
+
 # OAuth & DataStore (copied from Gallery)
 netOpenidAppauth = "0.11.1"
 dataStore = "1.1.7"
@@ -81,6 +89,15 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 
 # Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+# Networking
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-kotlinx-serialization = { group = "com.jakewharton.retrofit", name = "retrofit2-kotlinx-serialization-converter", version.ref = "retrofitSerializationConverter" }
+
+# Media & Video
+androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
 
 # OAuth & DataStore (copied from Gallery)
 openid-appauth = { group = "net.openid", name = "appauth", version.ref = "netOpenidAppauth" }

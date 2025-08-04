@@ -3,106 +3,11 @@
 ## 📋 PROJECT OVERVIEW
 **Eliza** is an AI tutoring platform built with Android Compose, following NowInAndroid architecture patterns. It uses Gemma 3n model for AI inference and provides interactive learning experiences through courses, chapters, exercises, and chat functionality.
 
----
-
-## **Cosmetics** 
-- [X] Check whether the added functionality and stylings work! -> works, but needs some stylings refining 
-- [X] Toggle for RAG leads to that the model picker in the middle is not centereed anymore! need to re-center it! 
-
-- [X] **Proper Sidebar styling and functionality** - sidebar now has proper light blue background, Material Icons (no more emojis), real data loading from CourseRepository, and proper chat session grouping by type!
-
-- [X] ModelPicker cancel functionality fixed! now properly shows "Eliza cannot run on this device :(" when cancelled. Still needs: replacement of emojis with icons and styling improvements
-
-- [X] exercise generation bug, the memory dialod should be displayed there as well!!
-
-- [X] **Camera not working** - camera not working but the select image yes!, additionally would like this to have white background (consider other cards, currently it is pinkish!)
-- [ ] Camera and model picker card should be white
-
-## 🎨 **CATEGORY 1: UI/UX DESIGN & STYLING FIXES**
-*Priority: CRITICAL - User Experience*
-
-### **Button & Theme Consistency**
-- [X] **Replace all buttons with square-edged design matching main page style** - Remove any rounded corners from buttons throughout the app, ensure consistent square button styling across all features (home, chat, chapter, test interfaces), update `core:designsystem` ElizaButton component with square shape, all our buttons should have light blue background and white text, just like in the main page! 
-
-- [X] **Fix inconsistent pinkish background usage** - Remove pinkish backgrounds from all pages except Eliza chat interface!, ensure slight blue and white theme consistency throughout the app, audit all color usage in theme files and UI components
-
-- [X] **Completely redesign retake question UI** - Remove horrible shadows from retake question interface, redesign to match rest of application styling, ensure consistent design language with other components, simplify and clean up the retake UI elements
-
-- [X] **Standardize app-wide color scheme** - Establish and enforce slight blue and white theme across all screens, create color guidelines documentation, remove any color inconsistencies, ensure Eliza chat responses maintain pinkish theme while everything else uses blue/white
+## **VIDEO functionality** 
+- [ ] make sure that the entire video functionality works and the implementation is seamless, currently the video functionality is not tested but the infrastructure seems reasonable 
 
 
-
-
-
----
-
-## 🔧 **CATEGORY 2: CORE FUNCTIONALITY FIXES**
-*Priority: CRITICAL - Broken Features*
-
-
-### **UI Element Removal**
-- [X] **Remove specified buttons from test results** - Delete "back to chapter", "main home", "Retake Test", and "retry exercise" buttons from test results screen, ensure navigation still works, and also clicking on the "Home" icon in the bottom bar, we navigate to the home and additionally clean up unused navigation logic
-
-- [X] **Remove retake exercise button** - Delete retake exercise button from exercise interfaces, maintain exercise functionality through other UI flows, clean up related event handlers
-
-- [X] Next and previous buttons while taking a test, do not have the same height! 
-- [X] the take test button in chapter still its text is weird 
-- [X] in window, loading model, should be instead exactly "Eliza is getting ready" 
-
-- [X] **Hide generated question UI elements** - the problem with the generated question is that its answer is spoiled! it should not be spoiled! only after user tries it then the explanation is also displayed! currently we are kind of spoiling the test exercise!
-
-### **Model Management**
-- [X] **Fix model switching functionality** - Implement proper model switching in ElizaModelManager, ensure selected model persists across app sessions, add loading indicators during model switching, handle model initialization correctly after switching, currently the model picker does not work on switching! upon clicking the alternative to gemma-3n-4b which is the gemma-3n-2b nothing changes! Here focus on gallery how they do it! 
-
-### HIGHEST PRIO: 
-- [X] **Model size according to device** with the highest priority! we should have a model manager which decides which is the most reasonable variant locally! since there are mobile phones who cannot handle the 4b model and thus should suggest to use the 2b model instead! 
-- [X] When app crashes, automatically switch to the 2b!!! 
-
-
-
-- [X] **Mock repository got an upgrade!**
-adjust the mock repository and the connection with the app to reflect the added stuff
-
-
-
-
-
----
-
-## 🧭 **CATEGORY 3: CHAT INTERFACE & SIDEBAR REDESIGN**
-*Priority: HIGH - Core User Interface*
-
-### **Sidebar Implementation**
-- [X] **Implement proper chat sidebar functionality** - The sidebar button is currently not showing! not sure if it works properly! 
-
-- [X] **Redesign top chat bar layout** - Position RAG toggle on far left (simple toggle saying "RAG enhanced"), place model picker in center, place sidebar button on far right, all in same row with proper spacing and alignment
-
-- [X] **Remove current RAG toggle background styling** - Replace current large background RAG component with simple toggle, clean up excessive styling, ensure minimal and clean design
-
-
-
-
-### **Chat Functionality**
-
-- [X] **System prompt and context** - When RAG toggle is off, Eliza seems to have NO CLUE about the context of the chapter or the exercise (despite this should be a default information!) RAG enabled should enhance the context, but the bare minimum it should always know! Additionally when RAG is enabled  
-
-- [X] **Implement exercise context as system prompt together with RAG** - Add question text and answer options as system prompt context for exercise help, ensure AI recognizes both question and selected answer, modify prompt engineering to include exercise context directly (for example opening a chat in the get exercise help, the model should know the exercise and alternatives and its solution and what the user had chosen from the context!!), and currently need to make sure the RAG for exercise works! !
-
-- [X] **Add stop button to chat interface** - Implement stop/cancel button for ongoing AI responses, add proper response cancellation logic, provide immediate response stopping when button is pressed (search here exactly how Gallery does it! and copy them!)
-
-- [X] **Add image upload functionality in the chat!** - chat messages from user should support image upload (this will require augmentation to the messages data types as well) but this is a very easy feature, Gallery provides an example with image upload in the chat! 
-
-
-
-- [X] **Ensure RAG slider positioning works** - Verify RAG toggle functions properly in new left position, maintain RAG enhancement functionality, ensure toggle state persistence, or does RAG persist between chats? 
-
-
-
-- [ ] **Request video button** whenever an image is included in the input chat from student, the button to request a video must be disabled! 
-
----
-
-## 🗂️ **CATEGORY 4: ARCHITECTURE & CODE CLEANUP**
+## 🗂️ **ARCHITECTURE & CODE CLEANUP** (last thing to do)
 *Priority: MEDIUM - Technical Debt*
 
 ### **Module Organization**
@@ -115,8 +20,7 @@ adjust the mock repository and the connection with the app to reflect the added 
 
 
 
-
-## 🌍 **CATEGORY 5: LANGUAGE SYSTEM IMPLEMENTATION**
+## 🌍 **LANGUAGE SYSTEM IMPLEMENTATION**
 *Priority: HIGH - Core Feature Requirement*
 
 ### **Multi-language Support**
@@ -152,6 +56,15 @@ adjust the mock repository and the connection with the app to reflect the added 
 ### **Test System Data Flow LAST TASK** DATA FLOW is a huge task, this will be final as it takes a lot of time! 
 - [ ] **Fix test retaking answer persistence** - Ensure test answers properly save to database when retaking tests, fix UserAnswer record updates, implement proper data flow for retaken tests, ensure "best attempt" progress tracking works correctly
 This is very important! a proper data flow is what makes the app working, make sure the chat messages and sessions are also stored and created! currently there are no data updates throughout the app! 
+
+### **CRITICAL: Video Chat Message Persistence** 
+- [ ] **Implement complete video message persistence** - Currently video messages are LOST when navigating away from chat because they only exist in local UI state. Need to:
+  - Store ChatMessageVideo and ChatMessageVideoRequest in database
+  - Link video files to chat sessions for retrieval
+  - Restore video messages when returning to chat sessions
+  - Track video metadata (duration, file size, local path) in database
+  - Handle video file cleanup when chat sessions are deleted
+This makes video explanations actually usable - without this, users lose access to videos immediately upon navigation! 
 
 
 

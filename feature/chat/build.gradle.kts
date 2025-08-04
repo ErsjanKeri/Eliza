@@ -46,6 +46,7 @@ dependencies {
     implementation(projects.core.designsystem)
     implementation(projects.core.data)
     implementation(projects.core.model)
+    implementation(projects.core.network)
     implementation(projects.core.common)
     
     // AI modules
@@ -81,4 +82,8 @@ dependencies {
     
     // Image handling
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+    
+    // Video playback
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
 } 

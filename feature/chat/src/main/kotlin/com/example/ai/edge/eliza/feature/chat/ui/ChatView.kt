@@ -83,6 +83,7 @@ fun ChatView(
 ) {
     val uiState by modelManager.uiState.collectAsState()
     val sidebarState by enhancedChatViewModel.sidebarState.collectAsState()
+    val isOnline by chatViewModel.isOnline.collectAsState(initial = false)
     val context = LocalContext.current
     var messages by remember { mutableStateOf(initialMessages.toMutableList()) }
     var isLoading by remember { mutableStateOf(false) }
@@ -294,7 +295,73 @@ fun ChatView(
                             isLoading = false
                         }
                     },
-                    showStopButtonWhenInProgress = true
+                    showStopButtonWhenInProgress = true,
+                    // NEW: Video request functionality
+                    onRequestVideo = { userQuestion ->
+                        // Create initial video request message
+                        var videoRequestMessage = ChatMessageVideoRequest(
+                            videoId = "",
+                            userPrompt = userQuestion,
+                            status = com.example.ai.edge.eliza.core.network.model.VideoStatus.QUEUED,
+                            progress = 0,
+                            currentMessage = "Preparing video request...",
+                            side = ChatSide.AGENT
+                        )
+                        messages = (messages + videoRequestMessage).toMutableList()
+                        
+                        // Request video explanation using the ViewModel
+                        chatViewModel.requestVideoExplanation(
+                            userQuestion = userQuestion,
+                            context = chatContext
+                        ) { videoStatus ->
+                            // Update the video request message with new status
+                            val updatedMessage = videoRequestMessage.withStatusUpdate(
+                                videoId = videoStatus.videoId,
+                                status = when (videoStatus.status) {
+                                    com.example.ai.edge.eliza.core.model.VideoExplanationStatusType.QUEUED -> 
+                                        com.example.ai.edge.eliza.core.network.model.VideoStatus.QUEUED
+                                    com.example.ai.edge.eliza.core.model.VideoExplanationStatusType.GENERATING_SCRIPT -> 
+                                        com.example.ai.edge.eliza.core.network.model.VideoStatus.GENERATING_SCRIPT
+                                    com.example.ai.edge.eliza.core.model.VideoExplanationStatusType.RENDERING_VIDEO -> 
+                                        com.example.ai.edge.eliza.core.network.model.VideoStatus.RENDERING_VIDEO
+                                    com.example.ai.edge.eliza.core.model.VideoExplanationStatusType.DOWNLOADING -> 
+                                        com.example.ai.edge.eliza.core.network.model.VideoStatus.COMPLETED
+                                    com.example.ai.edge.eliza.core.model.VideoExplanationStatusType.COMPLETED -> 
+                                        com.example.ai.edge.eliza.core.network.model.VideoStatus.COMPLETED
+                                    com.example.ai.edge.eliza.core.model.VideoExplanationStatusType.FAILED -> 
+                                        com.example.ai.edge.eliza.core.network.model.VideoStatus.FAILED
+                                    else -> com.example.ai.edge.eliza.core.network.model.VideoStatus.QUEUED
+                                },
+                                progress = videoStatus.progress,
+                                currentMessage = videoStatus.currentMessage
+                            )
+                            
+                            // Update messages list with new status
+                            val messageIndex = messages.indexOfLast { it is ChatMessageVideoRequest && it.userPrompt == userQuestion }
+                            if (messageIndex >= 0) {
+                                                            // Check if video is completed - replace with video message
+                            val localPath = videoStatus.localFilePath
+                            if (videoStatus.status == com.example.ai.edge.eliza.core.model.VideoExplanationStatusType.COMPLETED &&
+                                localPath != null) {
+                                val completedVideoMessage = ChatMessageVideo(
+                                    videoId = videoStatus.videoId,
+                                    title = "Video Explanation: ${userQuestion.take(30)}...",
+                                    localFilePath = localPath,
+                                    durationSeconds = videoStatus.durationSeconds,
+                                    fileSizeBytes = videoStatus.fileSizeBytes,
+                                    side = ChatSide.AGENT
+                                )
+                                    messages = (messages.take(messageIndex) + completedVideoMessage + messages.drop(messageIndex + 1)).toMutableList()
+                                } else {
+                                    // Update existing video request message
+                                    messages = (messages.take(messageIndex) + updatedMessage + messages.drop(messageIndex + 1)).toMutableList()
+                                    videoRequestMessage = updatedMessage
+                                }
+                            }
+                        }
+                    },
+                    isOnline = isOnline,
+                    showVideoButton = true
                 )
                 } else {
                     // Show model download panel when model isn't ready
