@@ -120,9 +120,14 @@ class ChapterRagProvider @Inject constructor(
             systemInstructions = systemInstructions
         )
         
+        // Calculate confidence based on chapter content availability
+        val confidence = if (chunks.isNotEmpty()) {
+            if (context is ChatContext.ChapterReading && context.chapterTitle.isNotBlank()) 0.8f else 0.7f
+        } else 0.5f
+        
         return PromptEnhancementResult(
             enhancedPrompt = enhancedPrompt,
-            confidence = 0.8f,
+            confidence = confidence,
             processingTime = System.currentTimeMillis() - startTime,
             chunksUsed = chunks.size
         )
@@ -191,9 +196,17 @@ class RevisionRagProvider @Inject constructor(
             systemInstructions = systemInstructions
         )
         
+        // Calculate confidence based on available revision content
+        val confidence = when {
+            chunks.isEmpty() -> 0.4f
+            chunks.size >= 3 -> 0.8f // Good coverage across multiple chapters
+            chunks.size >= 2 -> 0.7f // Moderate coverage
+            else -> 0.6f // Single chapter coverage
+        }
+        
         return PromptEnhancementResult(
             enhancedPrompt = enhancedPrompt,
-            confidence = 0.7f,
+            confidence = confidence,
             processingTime = System.currentTimeMillis() - startTime,
             chunksUsed = chunks.size
         )
@@ -254,9 +267,12 @@ class GeneralRagProvider @Inject constructor(
             systemInstructions = systemInstructions
         )
         
+        // Calculate confidence based on content availability
+        val confidence = if (chunks.isNotEmpty()) 0.6f else 0.4f // Lower confidence for general tutoring
+        
         return PromptEnhancementResult(
             enhancedPrompt = enhancedPrompt,
-            confidence = 0.6f,
+            confidence = confidence,
             processingTime = System.currentTimeMillis() - startTime,
             chunksUsed = chunks.size
         )
@@ -375,12 +391,42 @@ class ExerciseRagProvider @Inject constructor(
             systemInstructions = systemInstructions
         )
         
+        // Calculate dynamic confidence based on context completeness
+        val confidence = calculateExerciseConfidence(context)
+        
         return PromptEnhancementResult(
             enhancedPrompt = enhancedPrompt,
-            confidence = 0.9f, // Higher confidence due to comprehensive context
+            confidence = confidence,
             processingTime = System.currentTimeMillis() - startTime,
             chunksUsed = chunks.size
         )
+    }
+    
+    /**
+     * Calculate confidence score based on exercise context completeness.
+     * Higher confidence for exercises with complete context information.
+     */
+    private fun calculateExerciseConfidence(context: ChatContext): Float {
+        if (context !is ChatContext.ExerciseSolving) return 0.5f
+        
+        var confidence = 0.5f // Base confidence
+        
+        // Add confidence for available context components
+        if (context.questionText.isNotBlank()) confidence += 0.1f
+        if (context.options.isNotEmpty()) confidence += 0.1f
+        if (context.correctAnswerIndex != null && context.correctAnswer != null) confidence += 0.15f
+        if (context.userAnswerIndex != null && context.userAnswer != null) confidence += 0.1f
+        if (context.chapterTitle.isNotBlank()) confidence += 0.05f
+        
+        // Bonus for complete exercise context (all fields present)
+        val hasCompleteContext = context.questionText.isNotBlank() &&
+                context.options.isNotEmpty() &&
+                context.correctAnswerIndex != null &&
+                context.userAnswerIndex != null
+        
+        if (hasCompleteContext) confidence += 0.1f
+        
+        return confidence.coerceIn(0.5f, 0.9f) // Range: 0.5-0.9 for basic RAG
     }
     
     override suspend fun getSystemInstructions(context: ChatContext): String {

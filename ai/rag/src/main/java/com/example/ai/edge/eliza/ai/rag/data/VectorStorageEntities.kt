@@ -134,6 +134,9 @@ interface ContentChunkDao {
     
     @Query("SELECT * FROM content_chunks ORDER BY created_at DESC LIMIT :limit")
     suspend fun getRecentChunks(limit: Int = 100): List<ContentChunkEntity>
+    
+    @Query("SELECT * FROM content_chunks ORDER BY course_id, chapter_id, start_position ASC")
+    suspend fun getAllChunks(): List<ContentChunkEntity>
 }
 
 /**

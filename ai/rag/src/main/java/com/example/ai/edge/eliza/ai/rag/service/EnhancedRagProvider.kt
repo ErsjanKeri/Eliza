@@ -92,8 +92,18 @@ class EnhancedRagProvider @Inject constructor(
             return similarChunks
             
         } catch (e: Exception) {
-            Log.e(TAG, "Error in vector-based content retrieval", e)
-            return getBasicContent(context, maxChunks)
+            Log.e(TAG, "Enhanced RAG vector search failed - falling back to basic content", e)
+            // Return basic content but with metadata indicating fallback occurred
+            val basicContent = getBasicContent(context, maxChunks)
+            return basicContent.map { chunk ->
+                chunk.copy(
+                    metadata = chunk.metadata + mapOf(
+                        "fallback_reason" to "vector_search_failed",
+                        "original_error" to e.message.orEmpty(),
+                        "enhanced_rag_status" to "fallback_to_basic"
+                    )
+                )
+            }
         }
     }
     
@@ -136,26 +146,39 @@ class EnhancedRagProvider @Inject constructor(
     
     /**
      * Get candidate chunks based on chat context.
+     * Enhanced RAG searches ALL indexed content, not just current chapter.
      */
     private suspend fun getCandidateChunks(context: ChatContext): List<ContentChunkEntity> {
         return when (context) {
             is ChatContext.ChapterReading -> {
-                contentChunkDao.getChunksByChapter(context.chapterId)
+                // 🔍 ENHANCED RAG: Search ALL chunks across ALL courses/chapters
+                Log.d(TAG, "Enhanced RAG: Searching ALL indexed content for relevant chunks")
+                contentChunkDao.getAllChunks()
             }
             is ChatContext.ExerciseSolving -> {
-                contentChunkDao.getChunksByChapter(context.chapterId)
+                // 🔍 ENHANCED RAG: Search ALL chunks across ALL courses/chapters
+                Log.d(TAG, "Enhanced RAG: Searching ALL indexed content for exercise help")
+                contentChunkDao.getAllChunks()
             }
             is ChatContext.Revision -> {
-                val allChunks = mutableListOf<ContentChunkEntity>()
+                // For revision, search completed chapters + broader context
+                val revisionChunks = mutableListOf<ContentChunkEntity>()
                 context.completedChapterIds.forEach { chapterId ->
-                    allChunks.addAll(contentChunkDao.getChunksByChapter(chapterId))
+                    revisionChunks.addAll(contentChunkDao.getChunksByChapter(chapterId))
                 }
-                allChunks
+                
+                // Add broader context from all courses for better revision support
+                val allChunks = contentChunkDao.getAllChunks()
+                revisionChunks.addAll(allChunks.filter { chunk ->
+                    !context.completedChapterIds.contains(chunk.chapterId)
+                })
+                
+                revisionChunks
             }
             is ChatContext.GeneralTutoring -> {
-                // For general tutoring, we'd need a broader search strategy
-                // For now, return empty list to fall back to basic content
-                emptyList()
+                // 🔍 ENHANCED RAG: For general tutoring, search entire knowledge base
+                Log.d(TAG, "Enhanced RAG: Searching ALL indexed content for general tutoring")
+                contentChunkDao.getAllChunks()
             }
         }
     }
@@ -338,14 +361,26 @@ class EnhancedRagProvider @Inject constructor(
     
     /**
      * Calculate confidence score based on retrieved chunks.
+     * Considers whether content was retrieved via vector search or fallback.
      */
     private fun calculateConfidence(chunks: List<ContentChunk>): Float {
-        if (chunks.isEmpty()) return 0.3f
+        if (chunks.isEmpty()) return 0.1f // Very low confidence for no content
         
+        // Check if any chunks indicate a fallback occurred
+        val hasFallback = chunks.any { chunk ->
+            chunk.metadata["enhanced_rag_status"] == "fallback_to_basic"
+        }
+        
+        if (hasFallback) {
+            Log.w(TAG, "Enhanced RAG fallback detected - lowering confidence score")
+            return 0.3f // Lower confidence to indicate fallback occurred
+        }
+        
+        // Normal confidence calculation for successful vector search
         val avgRelevance = chunks.map { it.relevanceScore }.average().toFloat()
         val chunkCountFactor = (chunks.size.toFloat() / DEFAULT_MAX_CHUNKS).coerceAtMost(1f)
         
-        return (avgRelevance * 0.7f + chunkCountFactor * 0.3f).coerceIn(0f, 1f)
+        return (avgRelevance * 0.7f + chunkCountFactor * 0.3f).coerceIn(0.4f, 1f) // Minimum 0.4f for successful retrieval
     }
     
     /**

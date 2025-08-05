@@ -1,8 +1,66 @@
-# Eliza Inference Architecture: RAG-Enhanced Chat System
+# Eliza RAG System: Simple Guide
 
-## Overview
+## 🎯 **What is RAG and Why Use It?**
 
-Eliza implements a sophisticated **Retrieval Augmented Generation (RAG)** system that enhances AI chat responses with contextually relevant educational content. The system supports multiple chat contexts (chapter reading, exercise solving, general tutoring) and can be toggled between basic and enhanced RAG modes.
+**RAG (Retrieval Augmented Generation)** enhances AI responses by providing relevant educational context before generating answers. Think of it as giving the AI a textbook to reference while helping students.
+
+**Two RAG Modes Available:**
+
+### 📚 **Basic RAG (Always Available)**
+- **How it works**: Retrieves the full chapter content related to your question
+- **Content scope**: Single chapter from the course
+- **Speed**: Fast ⚡
+- **Reliability**: Very reliable 
+- **Best for**: Exercise help, chapter questions, reliable responses
+
+### 🔍 **Enhanced RAG (Optional, Can Be Toggled)**
+- **How it works**: Uses AI to find the most relevant content across ALL courses via similarity search
+- **Content scope**: All indexed educational content (multiple courses/chapters)
+- **Speed**: Slower due to AI search 
+- **Reliability**: May fall back to Basic RAG if search fails 
+- **Best for**: Complex questions requiring broad knowledge
+
+## 🔀 **Key Difference Explained Simply**
+
+**Question**: "Why is my algebra answer wrong?"
+
+**Basic RAG Response**: 
+- Gets the full algebra chapter content
+- Provides complete context about that specific topic
+- Always works reliably
+
+**Enhanced RAG Response**:
+-  **Searches ALL indexed content** across entire knowledge base (all courses/chapters)
+-  **Will find the Trigonometry chapter** even when user is in Quadratic Equations chapter
+- May discover relevant examples from geometry, calculus, trigonometry, etc.
+- **If search fails**: Automatically falls back to Basic RAG
+- **Result**: Cross-chapter content discovery OR same as Basic RAG (with transparency)
+
+## **Confidence Scoring & Transparency**
+
+The system uses **confidence scores** to determine response quality:
+
+### **Basic RAG Confidence** (0.4f - 0.9f)
+- **Exercise Help**: 0.5f - 0.9f based on completeness (question, options, correct answer available)
+- **Chapter Reading**: 0.5f - 0.8f based on chapter content availability  
+- **Revision**: 0.4f - 0.8f based on number of chapters covered
+- **General Tutoring**: 0.4f - 0.6f (limited context available)
+
+### **Enhanced RAG Confidence** (0.1f - 1.0f)
+- **Successful Vector Search**: 0.4f - 1.0f based on content relevance
+- **Fallback to Basic**: 0.3f (indicates Enhanced RAG failed, using Basic content)
+- **Complete Failure**: 0.1f (very rare, indicates system issues)
+
+### **Fallback Transparency**
+When Enhanced RAG is enabled but fails:
+1. **Vector search fails** → Falls back to Basic RAG content
+2. **Confidence drops to 0.3f** → Indicates fallback occurred
+3. **User gets response** → Same quality as Basic RAG, but they know Enhanced failed
+4. **Logs record failure** → Developers can investigate issues
+
+**Key Insight**: Enhanced RAG failure is NOT silent - confidence scores reveal what actually happened.
+
+---
 
 ## Architecture Components
 
@@ -188,29 +246,38 @@ LlmChatModelHelper.runInference(
 // Returns contextually relevant educational response
 ```
 
-## RAG Toggle: What Actually Changes
+## 🔄**RAG Toggle: What Actually Changes**
 
-### **Toggle OFF (Basic RAG)**
-- **Provider**: Uses context-specific basic providers:
-  - `ChapterRagProvider`: Full chapter content with educational context
-  - `GeneralRagProvider`: Basic educational guidance and tutoring context
-  - `ExerciseRagProvider`: **Complete exercise context** with question, options A/B/C/D, correct answer, user's answer, and performance tracking
-  - `RevisionRagProvider`: Multi-chapter revision content
-- **Content Retrieval**: Direct chapter/exercise content retrieval from CourseRepository
-- **Prompt Enhancement**: **Full RAG enhancement** with complete educational context - NOT simple templates
-- **System Instructions**: Centralized instructions via `SystemInstructionProvider` (same quality as Enhanced RAG)
-- **Performance**: Fast, comprehensive educational context without vector search overhead
+### **Quick Developer Guide**
+1. **To use Basic RAG**: `ragProviderFactory.setUseEnhancedRag(false)` (default)
+2. **To use Enhanced RAG**: `ragProviderFactory.setUseEnhancedRag(true)` + initialize embeddings
+3. **Both modes provide full educational context** - Enhanced just adds more content
 
-### **Toggle ON (Enhanced RAG)**
-- **Provider**: Uses `EnhancedRagProvider` for all contexts
-- **Content Retrieval**: **Same educational context as Basic RAG** PLUS vector-based semantic similarity search
-- **Embedding Process**: 
-  1. Query text → MediaPipe embeddings
-  2. Vector similarity search in indexed content chunks
-  3. Multi-vector retrieval strategy (summaries + details)
-- **Prompt Enhancement**: **Same base context as Basic RAG** PLUS intelligent vector-retrieved content assembly with relevance scores
-- **System Instructions**: **Identical to Basic RAG** via centralized `SystemInstructionProvider`
-- **Performance**: Slower due to vector search but provides additional chapter content context
+### **Toggle OFF (Basic RAG) - Recommended for Production**
+- ✅ **Always reliable** - no AI dependencies
+- ✅ **Fast response times** - direct database lookups
+- ✅ **Complete educational context**:
+  - Full chapter markdown content
+  - Exercise details (question, A/B/C/D options, correct answer, user's answer)
+  - Performance tracking (attempts, hints used)
+  - Consistent system instructions
+- ✅ **High confidence scores** (0.5f-0.9f based on content completeness)
+
+### **Toggle ON (Enhanced RAG) - Now Fully Functional**
+- ✅ **Searches entire knowledge base** - ALL courses/chapters indexed
+- ⚠️ **May fall back to Basic RAG** if vector search fails (now transparent via confidence)
+- ⚠️ **Slower response times** due to AI embedding generation (~300-500ms)
+- ✅ **All Basic RAG content PLUS**:
+  - ✅ **True cross-chapter content discovery** (e.g., find trigonometry from algebra chapter)
+  - Vector similarity search across ALL indexed content
+  - Semantically relevant content from other subjects/chapters
+  - Multi-vector retrieval (summaries + details)
+- ✅ **Transparent confidence scores** (0.1f-1.0f, with 0.3f indicating fallback)
+
+### **🎯 Practical Recommendation**
+- **Use Basic RAG** for reliable, fast educational responses
+- **Use Enhanced RAG** when you need cross-chapter content discovery
+- **Monitor confidence scores** to detect Enhanced RAG fallbacks
 
 ### **Toggle State Management**
 ```kotlin
@@ -754,10 +821,29 @@ USER QUESTION: why was my answer wrong?
 - **Image Sources**: Gallery selection and camera capture with rotation handling
 - **Message Types**: `ChatMessageText`, `ChatMessageImage` combined in single requests
 
-### **🎯 Quality Assurance**
+### **✅ Recent Quality Improvements (Fixed Issues)**
+
+#### **🔧 Enhanced RAG Transparency Fixed**
+- **Before**: Silent fallbacks gave false confidence that Enhanced RAG was working
+- **After**: Confidence scores reveal when Enhanced RAG fails (0.3f = fallback occurred)
+- **Impact**: Developers and users can detect when vector search isn't working
+
+#### **⚖️ Confidence Scoring Normalized**
+- **Before**: Basic RAG had hardcoded high scores (0.9f), Enhanced RAG had dynamic scores
+- **After**: Both systems use dynamic scoring based on actual content quality
+- **Impact**: Fair comparison between Basic and Enhanced RAG modes
+
+#### **🔍 Fallback Metadata Added**
+- **Before**: No way to know why Enhanced RAG fell back to Basic content
+- **After**: Metadata tracks fallback reasons ("vector_search_failed", original error)
+- **Impact**: Better debugging and system monitoring
+
+### **📊 Current System Quality Status**
+- **Basic RAG**: ✅ Production-ready, reliable, fast
+- **Enhanced RAG**: ⚠️ Functional but may fall back silently (now detectable via confidence)
 - **Build Status**: ✅ All changes compile successfully
-- **Fallback Chain**: Enhanced RAG → Basic RAG → Raw input (graceful degradation)
-- **Error Handling**: Comprehensive error recovery with educational context preservation
+- **Fallback Chain**: Enhanced RAG → Basic RAG (with transparency) → Raw input (rare)
+- **Error Handling**: ✅ Comprehensive error recovery with educational context preservation
 - **Performance**: Basic RAG ~100-200ms, Enhanced RAG ~300-500ms (vector search overhead)
 
 ## Future Enhancements
