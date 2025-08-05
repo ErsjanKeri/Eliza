@@ -30,110 +30,73 @@ object VideoPromptTemplates {
     /**
      * Create a video explanation prompt for chapter reading context.
      * Transforms rich chapter context into a natural language prompt for ElizaServer.
+     * Optimized to stay within 1000 character server limit.
      */
     fun createChapterVideoPrompt(
         userQuestion: String,
         context: ChatContext.ChapterReading
     ): String {
         return """
-            Create an educational video explanation for this question about "${context.chapterTitle}":
+            Create a ${context.courseGrade} educational video about "${context.chapterTitle}" for this question:
             
-            STUDENT QUESTION: "$userQuestion"
+            QUESTION: "$userQuestion"
             
-            EDUCATIONAL CONTEXT:
-            - Course: ${context.courseTitle} (${context.courseSubject}, Grade ${context.courseGrade})
-            - Chapter: ${context.chapterTitle} (Chapter ${context.chapterNumber} of ${context.totalChapters})
-            - Progress: ${context.completedChapters}/${context.totalChapters} chapters completed
-            ${if (context.currentSection != null) "- Current Section: ${context.currentSection}" else ""}
+            CONTEXT: ${context.courseTitle} - Chapter ${context.chapterNumber}/${context.totalChapters}
             
-            CHAPTER CONTENT OVERVIEW:
-            ${getChapterContentSummary(context.markdownContent)}
+            REQUIREMENTS:
+            - Clear step-by-step visual explanation
+            - Focus on the specific concept asked
+            - Use animations for mathematical concepts
+            - Include concrete examples
+            - 30-60 seconds duration
             
-            VIDEO REQUIREMENTS:
-            - Create a clear, step-by-step visual explanation
-            - Focus on the specific concept the student asked about
-            - Connect to the broader chapter themes
-            - Use visual animations to illustrate mathematical concepts
-            - Keep explanations at ${context.courseGrade} grade level
-            - Include concrete examples and practice problems
-            - Duration: 30-60 seconds for focused explanation
-            
-            Create an engaging educational video that helps the student understand this concept within the context of their current chapter study.
+            Make it engaging and easy to understand for ${context.courseGrade} students.
         """.trimIndent()
     }
     
     /**
      * Create a video explanation prompt for exercise solving context.
      * Transforms rich exercise context into a natural language prompt for ElizaServer.
+     * Optimized to stay within 1000 character server limit.
      */
     fun createExerciseVideoPrompt(
         userQuestion: String,
         context: ChatContext.ExerciseSolving
     ): String {
         return """
-            Create an educational video explanation for this exercise problem:
+            Create an educational video for Exercise #${context.exerciseNumber} from ${context.chapterTitle}:
             
-            STUDENT QUESTION: "$userQuestion"
+            QUESTION: "$userQuestion"
             
-            EXERCISE CONTEXT:
-            - Course: ${context.courseTitle} (${context.courseSubject})
-            - Chapter: ${context.chapterTitle}
-            - Exercise #${context.exerciseNumber}
-            
-            PROBLEM DETAILS:
-            Question: "${context.questionText}"
-            
-            Multiple Choice Options:
-            A) ${context.options.getOrNull(0) ?: "Option A"}
-            B) ${context.options.getOrNull(1) ?: "Option B"}
-            C) ${context.options.getOrNull(2) ?: "Option C"}
-            D) ${context.options.getOrNull(3) ?: "Option D"}
+            PROBLEM: "${context.questionText}"
+            Options: A) ${context.options.getOrNull(0)} B) ${context.options.getOrNull(1)} C) ${context.options.getOrNull(2)} D) ${context.options.getOrNull(3)}
             
             ${if (context.userAnswer != null && context.correctAnswer != null) {
-                """
-                STUDENT'S PERFORMANCE:
-                Student Selected: ${getOptionLetter(context.userAnswerIndex)} ${context.userAnswer}
-                Correct Answer: ${getOptionLetter(context.correctAnswerIndex)} ${context.correctAnswer}
-                Result: ${if (context.userAnswer == context.correctAnswer) "CORRECT" else "INCORRECT"}
-                Attempts: ${context.attempts}
-                """.trimIndent()
+                "Student chose ${getOptionLetter(context.userAnswerIndex)} but correct is ${getOptionLetter(context.correctAnswerIndex)}."
             } else {
-                "CONTEXT: Student is asking for help with this problem"
+                "Student needs help solving this."
             }}
             
-            VIDEO REQUIREMENTS:
-            - Create a step-by-step visual solution
-            ${if (context.userAnswer != context.correctAnswer && context.userAnswer != null) {
-                "- Explain why option ${getOptionLetter(context.userAnswerIndex)} (${context.userAnswer}) is incorrect"
-            } else ""}
-            - Show the complete solution process leading to option ${getOptionLetter(context.correctAnswerIndex)} (${context.correctAnswer})
-            - Use visual animations to demonstrate mathematical steps
-            - Highlight key concepts from the chapter content
-            - Include similar practice examples if helpful
-            - Duration: 45-90 seconds for complete explanation
+            REQUIREMENTS:
+            - Step-by-step visual solution
+            - Explain why correct answer is right
+            ${if (context.userAnswer != context.correctAnswer && context.userAnswer != null) "- Show why ${getOptionLetter(context.userAnswerIndex)} is wrong" else ""}
+            - Use clear animations
+            - 45-90 seconds
             
-            Create an engaging educational video that helps the student understand both the specific problem and the underlying mathematical concepts.
+            Make it engaging and educational.
         """.trimIndent()
     }
     
     /**
      * Create a general video prompt when no specific context is available.
      * Fallback for direct video requests without chapter/exercise context.
+     * Optimized to stay within 1000 character server limit.
      */
     fun createGeneralVideoPrompt(userQuestion: String): String {
         return """
-            Create an educational video explanation for this mathematical question:
-            
-            STUDENT QUESTION: "$userQuestion"
-            
-            VIDEO REQUIREMENTS:
-            - Provide a clear, step-by-step explanation
-            - Use visual animations to illustrate concepts
-            - Include concrete examples and demonstrations
-            - Make the explanation accessible and engaging
-            - Duration: 30-60 seconds for focused explanation
-            
-            Create an educational video that helps the student understand this mathematical concept clearly.
+            Create an educational video for this question:
+            QUESTION: "$userQuestion"
         """.trimIndent()
     }
     

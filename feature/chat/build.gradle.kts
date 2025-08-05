@@ -80,6 +80,9 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+    
     // Image handling
     implementation("androidx.exifinterface:exifinterface:1.3.7")
     

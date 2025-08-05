@@ -18,6 +18,9 @@ package com.example.ai.edge.eliza.feature.chat.ui
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.example.ai.edge.eliza.feature.chat.model.CourseNavigationData
+import com.example.ai.edge.eliza.feature.chat.util.CourseJsonExtractor
+import kotlinx.serialization.json.Json
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,11 +29,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -79,7 +84,10 @@ fun ChatView(
     chatViewModel: ElizaChatViewModel = hiltViewModel(),
     modelManager: ElizaModelManager = hiltViewModel(),
     enhancedChatViewModel: EnhancedChatViewModel = hiltViewModel(),
-    showSidebarToggle: Boolean = false
+    showSidebarToggle: Boolean = false,
+    // NEW: Course navigation functions for chat suggestions
+    onNavigateToCourse: (String) -> Unit = {},
+    onNavigateToChapter: (String, String) -> Unit = { _, _ -> }
 ) {
     val uiState by modelManager.uiState.collectAsState()
     val sidebarState by enhancedChatViewModel.sidebarState.collectAsState()
@@ -264,6 +272,47 @@ fun ChatView(
                                     }
                                     
                                     if (isComplete) {
+                                        // Check if this is a course suggestion response and convert to CourseNavigationData
+                                        if (contextToUse is ChatContext.CourseSuggestion && currentStreamingMessage != null) {
+                                            try {
+                                                // Extract clean JSON from AI response (handles markdown wrapping)
+                                                val cleanJsonString = CourseJsonExtractor.extractJsonFromResponse(
+                                                    currentStreamingMessage!!.content
+                                                )
+                                                
+                                                // Parse the cleaned JSON
+                                                val json = Json { 
+                                                    ignoreUnknownKeys = true
+                                                    isLenient = true 
+                                                }
+                                                val courseSuggestionResponse = json.decodeFromString<com.example.ai.edge.eliza.core.model.CourseSuggestionResponse>(
+                                                    cleanJsonString
+                                                )
+                                                
+                                                // Create navigation data from the parsed response
+                                                val navigationData = CourseNavigationData.fromCourseSuggestionResponse(courseSuggestionResponse)
+                                                
+                                                // Replace the last message with a course suggestion message
+                                                val courseSuggestionMessage = ChatMessageCourseSuggestion(
+                                                    content = currentStreamingMessage!!.content,
+                                                    navigationData = navigationData,
+                                                    side = ChatSide.AGENT,
+                                                    latencyMs = currentStreamingMessage!!.latencyMs,
+                                                    accelerator = currentStreamingMessage!!.accelerator
+                                                )
+                                                
+                                                messages = (messages.dropLast(1) + courseSuggestionMessage).toMutableList()
+                                                
+                                                android.util.Log.d("ChatView", "Successfully parsed course suggestion JSON with ${navigationData.suggestions.size} suggestions")
+                                                
+                                            } catch (e: Exception) {
+                                                // If JSON parsing fails, keep as regular text message (fallback)
+                                                // This ensures the chat doesn't break if AI doesn't follow JSON format
+                                                android.util.Log.d("ChatView", "Failed to parse course suggestion JSON: ${e.message}")
+                                                android.util.Log.d("ChatView", "Response content preview: ${currentStreamingMessage!!.content.take(200)}...")
+                                            }
+                                        }
+                                        
                                         // Reset state
                                         currentStreamingMessage = null
                                         isLoading = false
@@ -361,7 +410,12 @@ fun ChatView(
                         }
                     },
                     isOnline = isOnline,
-                    showVideoButton = true
+                    showVideoButton = chatContext !is ChatContext.CourseSuggestion, // Disable video for course suggestions
+                    // NEW: Pass navigation functions to ChatPanel
+                    onNavigateToCourse = onNavigateToCourse,
+                    onNavigateToChapter = onNavigateToChapter,
+                    // NEW: Pass chatContext for badge text customization
+                    chatContext = chatContext
                 )
                 } else {
                     // Show model download panel when model isn't ready
@@ -482,7 +536,10 @@ fun EnhancedChapterChatView(
     onNavigateUp: () -> Unit,
     modifier: Modifier = Modifier,
     chatViewModel: ElizaChatViewModel = hiltViewModel(),
-    enhancedViewModel: EnhancedChatViewModel = hiltViewModel()
+    enhancedViewModel: EnhancedChatViewModel = hiltViewModel(),
+    // NEW: Course navigation functions  
+    onNavigateToCourse: (String) -> Unit = {},
+    onNavigateToChapter: (String, String) -> Unit = { _, _ -> }
 ) {
     val uiState by enhancedViewModel.uiState.collectAsState()
     
@@ -526,7 +583,10 @@ fun EnhancedChapterChatView(
                 chatContext = uiState.chatContext,
                 onNavigateUp = onNavigateUp,
                 modifier = modifier,
-                chatViewModel = chatViewModel
+                chatViewModel = chatViewModel,
+                // NEW: Pass navigation functions
+                onNavigateToCourse = onNavigateToCourse,
+                onNavigateToChapter = onNavigateToChapter
             )
         }
     }
@@ -545,7 +605,10 @@ fun EnhancedExerciseHelpChatView(
     onNavigateUp: () -> Unit,
     modifier: Modifier = Modifier,
     chatViewModel: ElizaChatViewModel = hiltViewModel(),
-    enhancedViewModel: EnhancedChatViewModel = hiltViewModel()
+    enhancedViewModel: EnhancedChatViewModel = hiltViewModel(),
+    // NEW: Course navigation functions
+    onNavigateToCourse: (String) -> Unit = {},
+    onNavigateToChapter: (String, String) -> Unit = { _, _ -> }
 ) {
     val uiState by enhancedViewModel.uiState.collectAsState()
     
@@ -594,7 +657,10 @@ fun EnhancedExerciseHelpChatView(
                 initialMessages = initialMessages,
                 onNavigateUp = onNavigateUp,
                 modifier = modifier,
-                chatViewModel = chatViewModel
+                chatViewModel = chatViewModel,
+                // NEW: Pass navigation functions
+                onNavigateToCourse = onNavigateToCourse,
+                onNavigateToChapter = onNavigateToChapter
             )
         }
     }
@@ -610,7 +676,10 @@ private fun EnhancedChatInterface(
     onNavigateUp: () -> Unit,
     modifier: Modifier = Modifier,
     initialMessages: List<ChatMessage> = emptyList(),
-    chatViewModel: ElizaChatViewModel = hiltViewModel()
+    chatViewModel: ElizaChatViewModel = hiltViewModel(),
+    // NEW: Course navigation functions
+    onNavigateToCourse: (String) -> Unit = {},
+    onNavigateToChapter: (String, String) -> Unit = { _, _ -> }
 ) {
     // Use the existing ChatView but with enhanced context awareness
     // The ChatViewModel will automatically use RAG when chatContext is provided
@@ -621,12 +690,79 @@ private fun EnhancedChatInterface(
         chatContext = chatContext,
         chatViewModel = chatViewModel,
         showSidebarToggle = true, // Enable sidebar for enhanced chat
-        modifier = modifier
+        modifier = modifier,
+        // NEW: Pass navigation functions down to ChatView
+        onNavigateToCourse = onNavigateToCourse,
+        onNavigateToChapter = onNavigateToChapter
     )
+
+    // maybe show context hints/suggestions? 
+}
+
+/**
+ * Enhanced ChatView for course suggestions with personalized recommendations.
+ * Integrates user preferences and provides AI-powered course guidance.
+ */
+@Composable
+fun EnhancedCourseSuggestionChatView(
+    onNavigateUp: () -> Unit,
+    modifier: Modifier = Modifier,
+    chatViewModel: ElizaChatViewModel = hiltViewModel(),
+    enhancedViewModel: EnhancedChatViewModel = hiltViewModel(),
+    // NEW: Course navigation functions
+    onNavigateToCourse: (String) -> Unit,
+    onNavigateToChapter: (String, String) -> Unit
+) {
+    val uiState by enhancedViewModel.uiState.collectAsState()
     
-    // TODO: In future iterations, this can be enhanced to:
-    // 1. Display RAG toggle status
-    // 2. Show context suggestions
-    // 3. Provide context-aware input hints
-    // 4. Display relevance scores for responses
+    // Load course suggestion context on first launch
+    LaunchedEffect(Unit) {
+        enhancedViewModel.loadCourseSuggestionContext()
+    }
+    
+    when {
+        uiState.isLoading -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        uiState.error != null -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Error loading course suggestions",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        text = uiState.error ?: "Unknown error",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { enhancedViewModel.loadCourseSuggestionContext() }) {
+                        Text("Try Again")
+                    }
+                }
+            }
+        }
+        uiState.chatContext != null -> {
+            EnhancedChatInterface(
+                title = uiState.title,
+                chatContext = uiState.chatContext,
+                onNavigateUp = onNavigateUp,
+                modifier = modifier,
+                chatViewModel = chatViewModel,
+                // NEW: Pass navigation functions
+                onNavigateToCourse = onNavigateToCourse,
+                onNavigateToChapter = onNavigateToChapter
+            )
+        }
+    }
 } 

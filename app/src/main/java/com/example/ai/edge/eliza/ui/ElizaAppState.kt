@@ -30,8 +30,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import com.example.ai.edge.eliza.core.data.util.NetworkMonitor
 import com.example.ai.edge.eliza.feature.home.navigation.navigateToHome
+import com.example.ai.edge.eliza.feature.chat.navigation.navigateToCourseSuggestionsChat
+import com.example.ai.edge.eliza.feature.settings.navigation.navigateToSettings
 import com.example.ai.edge.eliza.navigation.TopLevelDestination
 import com.example.ai.edge.eliza.navigation.TopLevelDestination.HOME
+import com.example.ai.edge.eliza.navigation.TopLevelDestination.COURSE_SUGGESTIONS
 import com.example.ai.edge.eliza.navigation.TopLevelDestination.SETTINGS
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -68,11 +71,12 @@ class ElizaAppState(
 
     val currentTopLevelDestination: TopLevelDestination?
         @Composable get() {
-            return when (currentDestination?.route) {
-                HOME.route -> HOME
-                SETTINGS.route -> SETTINGS
-                else -> HOME // Default to HOME
-            }
+                    return when (currentDestination?.route) {
+            HOME.route -> HOME
+            COURSE_SUGGESTIONS.route -> COURSE_SUGGESTIONS
+            SETTINGS.route -> SETTINGS
+            else -> HOME // Default to HOME
+        }
         }
 
     val isOffline = networkMonitor.isOnline
@@ -111,9 +115,13 @@ class ElizaAppState(
 
         when (topLevelDestination) {
             HOME -> navController.navigateToHome(topLevelNavOptions)
+            COURSE_SUGGESTIONS -> {
+                // Navigate to course suggestions chat interface
+                navController.navigateToCourseSuggestionsChat()
+            }
             SETTINGS -> {
-                // TODO: Implement settings navigation when feature is ready
-                println("Settings navigation not implemented yet")
+                // Navigate to settings screen
+                navController.navigateToSettings(topLevelNavOptions)
             }
         }
     }

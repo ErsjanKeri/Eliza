@@ -300,7 +300,7 @@ fun NavGraphBuilder.chapterTestResultScreen(
             testResult = testResult,
             onRetakeTest = { viewModel.retakeTest(chapterId) },
             onRetakeQuestion = { exercise ->
-                // TODO: Navigate to single question test
+                // TODO: Navigate to single question test, TODO: delete!!! 
             },
             onBackToChapter = { onBackClick(chapterId) },
             onContinueLearning = onContinueLearning,

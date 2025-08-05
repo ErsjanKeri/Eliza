@@ -19,6 +19,7 @@ package com.example.ai.edge.eliza.core.designsystem.icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Chat
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.outlined.BookmarkAdd
@@ -76,6 +77,7 @@ object ElizaIcons {
     
     // Communication icons
     val Chat = Icons.AutoMirrored.Rounded.Chat
+    val ChatBorder = Icons.AutoMirrored.Outlined.Chat
     val Send = Icons.AutoMirrored.Rounded.Send
     
     // Action icons

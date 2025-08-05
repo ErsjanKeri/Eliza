@@ -102,6 +102,23 @@ sealed class ChatContext {
         val relatedConcepts: List<String> = emptyList()
     ) : ChatContext()
     
+    /**
+     * Context for course recommendation and discovery.
+     * Used when the user is asking about what they should learn or which courses to take.
+     */
+    @Serializable
+    data class CourseSuggestion(
+        val userQuery: String, // What the user wants to learn
+        val userLevel: String? = null, // User's specified experience level
+        val preferredSubjects: List<String> = emptyList(), // Subject preferences
+        val availableTimeHours: Int? = null, // How much time user has to study
+        val currentCourses: List<String> = emptyList(), // Currently enrolled course IDs
+        val completedCourses: List<String> = emptyList(), // Previously completed course IDs
+        val learningGoals: List<String> = emptyList(), // Specific goals from user query
+        val sessionStartTime: Long = System.currentTimeMillis(),
+        val conversationHistory: List<String> = emptyList() // Previous queries in this session
+    ) : ChatContext()
+    
     companion object {
         /**
          * Create a ChapterReading context from domain models.
@@ -165,6 +182,54 @@ sealed class ChatContext {
                 isTestQuestion = isTestQuestion,
                 previousAttempts = previousAttempts
             )
+        }
+        
+        /**
+         * Create a CourseSuggestion context from user query and preferences.
+         */
+        fun createCourseSuggestion(
+            userQuery: String,
+            userLevel: String? = null,
+            preferredSubjects: List<String> = emptyList(),
+            availableTimeHours: Int? = null,
+            allUserProgress: List<UserProgress> = emptyList(),
+            conversationHistory: List<String> = emptyList()
+        ): CourseSuggestion {
+            // Extract course IDs from user progress data
+            val enrolledCourses = allUserProgress.map { it.courseId }
+            val completedCourses = allUserProgress.filter { it.completionPercentage >= 100f }.map { it.courseId }
+            
+            return CourseSuggestion(
+                userQuery = userQuery,
+                userLevel = userLevel,
+                preferredSubjects = preferredSubjects,
+                availableTimeHours = availableTimeHours,
+                currentCourses = enrolledCourses,
+                completedCourses = completedCourses,
+                learningGoals = extractLearningGoals(userQuery),
+                conversationHistory = conversationHistory
+            )
+        }
+        
+        /**
+         * Extract learning goals from user query using simple keyword matching.
+         * This can be enhanced with NLP in the future.
+         */
+        private fun extractLearningGoals(query: String): List<String> {
+            val goals = mutableListOf<String>()
+            val lowerQuery = query.lowercase()
+            
+            // Common learning goal patterns
+            when {
+                "learn" in lowerQuery || "understand" in lowerQuery -> goals.add("Learn new concepts")
+                "prepare" in lowerQuery || "exam" in lowerQuery -> goals.add("Exam preparation")
+                "improve" in lowerQuery || "better" in lowerQuery -> goals.add("Skill improvement")
+                "beginner" in lowerQuery || "start" in lowerQuery -> goals.add("Beginner introduction")
+                "advanced" in lowerQuery || "expert" in lowerQuery -> goals.add("Advanced mastery")
+                "review" in lowerQuery || "refresh" in lowerQuery -> goals.add("Knowledge review")
+            }
+            
+            return goals.ifEmpty { listOf("General learning") }
         }
     }
 }

@@ -23,12 +23,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.ai.edge.eliza.feature.chat.ui.ChatView
 import com.example.ai.edge.eliza.feature.chat.ui.EnhancedChapterChatView
+import com.example.ai.edge.eliza.feature.chat.ui.EnhancedCourseSuggestionChatView
 import com.example.ai.edge.eliza.feature.chat.ui.EnhancedExerciseHelpChatView
 import com.example.ai.edge.eliza.feature.chat.ui.ExerciseHelpChatView
 
 const val CHAT_ROUTE = "chat_route"
 const val CHAPTER_CHAT_ROUTE = "chapter_chat_route"
 const val EXERCISE_HELP_CHAT_ROUTE = "exercise_help_chat_route"
+const val COURSE_SUGGESTIONS_CHAT_ROUTE = "course_suggestions_chat_route"
 
 /**
  * Navigation to general chat screen (legacy)
@@ -63,10 +65,20 @@ fun NavController.navigateToExerciseHelpChat(
 }
 
 /**
+ * Navigation to course suggestions chat for general learning guidance
+ */
+fun NavController.navigateToCourseSuggestionsChat() {
+    this.navigate(COURSE_SUGGESTIONS_CHAT_ROUTE)
+}
+
+/**
  * Chat section for the navigation graph
  */
 fun NavGraphBuilder.chatSection(
-    onNavigateUp: () -> Unit
+    onNavigateUp: () -> Unit,
+    // NEW: Course navigation functions for course suggestion buttons
+    onNavigateToCourse: (String) -> Unit = {},
+    onNavigateToChapter: (String, String) -> Unit = { _, _ -> }
 ) {
     // Legacy general chat screen
     composable(
@@ -131,6 +143,15 @@ fun NavGraphBuilder.chatSection(
             userAnswer = userAnswer,
             isTestQuestion = isTestQuestion,
             onNavigateUp = onNavigateUp
+        )
+    }
+    
+    // Enhanced course suggestions chat screen
+    composable(COURSE_SUGGESTIONS_CHAT_ROUTE) {
+        EnhancedCourseSuggestionChatView(
+            onNavigateUp = onNavigateUp,
+            onNavigateToCourse = onNavigateToCourse,
+            onNavigateToChapter = onNavigateToChapter
         )
     }
 } 

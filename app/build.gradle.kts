@@ -48,9 +48,10 @@ dependencies {
     implementation(project(":feature:course-progress"))
     implementation(project(":feature:chapter"))
     implementation(project(":feature:chat"))
+    implementation(project(":feature:course-suggestions"))
+    implementation(project(":feature:settings"))
     // TODO: Add other features as they're implemented
     // implementation(project(":feature:courses"))
-    // implementation(project(":feature:settings"))
     
     // Core modules
     implementation(project(":core:common"))

@@ -17,6 +17,7 @@
 package com.example.ai.edge.eliza.ai.rag.service
 
 import android.util.Log
+import com.example.ai.edge.eliza.ai.rag.util.RagContentIndexer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,7 +31,8 @@ import javax.inject.Singleton
 @Singleton
 class RagInitializationService @Inject constructor(
     private val textEmbeddingService: TextEmbeddingService,
-    private val ragIndexingService: RagIndexingService
+    private val ragIndexingService: RagIndexingService,
+    private val ragContentIndexer: RagContentIndexer
 ) {
     
     companion object {
@@ -139,6 +141,15 @@ class RagInitializationService @Inject constructor(
                 }
             } else {
                 Log.d(TAG, "Step 3: Mock data already indexed (${stats.totalChunks} chunks)")
+            }
+            
+            // CRITICAL FIX: Ensure all critical courses (especially trigonometry) are indexed
+            Log.d(TAG, "Step 4: 🎯 CRITICAL FIX - Ensuring trigonometry and other critical courses are indexed...")
+            val criticalCoursesIndexed = ragContentIndexer.ensureCriticalCoursesIndexed()
+            if (criticalCoursesIndexed) {
+                Log.d(TAG, "✅ All critical courses successfully indexed - Course suggestions will now work properly!")
+            } else {
+                Log.w(TAG, "⚠️ Some critical courses failed to index - Course suggestions may recommend external courses")
             }
             
             val finalStats = ragIndexingService.getIndexingStats()

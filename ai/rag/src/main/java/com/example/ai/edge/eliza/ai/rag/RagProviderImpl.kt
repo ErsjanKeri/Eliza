@@ -38,7 +38,7 @@ interface RagProvider {
     suspend fun getRelevantContent(
         query: String,
         context: ChatContext,
-        maxChunks: Int = 3
+        maxChunks: Int = 5
     ): List<ContentChunk>
     
     /**
@@ -435,6 +435,152 @@ class ExerciseRagProvider @Inject constructor(
 }
 
 /**
+ * RAG provider for course suggestion context.
+ * Provides comprehensive course and chapter information for AI-powered course recommendations.
+ */
+class CourseSuggestionRagProvider @Inject constructor(
+    private val courseRepository: CourseRepository,
+    private val systemInstructionProvider: SystemInstructionProvider
+) : RagProvider {
+    
+    override suspend fun getRelevantContent(
+        query: String,
+        context: ChatContext,
+        maxChunks: Int
+    ): List<ContentChunk> {
+        return if (context is ChatContext.CourseSuggestion) {
+            try {
+                // Get all available courses for comprehensive course suggestions
+                val allCourses = courseRepository.getAllCourses().firstOrNull() ?: emptyList()
+                
+                // Create content chunks for each course with key information
+                allCourses.take(maxChunks).map { course ->
+                    val courseOverview = buildString {
+                        appendLine("Course: ${course.title}")
+                        appendLine("Subject: ${course.subject.name}")
+                        appendLine("Grade: ${course.grade}")
+                        appendLine("Description: ${course.description}")
+                        appendLine("Chapters (${course.totalChapters} total):")
+                        course.chapters.forEach { chapter ->
+                            appendLine("- Chapter ${chapter.chapterNumber}: ${chapter.title}")
+                        }
+                        appendLine("Estimated completion: ${course.estimatedHours} hours")
+                    }
+                    
+                    ContentChunk(
+                        id = "course_${course.id}",
+                        title = course.title,
+                        content = courseOverview,
+                        source = "Course Overview",
+                        relevanceScore = 0.8f, // High relevance for course discovery
+                        chunkType = ContentChunkType.SUMMARY,
+                        metadata = mapOf(
+                            "courseId" to course.id,
+                            "subject" to course.subject.name,
+                            "grade" to course.grade,
+                            "totalChapters" to course.totalChapters.toString(),
+                            "estimatedHours" to course.estimatedHours.toString()
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
+    }
+    
+    override suspend fun enhancePrompt(
+        prompt: String,
+        context: ChatContext
+    ): PromptEnhancementResult {
+        
+        val startTime = System.currentTimeMillis()
+        
+        if (context !is ChatContext.CourseSuggestion) {
+            return PromptEnhancementResult(
+                enhancedPrompt = com.example.ai.edge.eliza.core.model.EnhancedPrompt(
+                    originalPrompt = prompt,
+                    enhancedPrompt = prompt,
+                    context = context,
+                    retrievedChunks = emptyList(),
+                    systemInstructions = ""
+                ),
+                confidence = 0.3f,
+                processingTime = System.currentTimeMillis() - startTime,
+                chunksUsed = 0
+            )
+        }
+        
+        // Get comprehensive course content for recommendations
+        val chunks = getRelevantContent(prompt, context, maxChunks = 10) // More courses for better suggestions
+        
+        // Build context with all available courses and chapters
+        val contextText = if (chunks.isNotEmpty()) {
+            buildString {
+                appendLine("AVAILABLE COURSES AND CHAPTERS:")
+                appendLine()
+                chunks.forEach { chunk ->
+                    appendLine(chunk.content)
+                    appendLine()
+                }
+                appendLine("USER QUERY: ${context.userQuery}")
+                if (context.userLevel != null) {
+                    appendLine("USER LEVEL: ${context.userLevel}")
+                }
+                if (context.availableTimeHours != null) {
+                    appendLine("AVAILABLE TIME: ${context.availableTimeHours} hours")
+                }
+                if (context.preferredSubjects.isNotEmpty()) {
+                    appendLine("PREFERRED SUBJECTS: ${context.preferredSubjects.joinToString(", ")}")
+                }
+                if (context.completedCourses.isNotEmpty()) {
+                    appendLine("COMPLETED COURSES: ${context.completedCourses.joinToString(", ")}")
+                }
+            }
+        } else {
+            "No course content available for recommendations."
+        }
+        
+        val systemInstructions = systemInstructionProvider.getSystemInstructions(context, isEnhancedRag = false)
+        
+        val enhancedPrompt = buildString {
+            appendLine(systemInstructions)
+            appendLine()
+            appendLine(contextText)
+            appendLine()
+            appendLine("USER REQUEST: $prompt")
+        }
+        
+        // Calculate confidence based on available content
+        val confidence = when {
+            chunks.isEmpty() -> 0.3f
+            chunks.size >= 3 -> 0.8f // Good course coverage
+            chunks.size >= 2 -> 0.7f // Moderate coverage  
+            else -> 0.6f // Limited coverage
+        }
+        
+        return PromptEnhancementResult(
+            enhancedPrompt = com.example.ai.edge.eliza.core.model.EnhancedPrompt(
+                originalPrompt = prompt,
+                enhancedPrompt = enhancedPrompt,
+                context = context,
+                retrievedChunks = chunks,
+                systemInstructions = systemInstructions
+            ),
+            confidence = confidence,
+            processingTime = System.currentTimeMillis() - startTime,
+            chunksUsed = chunks.size
+        )
+    }
+    
+    override suspend fun getSystemInstructions(context: ChatContext): String {
+        return systemInstructionProvider.getSystemInstructions(context, isEnhancedRag = false)
+    }
+}
+
+/**
  * Factory implementation for creating appropriate RAG providers.
  * Supports both basic and enhanced (vector-based) RAG providers with UI toggle.
  */
@@ -444,6 +590,7 @@ class RagProviderFactoryImpl @Inject constructor(
     private val revisionRagProvider: RevisionRagProvider,
     private val generalRagProvider: GeneralRagProvider,
     private val exerciseRagProvider: ExerciseRagProvider,
+    private val courseSuggestionRagProvider: CourseSuggestionRagProvider,
     private val enhancedRagProvider: com.example.ai.edge.eliza.ai.rag.service.EnhancedRagProvider
 ) : RagProviderFactory {
     
@@ -479,6 +626,7 @@ class RagProviderFactoryImpl @Inject constructor(
             is ChatContext.Revision -> revisionRagProvider
             is ChatContext.GeneralTutoring -> generalRagProvider
             is ChatContext.ExerciseSolving -> exerciseRagProvider
+            is ChatContext.CourseSuggestion -> courseSuggestionRagProvider
         }
     }
 } 

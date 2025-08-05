@@ -142,7 +142,6 @@ private fun TrialPracticeTopBar(
     TopAppBar(
         title = {
             Text(
-                // TODO replace 🎲 with a proper icon
                 text = "Practice Question",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.SemiBold

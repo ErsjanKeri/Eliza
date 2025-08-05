@@ -214,7 +214,7 @@ class RagEnhancedChatService @Inject constructor(
     ): List<String> {
         return try {
             val ragProvider = ragProviderFactory.createProvider(context)
-            val relevantContent = ragProvider.getRelevantContent(query, context, maxChunks = 2)
+            val relevantContent = ragProvider.getRelevantContent(query, context, maxChunks = 5)
             
             relevantContent.map { chunk ->
                 "Ask about: ${chunk.title}"

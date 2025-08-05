@@ -58,9 +58,22 @@ message LlmConfig {
   bool support_audio = 7;
 }
 
+message UserLearningPreferences {
+  string experience_level = 1; // "beginner", "intermediate", "advanced"
+  repeated string preferred_subjects = 2; // e.g., ["mathematics", "physics"]
+  int32 available_time_hours = 3; // Hours per week available for study
+  repeated string learning_goals = 4; // User-defined learning objectives
+  string preferred_difficulty = 5; // "easy", "moderate", "challenging"
+  string study_schedule = 6; // "morning", "afternoon", "evening", "flexible"
+  bool is_first_time = 7; // Whether user has set preferences before
+  int64 last_updated = 8; // When preferences were last modified (timestamp)
+  string language = 9; // "albanian", "german", "english" - app language preference
+}
+
 message ElizaSettings {
   Theme theme = 1;
   AccessTokenData access_token_data = 2;
   repeated string text_input_history = 3;
   repeated ImportedModel imported_model = 4;
+  UserLearningPreferences user_learning_preferences = 5;
 }

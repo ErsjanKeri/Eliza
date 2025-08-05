@@ -72,6 +72,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import com.example.ai.edge.eliza.core.model.ChatContext
 
 enum class ChatInputType {
   TEXT,
@@ -98,6 +99,11 @@ fun ChatPanel(
   onFallbackToTextChat: (String) -> Unit = {},
   isOnline: Boolean = true,
   showVideoButton: Boolean = true,
+  // NEW: Course navigation functions for chat suggestions
+  onNavigateToCourse: (String) -> Unit = {},
+  onNavigateToChapter: (String, String) -> Unit = { _, _ -> },
+  // NEW: Chat context for badge text customization
+  chatContext: ChatContext? = null,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
@@ -222,6 +228,13 @@ fun ChatPanel(
                 // Info.
                 is ChatMessageInfo -> MessageBodyInfo(message = message)
 
+                // Course suggestion with navigation actions.
+                is ChatMessageCourseSuggestion -> MessageBodyCourseSuggestion(
+                  message = message,
+                  onNavigateToCourse = onNavigateToCourse,
+                  onNavigateToChapter = onNavigateToChapter
+                )
+
                 // Text message.
                 is ChatMessageText -> MessageBodyText(message = message)
 
@@ -284,7 +297,10 @@ fun ChatPanel(
         ) {
           MessageBodyInfo(
             ChatMessageInfo(
-              content = "Ask me anything about this chapter! I'm here to help you understand the material."
+              content = when (chatContext) {
+                is ChatContext.CourseSuggestion -> "Ask me anything about Eliza and our courses!"
+                else -> "Ask me anything about this chapter! I'm here to help you understand the material."
+              }
             ),
             smallFontSize = false,
           )

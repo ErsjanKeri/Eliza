@@ -154,11 +154,28 @@ class VideoExplanationServiceImpl @Inject constructor(
             val prompt = generatePromptFromContext(userQuestion, context)
             Log.d(TAG, "Generated prompt: ${prompt.take(100)}...")
             
-            // Step 3: Validate prompt length
-            if (prompt.length > 4000) { // Reasonable limit for most APIs
+            // Step 3: Validate generated prompt is not empty
+            if (prompt.trim().isEmpty()) {
+                Log.e(TAG, "CRITICAL: Generated prompt is empty! userQuestion: '$userQuestion', context: $context")
+                val errorInfo = VideoErrorInfo(
+                    type = VideoErrorType.INVALID_PROMPT,
+                    message = "Failed to generate video prompt. Please try a different question.",
+                    technicalDetails = "Generated prompt is empty for userQuestion: '$userQuestion'",
+                    isRetryable = true,
+                    suggestedAction = "Try rephrasing your question",
+                    retryDelayMs = 1000L,
+                    maxRetries = 1
+                )
+                onStatusUpdated(initialStatus.withError(errorInfo))
+                return
+            }
+            
+            // Step 4: Validate prompt length (ElizaServer limit is 1000 characters)
+            if (prompt.length > 1000) {
                 val errorInfo = VideoErrorInfo(
                     type = VideoErrorType.PROMPT_TOO_LONG,
                     message = "Your request is too long. Please try a shorter question.",
+                    technicalDetails = "Generated prompt is ${prompt.length} characters, but server limit is 1000",
                     isRetryable = false,
                     suggestedAction = "Use a shorter question"
                 )
@@ -166,10 +183,10 @@ class VideoExplanationServiceImpl @Inject constructor(
                 return
             }
             
-            // Step 4: Send request to ElizaServer with error handling
+            // Step 5: Send request to ElizaServer with error handling
             val videoRequest = VideoRequest(
                 prompt = prompt,
-                durationLimit = 60 // Default 60 seconds
+                durationLimit = 30 // Default 30 seconds (server accepts 5-120)
             )
             
             val response = try {
@@ -191,7 +208,7 @@ class VideoExplanationServiceImpl @Inject constructor(
             val videoId = response.videoId
             Log.d(TAG, "Video request created with ID: $videoId")
             
-            // Step 5: Update status with video ID
+            // Step 6: Update status with video ID
             val queuedStatus = initialStatus.copy(
                 status = VideoExplanationStatusType.QUEUED,
                 videoId = videoId,
@@ -201,7 +218,7 @@ class VideoExplanationServiceImpl @Inject constructor(
             activeRequests[videoId] = queuedStatus
             onStatusUpdated(queuedStatus)
             
-            // Step 6: Start polling for status updates
+            // Step 7: Start polling for status updates
             pollVideoStatusWithRetry(videoId, onStatusUpdated)
             
         } catch (e: Exception) {
@@ -312,15 +329,25 @@ class VideoExplanationServiceImpl @Inject constructor(
      * Reuses existing VideoPromptTemplates for consistency.
      */
     private fun generatePromptFromContext(userQuestion: String, context: ChatContext?): String {
+        Log.d(TAG, "Generating prompt for userQuestion: '$userQuestion', context: $context")
+        
         return when (context) {
             is ChatContext.ChapterReading -> {
+                Log.d(TAG, "Using ChapterReading context")
                 VideoPromptTemplates.createChapterVideoPrompt(userQuestion, context)
             }
             is ChatContext.ExerciseSolving -> {
+                Log.d(TAG, "Using ExerciseSolving context") 
                 VideoPromptTemplates.createExerciseVideoPrompt(userQuestion, context)
             }
             else -> {
+                Log.d(TAG, "Using General context (no specific context provided)")
                 VideoPromptTemplates.createGeneralVideoPrompt(userQuestion)
+            }
+        }.also { generatedPrompt ->
+            Log.d(TAG, "Generated prompt length: ${generatedPrompt.length}")
+            if (generatedPrompt.isBlank()) {
+                Log.e(TAG, "ERROR: Generated prompt is empty!")
             }
         }
     }

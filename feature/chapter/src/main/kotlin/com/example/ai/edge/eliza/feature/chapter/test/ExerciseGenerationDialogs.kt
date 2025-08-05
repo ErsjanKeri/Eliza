@@ -104,7 +104,6 @@ fun DifficultySelectionDialog(
         containerColor = MaterialTheme.colorScheme.surface, // Clean white background
         title = {
             Text(
-                // TODO: replace 🎲 with a proper icon 
                 text = "Generate New Practice Question",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.SemiBold

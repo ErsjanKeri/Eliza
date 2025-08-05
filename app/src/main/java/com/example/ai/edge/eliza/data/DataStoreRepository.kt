@@ -125,4 +125,59 @@ class DefaultDataStoreRepository(private val dataStore: DataStore<ElizaSettings>
       emptyList()
     }
   }
+
+  override fun saveUserPreferences(preferences: String) {
+    runBlocking {
+      dataStore.updateData { settings ->
+        val preferencesProto = com.example.ai.edge.eliza.proto.UserLearningPreferences.newBuilder()
+        
+        // Parse JSON string and convert to proto
+        try {
+          // Simple delimiter-based approach: experienceLevel|subjects|timeHours|goals|language
+          val parts = preferences.split("|")
+          if (parts.size >= 5) {
+            if (parts[0].isNotEmpty()) preferencesProto.experienceLevel = parts[0]
+            if (parts[1].isNotEmpty()) preferencesProto.addAllPreferredSubjects(parts[1].split(",").filter { it.isNotEmpty() })
+            if (parts[2].isNotEmpty()) preferencesProto.availableTimeHours = parts[2].toIntOrNull() ?: 0
+            if (parts[3].isNotEmpty()) preferencesProto.addAllLearningGoals(parts[3].split(",").filter { it.isNotEmpty() })
+            if (parts[4].isNotEmpty()) preferencesProto.language = parts[4]
+          } else if (parts.size >= 4) {
+            // Backwards compatibility for old format without language
+            if (parts[0].isNotEmpty()) preferencesProto.experienceLevel = parts[0]
+            if (parts[1].isNotEmpty()) preferencesProto.addAllPreferredSubjects(parts[1].split(",").filter { it.isNotEmpty() })
+            if (parts[2].isNotEmpty()) preferencesProto.availableTimeHours = parts[2].toIntOrNull() ?: 0
+            if (parts[3].isNotEmpty()) preferencesProto.addAllLearningGoals(parts[3].split(",").filter { it.isNotEmpty() })
+            preferencesProto.language = "english" // Default to English for backwards compatibility
+          }
+          preferencesProto.lastUpdated = System.currentTimeMillis()
+        } catch (e: Exception) {
+          // If parsing fails, create empty preferences with default language
+          preferencesProto.isFirstTime = true
+          preferencesProto.language = "english"
+          preferencesProto.lastUpdated = System.currentTimeMillis()
+        }
+        
+        settings.toBuilder()
+          .setUserLearningPreferences(preferencesProto.build())
+          .build()
+      }
+    }
+  }
+
+  override fun readUserPreferences(): String? {
+    return runBlocking {
+      val settings = dataStore.data.first()
+      if (settings.hasUserLearningPreferences()) {
+        val prefs = settings.userLearningPreferences
+        // Convert proto to simple string format
+        // Format: experienceLevel|subjects|timeHours|goals|language
+        val subjects = prefs.preferredSubjectsList.joinToString(",")
+        val goals = prefs.learningGoalsList.joinToString(",")
+        val language = if (prefs.language.isNotEmpty()) prefs.language else "english"
+        "${prefs.experienceLevel}|$subjects|${prefs.availableTimeHours}|$goals|$language"
+      } else {
+        null
+      }
+    }
+  }
 }

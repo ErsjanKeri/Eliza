@@ -19,6 +19,7 @@ package com.example.ai.edge.eliza.feature.chat.ui
 import android.graphics.Bitmap
 import com.example.ai.edge.eliza.core.model.VideoErrorInfo
 import com.example.ai.edge.eliza.core.network.model.VideoStatus
+import com.example.ai.edge.eliza.feature.chat.model.CourseNavigationData
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.Dp
@@ -40,6 +41,7 @@ enum class ChatMessageType {
   PROMPT_TEMPLATES,
   VIDEO_REQUEST,
   VIDEO,
+  COURSE_SUGGESTION, // NEW: For AI responses with course navigation actions
 }
 
 enum class ChatSide {
@@ -98,6 +100,36 @@ open class ChatMessageText(
       accelerator = accelerator,
       isMarkdown = isMarkdown,
       llmBenchmarkResult = llmBenchmarkResult,
+    )
+  }
+}
+
+/** Chat message for course suggestions with navigation actions. */
+class ChatMessageCourseSuggestion(
+  content: String,
+  val navigationData: CourseNavigationData,
+  side: ChatSide = ChatSide.AGENT,
+  latencyMs: Float = 0f,
+  isMarkdown: Boolean = true,
+  accelerator: String = "",
+) : ChatMessageText(
+  content = content,
+  side = side,
+  latencyMs = latencyMs,
+  isMarkdown = isMarkdown,
+  accelerator = accelerator
+) {
+  
+  override val type: ChatMessageType = ChatMessageType.COURSE_SUGGESTION
+  
+  override fun clone(): ChatMessageCourseSuggestion {
+    return ChatMessageCourseSuggestion(
+      content = content,
+      navigationData = navigationData,
+      side = side,
+      latencyMs = latencyMs,
+      isMarkdown = isMarkdown,
+      accelerator = accelerator,
     )
   }
 }

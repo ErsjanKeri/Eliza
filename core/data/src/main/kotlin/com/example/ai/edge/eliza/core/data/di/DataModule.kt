@@ -19,6 +19,8 @@ package com.example.ai.edge.eliza.core.data.di
 import com.example.ai.edge.eliza.core.data.repository.ChatRepository
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 import com.example.ai.edge.eliza.core.data.repository.ProgressRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
+import com.example.ai.edge.eliza.core.data.repository.DefaultUserPreferencesRepository
 import com.example.ai.edge.eliza.core.data.repository.mock.MockChatRepository
 import com.example.ai.edge.eliza.core.data.repository.mock.MockCourseRepository
 import com.example.ai.edge.eliza.core.data.repository.mock.MockProgressRepository
@@ -67,6 +69,16 @@ abstract class DataModule {
     abstract fun bindProgressRepository(
         mockProgressRepository: MockProgressRepository
     ): ProgressRepository
+
+    /**
+     * Binds the UserPreferencesRepository interface to its default implementation.
+     * This provides user preferences management with persistent storage via DataStore.
+     */
+    @Binds
+    @Singleton
+    abstract fun bindUserPreferencesRepository(
+        defaultUserPreferencesRepository: DefaultUserPreferencesRepository
+    ): UserPreferencesRepository
 
     /**
      * Binds the NetworkMonitor interface to its simple implementation.

@@ -46,6 +46,8 @@ include(":feature:home")
 include(":feature:chat")
 include(":feature:course-progress")
 include(":feature:chapter")
+include(":feature:course-suggestions")
+include(":feature:settings")
 
 // Check Java version compatibility
 check(JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {

@@ -88,7 +88,7 @@ class ExerciseGenerationService @Inject constructor(
             val relevantContent = ragProvider.getRelevantContent(
                 query = prompt,
                 context = chatContext,
-                maxChunks = 3
+                maxChunks = 5
             )
             
             // Build enhanced prompt with RAG context

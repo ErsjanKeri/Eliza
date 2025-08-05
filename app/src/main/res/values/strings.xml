@@ -3,6 +3,7 @@
     
     <!-- Navigation -->
     <string name="home">Home</string>
+    <string name="course_suggestions">Suggestions</string>
     <string name="settings">Settings</string>
     
     <!-- Loading -->

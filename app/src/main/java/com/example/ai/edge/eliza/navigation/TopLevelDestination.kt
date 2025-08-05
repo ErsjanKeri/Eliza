@@ -22,6 +22,8 @@ import com.example.ai.edge.eliza.R
 import com.example.ai.edge.eliza.core.designsystem.icon.ElizaIcons
 import com.example.ai.edge.eliza.feature.home.navigation.HOME_BASE_ROUTE
 import com.example.ai.edge.eliza.feature.home.navigation.HOME_ROUTE
+import com.example.ai.edge.eliza.feature.chat.navigation.COURSE_SUGGESTIONS_CHAT_ROUTE
+import com.example.ai.edge.eliza.feature.settings.navigation.SETTINGS_ROUTE
 
 /**
  * Type for the top level destinations in the Eliza application. 
@@ -51,13 +53,18 @@ enum class TopLevelDestination(
         route = HOME_ROUTE,
         baseRoute = HOME_BASE_ROUTE,
     ),
+    COURSE_SUGGESTIONS(
+        selectedIcon = ElizaIcons.Chat,
+        unselectedIcon = ElizaIcons.ChatBorder,
+        iconTextId = R.string.course_suggestions,
+        titleTextId = R.string.course_suggestions,
+        route = COURSE_SUGGESTIONS_CHAT_ROUTE,
+    ),
     SETTINGS(
         selectedIcon = ElizaIcons.Settings,
         unselectedIcon = ElizaIcons.SettingsBorder,
         iconTextId = R.string.settings,
         titleTextId = R.string.settings,
-        route = "settings_route",
+        route = SETTINGS_ROUTE,
     ),
-}
-
-// TODO: Add settings navigation when implemented 
+} 

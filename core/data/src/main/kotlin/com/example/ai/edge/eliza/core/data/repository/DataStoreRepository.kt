@@ -19,7 +19,6 @@ package com.example.ai.edge.eliza.core.data.repository
 // Interface only - no protobuf dependencies here
 // Implementation will be in app module with proper protobuf access
 
-// TODO(b/423700720): Change to async (suspend) functions
 interface DataStoreRepository {
   fun saveTextInputHistory(history: List<String>)
 
@@ -38,6 +37,11 @@ interface DataStoreRepository {
   fun saveImportedModels(importedModels: List<String>) // Using String (JSON) to avoid protobuf dependency
 
   fun readImportedModels(): List<String>
+
+  // User Learning Preferences
+  fun saveUserPreferences(preferences: String) // Using JSON string to avoid protobuf dependency
+
+  fun readUserPreferences(): String? // Returns JSON string or null if not set
 }
 
 // Authentication token types (OAuth removed - using direct API tokens)

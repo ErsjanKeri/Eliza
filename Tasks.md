@@ -16,6 +16,11 @@
 - [ ] **Optimize common module usage** - Audit `:core:common` module and move rarely used components to appropriate modules, evaluate markdown renderer placement, reduce unnecessary dependencies, document proper module usage patterns
 
 
+**Questionable constants** 
+- [ ] **1000 character limit** for prompt generation for video (smh lol) 
+
+- [ ] **max chunks = 5** for rag 
+
 ---
 
 

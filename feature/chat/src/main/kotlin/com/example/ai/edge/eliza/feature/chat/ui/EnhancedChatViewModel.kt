@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ai.edge.eliza.core.data.repository.ChatRepository
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.ChatSession
 import com.example.ai.edge.eliza.core.model.ChatType
@@ -42,7 +43,8 @@ import javax.inject.Inject
 @HiltViewModel
 class EnhancedChatViewModel @Inject constructor(
     private val courseRepository: CourseRepository,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EnhancedChatUiState())
@@ -184,13 +186,46 @@ class EnhancedChatViewModel @Inject constructor(
                 val exerciseNumber = chatContext.exerciseNumber
 
                 // Create initial context message
+                // Build the options string first (outside the template) 
+                val optionsText = exercise.options.mapIndexed { index, option ->
+                    val label = when(index) {
+                        0 -> "A"
+                        1 -> "B"
+                        2 -> "C"
+                        3 -> "D"
+                        else -> "${index + 1}"
+                    }
+                    
+                    val annotations = mutableListOf<String>()
+                    
+                    // Check if this is the user's answer
+                    chatContext.userAnswerIndex?.let { userIndex ->
+                        if (index == userIndex) {
+                            annotations.add("Your Answer")
+                        }
+                    }
+                                            
+                    if (index == exercise.correctAnswerIndex) {
+                        annotations.add("Correct Answer")
+                    }
+                                            
+                    val annotationText = if (annotations.isNotEmpty()) {
+                        " - ${annotations.joinToString(" - ")}"
+                    } else {
+                        ""
+                    }
+                                            
+                    "$label) $option$annotationText"
+                }.joinToString("\n")
+
+                // Now use the clean string template
                 val exerciseContext = """
-                    Exercise #$exerciseNumber Help: ${chapter.title}
-                    
-                    Question: ${exercise.questionText}
-                    ${userAnswer?.let { "Your answer: $it" } ?: ""}
-                    
-                    I'm here to help you understand this problem better. What would you like to know?
+Exercise #$exerciseNumber Help: ${chapter.title}
+
+Question: ${exercise.questionText}
+$optionsText
+
+I'm here to help you understand this problem better. What would you like to know?
                 """.trimIndent()
 
                 _uiState.value = _uiState.value.copy(
@@ -244,6 +279,43 @@ class EnhancedChatViewModel @Inject constructor(
                 
                 // Load chat sessions when sidebar opens
                 loadChatSessions()
+            }
+        }
+    }
+    
+    /**
+     * Load course suggestion context for general learning guidance chat.
+     */
+    fun loadCourseSuggestionContext(userQuery: String = "") {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            
+            try {
+                // Get user preferences from repository
+                val userPreferences = userPreferencesRepository.getCurrentUserPreferences()
+                
+                // Create ChatContext.CourseSuggestion using factory method
+                val chatContext = ChatContext.createCourseSuggestion(
+                    userQuery = userQuery.ifEmpty { "I'm looking for course recommendations" },
+                    userLevel = userPreferences.experienceLevel,
+                    preferredSubjects = userPreferences.preferredSubjects,
+                    availableTimeHours = userPreferences.availableTimeHours,
+                    allUserProgress = emptyList(), // Will be enhanced later with actual progress
+                    conversationHistory = emptyList()
+                )
+
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    chatContext = chatContext,
+                    title = "Course Suggestions",
+                    error = null
+                )
+                
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Failed to load course suggestion context: ${e.message}"
+                )
             }
         }
     }

@@ -180,6 +180,11 @@ class EnhancedRagProvider @Inject constructor(
                 Log.d(TAG, "Enhanced RAG: Searching ALL indexed content for general tutoring")
                 contentChunkDao.getAllChunks()
             }
+            is ChatContext.CourseSuggestion -> {
+                // 🔍 ENHANCED RAG: For course suggestions, search ALL indexed content for best recommendations
+                Log.d(TAG, "Enhanced RAG: Searching ALL indexed content for course suggestions")
+                contentChunkDao.getAllChunks()
+            }
         }
     }
     

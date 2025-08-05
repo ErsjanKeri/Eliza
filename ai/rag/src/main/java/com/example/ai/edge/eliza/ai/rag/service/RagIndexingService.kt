@@ -121,7 +121,7 @@ class RagIndexingService @Inject constructor(
     }
     
     /**
-     * Index all chapters in a course.
+     * Index all chapters in a course AND the course metadata itself.
      */
     suspend fun indexCourse(courseId: String): Boolean = withContext(Dispatchers.IO) {
         try {
@@ -131,6 +131,12 @@ class RagIndexingService @Inject constructor(
             if (course == null) {
                 Log.w(TAG, "Course not found: $courseId")
                 return@withContext false
+            }
+            
+            // CRITICAL FIX: Index course metadata as a content chunk for Enhanced RAG
+            val courseIndexed = indexCourseMetadata(course)
+            if (!courseIndexed) {
+                Log.w(TAG, "Failed to index course metadata for: $courseId")
             }
             
             var successCount = 0
@@ -145,7 +151,7 @@ class RagIndexingService @Inject constructor(
             Log.d(TAG, "Indexed $successCount out of $totalChapters chapters for course $courseId")
             
             // Update course-level metadata
-            if (successCount > 0) {
+            if (successCount > 0 || courseIndexed) {
                 val metadata = VectorIndexMetadata(
                     id = "course_$courseId",
                     indexType = "course",
@@ -158,7 +164,7 @@ class RagIndexingService @Inject constructor(
                 vectorIndexMetadataDao.insertMetadata(metadata)
             }
             
-            successCount == totalChapters
+            successCount == totalChapters && courseIndexed
             
         } catch (e: Exception) {
             Log.e(TAG, "Error indexing course $courseId", e)
@@ -205,6 +211,85 @@ class RagIndexingService @Inject constructor(
             metadata != null && metadata.indexVersion >= INDEX_VERSION
         } catch (e: Exception) {
             Log.e(TAG, "Error checking if content is indexed", e)
+            false
+        }
+    }
+    
+    /**
+     * Index course metadata as a content chunk for Enhanced RAG course suggestions.
+     * CRITICAL FIX: This ensures courses are discoverable when Enhanced RAG is enabled.
+     */
+    private suspend fun indexCourseMetadata(course: com.example.ai.edge.eliza.core.model.Course): Boolean = withContext(Dispatchers.IO) {
+        try {
+            // Initialize text embedding service
+            if (!textEmbeddingService.initialize()) {
+                Log.e(TAG, "Failed to initialize text embedding service for course metadata")
+                return@withContext false
+            }
+            
+            // Create comprehensive course description for embedding
+            val courseContent = buildString {
+                appendLine("Course: ${course.title}")
+                appendLine("Course ID: ${course.id}")
+                appendLine("Subject: ${course.subject.name}")
+                appendLine("Grade Level: ${course.grade}")
+                appendLine("Description: ${course.description}")
+                appendLine("Total Chapters: ${course.totalChapters}")
+                appendLine("Estimated Duration: ${course.estimatedHours} hours")
+                
+                // Add chapter information for richer context
+                if (course.chapters.isNotEmpty()) {
+                    appendLine("\nChapter Overview:")
+                    course.chapters.forEach { chapter ->
+                        appendLine("- Chapter ${chapter.chapterNumber}: ${chapter.title}")
+                    }
+                }
+                
+                // Add searchable keywords for better discovery
+                appendLine("\nKeywords: ${course.subject.name.lowercase()}, ${course.title.lowercase()}, ${course.grade.lowercase()}")
+            }
+            
+            // Generate embedding for course content
+            val embedding = textEmbeddingService.embedText(courseContent)
+            if (embedding == null) {
+                Log.w(TAG, "Failed to generate embedding for course: ${course.id}")
+                return@withContext false
+            }
+            
+            // Create content chunk entity
+            val courseChunk = ContentChunkEntity(
+                id = "course_metadata_${course.id}",
+                courseId = course.id,
+                chapterId = "overview", // Special chapter ID for course metadata  
+                title = course.title,
+                content = courseContent,
+                chunkType = "COURSE_OVERVIEW",
+                source = "Course Metadata",
+                startPosition = 0,
+                endPosition = courseContent.length,
+                tokenCount = courseContent.split("\\s+".toRegex()).size,
+                embedding = embedding,
+                metadata = mapOf(
+                    "courseId" to course.id,
+                    "courseTitle" to course.title,
+                    "subject" to course.subject.name,
+                    "grade" to course.grade,
+                    "description" to course.description,
+                    "totalChapters" to course.totalChapters.toString(),
+                    "estimatedHours" to course.estimatedHours.toString(),
+                    "isDownloaded" to course.isDownloaded.toString(),
+                    "type" to "course_metadata"
+                )
+            )
+            
+            // Save course chunk to database  
+            contentChunkDao.insertChunk(courseChunk)
+            
+            Log.d(TAG, "Successfully indexed course metadata: ${course.id} - ${course.title}")
+            true
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error indexing course metadata: ${course.id}", e)
             false
         }
     }

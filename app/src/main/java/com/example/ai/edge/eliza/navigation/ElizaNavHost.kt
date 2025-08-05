@@ -34,7 +34,9 @@ import com.example.ai.edge.eliza.feature.chapter.navigation.CHAPTER_ROUTE
 import com.example.ai.edge.eliza.feature.chat.navigation.chatSection
 import com.example.ai.edge.eliza.feature.chat.navigation.navigateToChat
 import com.example.ai.edge.eliza.feature.chat.navigation.navigateToChapterChat
+import com.example.ai.edge.eliza.feature.chat.navigation.navigateToCourseSuggestionsChat
 import com.example.ai.edge.eliza.feature.chat.navigation.navigateToExerciseHelpChat
+import com.example.ai.edge.eliza.feature.settings.navigation.settingsScreen
 import com.example.ai.edge.eliza.ui.ElizaAppState
 
 /**
@@ -140,15 +142,27 @@ fun ElizaNavHost(
             }
         )
         
-        // Chat section - Gallery-style chat interface
         chatSection(
             onNavigateUp = {
+                navController.popBackStack()
+            },
+            // NEW: Course navigation functions for course suggestion buttons
+            onNavigateToCourse = { courseId ->
+                navController.navigateToCourseProgress(courseId)
+            },
+            onNavigateToChapter = { courseId, chapterId ->
+                navController.navigateToChapter(chapterId)
+            }
+        )
+        
+        // Settings section
+        settingsScreen(
+            onBackClick = {
                 navController.popBackStack()
             }
         )
         
         // TODO: Add other sections as they're implemented
-        // settingsSection()
         // coursesSection()
     }
 } 
