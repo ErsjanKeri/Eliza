@@ -25,17 +25,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.max
 
-/**
- * Device capability checker using Gallery's proven memory detection pattern.
- * Determines if device can handle specific AI models based on memory requirements.
- */
 @Singleton
 class DeviceCapabilityChecker @Inject constructor() {
     
     companion object {
         private const val TAG = "DeviceCapabilityChecker"
         
-        // Gallery's exact system memory reserve - 3GB for Android system
         private const val SYSTEM_RESERVED_MEMORY_IN_BYTES = 3 * (1L shl 30) // 3GB
         
         // Memory safety thresholds
@@ -43,9 +38,6 @@ class DeviceCapabilityChecker @Inject constructor() {
         private const val MEMORY_CRITICAL_THRESHOLD = 1.0f // Critical if using 100%+ of available memory
     }
 
-    /**
-     * Device memory information following Gallery's pattern.
-     */
     data class DeviceMemoryInfo(
         val totalMemoryBytes: Long,
         val availableMemoryBytes: Long,
@@ -85,9 +77,6 @@ class DeviceCapabilityChecker @Inject constructor() {
         DANGEROUS   // >100% memory usage (will likely crash)
     }
 
-    /**
-     * Get device memory information using Gallery's exact pattern.
-     */
     fun getDeviceMemoryInfo(context: Context): DeviceMemoryInfo {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memoryInfo = ActivityManager.MemoryInfo()
@@ -95,7 +84,6 @@ class DeviceCapabilityChecker @Inject constructor() {
         
         Log.d(TAG, "Raw device memory - Available: ${memoryInfo.availMem} bytes, Total: ${memoryInfo.totalMem} bytes")
         
-        // Gallery's exact calculation pattern
         val usableMemory = max(memoryInfo.availMem, memoryInfo.totalMem - SYSTEM_RESERVED_MEMORY_IN_BYTES)
         
         val deviceInfo = DeviceMemoryInfo(
@@ -118,9 +106,6 @@ class DeviceCapabilityChecker @Inject constructor() {
         return deviceInfo
     }
 
-    /**
-     * Assess model compatibility with current device using Gallery's logic.
-     */
     fun assessModelCompatibility(
         context: Context, 
         model: Model
@@ -192,10 +177,6 @@ class DeviceCapabilityChecker @Inject constructor() {
         )
     }
 
-    /**
-     * Get recommended model based on device capabilities.
-     * Follows Gallery's approach but with Eliza-specific model selection.
-     */
     fun getRecommendedModel(context: Context, availableModels: List<Model>): Model? {
         val deviceInfo = getDeviceMemoryInfo(context)
         

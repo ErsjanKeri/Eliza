@@ -56,12 +56,10 @@ import javax.inject.Singleton
 
 private const val TAG = "ModelDownloadRepositoryImpl"
 
-/** Gallery's exact work info data structure */
 data class ElizaWorkInfo(val modelName: String, val workId: String)
 
 /**
  * Repository interface for model downloading.
- * Matches Gallery's DownloadRepository interface exactly.
  */
 interface ModelDownloadRepository {
     fun downloadModel(
@@ -120,7 +118,6 @@ class ModelDownloadRepositoryImpl @Inject constructor(
         }
             
         // Note: sha256Checksum not available in Gallery Model, but we keep the logic for future use
-        
         val inputData = inputDataBuilder.build()
         
         // Create worker request exactly like Gallery's pattern
@@ -186,7 +183,6 @@ class ModelDownloadRepositoryImpl @Inject constructor(
             if (workInfo != null) {
                 when (workInfo.state) {
                     WorkInfo.State.ENQUEUED -> {
-                        // Gallery's exact pattern: save download start time
                         downloadStartTimeSharedPreferences.edit {
                             putLong(model.name, System.currentTimeMillis())
                         }
@@ -243,7 +239,6 @@ class ModelDownloadRepositoryImpl @Inject constructor(
                             )
                         )
                         
-                        // Gallery's exact pattern: log duration and cleanup start time
                         val startTime = downloadStartTimeSharedPreferences.getLong(model.name, 0L)
                         val duration = System.currentTimeMillis() - startTime
                         Log.d(TAG, "Download completed in ${duration}ms")
@@ -266,13 +261,11 @@ class ModelDownloadRepositoryImpl @Inject constructor(
                             )
                         )
                         
-                        // Gallery's exact pattern: cleanup start time
                         downloadStartTimeSharedPreferences.edit { remove(model.name) }
                     }
                     
                     WorkInfo.State.CANCELLED -> {
                         Log.d(TAG, "Model '${model.name}' download cancelled")
-                        // Gallery's exact pattern: cancelled becomes NOT_DOWNLOADED, not FAILED
                         onStatusUpdated(
                             model,
                             ModelDownloadStatus(
@@ -285,7 +278,6 @@ class ModelDownloadRepositoryImpl @Inject constructor(
                             )
                         )
                         
-                        // Gallery's exact pattern: cleanup start time
                         downloadStartTimeSharedPreferences.edit { remove(model.name) }
                     }
                     
@@ -298,7 +290,7 @@ class ModelDownloadRepositoryImpl @Inject constructor(
     }
     
     /**
-     * Gallery's exact method for getting enqueued or running work infos
+     * Gallery's method for getting enqueued or running work infos
      */
     override fun getEnqueuedOrRunningWorkInfos(): List<ElizaWorkInfo> {
         val workQuery =

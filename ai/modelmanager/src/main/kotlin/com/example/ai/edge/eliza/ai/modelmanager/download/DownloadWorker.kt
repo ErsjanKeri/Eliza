@@ -45,10 +45,6 @@ private const val TAG = "ElizaDownloadWorker"
 private const val FOREGROUND_NOTIFICATION_CHANNEL_ID = "eliza_model_download_channel_foreground"
 private var channelCreated = false
 
-/**
- * WorkManager worker for downloading AI models.
- * Based exactly on Gallery's DownloadWorker implementation.
- */
 @HiltWorker
 @RequiresApi(Build.VERSION_CODES.O)
 class DownloadWorker @AssistedInject constructor(
@@ -100,7 +96,6 @@ class DownloadWorker @AssistedInject constructor(
                     val url = URL(fileUrl)
                     val connection = url.openConnection() as HttpURLConnection
                     
-                    // Add access token if provided - Gallery's pattern for HuggingFace
                     if (accessToken != null && fileUrl.startsWith("https://huggingface.co")) {
                         Log.d(TAG, "Using HuggingFace access token: ${accessToken.subSequence(0, 10)}...")
                         connection.setRequestProperty("Authorization", "Bearer $accessToken")
@@ -121,13 +116,11 @@ class DownloadWorker @AssistedInject constructor(
                         fileName
                     )
                     
-                    // Check if model is already fully downloaded - Gallery's pattern
                     if (validateDownloadedModel(outputFile, totalBytes)) {
                         Log.d(TAG, "Model already fully downloaded and validated")
                         return@withContext Result.success()
                     }
                     
-                    // Check for partial download - Gallery's pattern
                     var downloadedBytes = 0L
                     if (isModelPartiallyDownloaded(outputFile, totalBytes)) {
                         val outputFileBytes = outputFile.length()
@@ -228,7 +221,6 @@ class DownloadWorker @AssistedInject constructor(
 
                     Log.d(TAG, "Download completed successfully")
                     
-                    // Validate downloaded model exactly like Gallery's pattern
                     if (!validateDownloadedModel(outputFile, totalBytes)) {
                         Log.e(TAG, "Downloaded model validation failed")
                         return@withContext Result.failure(

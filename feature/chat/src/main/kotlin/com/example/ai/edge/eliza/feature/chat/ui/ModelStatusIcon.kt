@@ -29,15 +29,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-// Import Gallery-compatible classes from core.model
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatus
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
 import com.example.ai.edge.eliza.core.designsystem.theme.Green40
 import com.example.ai.edge.eliza.core.designsystem.theme.Red40
 
-/**
- * Gallery's exact StatusIcon component for showing model download status.
- */
 @Composable
 fun ModelStatusIcon(
     downloadStatus: ModelDownloadStatus?,

@@ -21,7 +21,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ai.edge.eliza.ai.modelmanager.LlmChatModelHelper
-// Import Gallery-compatible classes from core.model
 import com.example.ai.edge.eliza.core.model.Model
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatus
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
@@ -33,7 +32,6 @@ import com.example.ai.edge.eliza.ai.modelmanager.data.Task
 import com.example.ai.edge.eliza.ai.modelmanager.data.TaskType
 import com.example.ai.edge.eliza.ai.modelmanager.data.processTasks
 import com.example.ai.edge.eliza.ai.modelmanager.download.ModelDownloadRepository
-// Device capability checking using Gallery's proven pattern
 import com.example.ai.edge.eliza.ai.modelmanager.device.DeviceCapabilityChecker
 // DataStore for token management (OAuth removed - using direct API tokens)
 import com.example.ai.edge.eliza.core.data.repository.DataStoreRepository
@@ -59,7 +57,6 @@ import com.example.ai.edge.eliza.ai.modelmanager.BuildConfig
 
 private const val TAG = "ElizaModelManager"
 
-/** Model initialization status types - copied from Gallery. */
 enum class ModelInitializationStatusType {
     NOT_INITIALIZED,
     INITIALIZING,
@@ -68,15 +65,11 @@ enum class ModelInitializationStatusType {
     CANCELLED_DUE_TO_MEMORY, // NEW: User cancelled due to memory warning
 }
 
-/** Model initialization status with error information - copied from Gallery. */
 data class ModelInitializationStatus(
     val status: ModelInitializationStatusType,
     val error: String = "",
 )
 
-// ModelDownloadStatus and ModelDownloadStatusType are now imported from data package
-
-/** UI state for the model manager - adapted from Gallery. */
 data class ModelManagerUiState(
     val tasks: List<Task> = emptyList(),
     val selectedModel: Model? = null,
@@ -90,10 +83,6 @@ data class ModelManagerUiState(
     val memoryWarningDeviceInfo: DeviceCapabilityChecker.DeviceMemoryInfo? = null,
 )
 
-/**
- * Eliza Model Manager - Copied from Gallery's ModelManagerViewModel
- * Simplified for Eliza's needs but following Gallery's proven patterns
- */
 @HiltViewModel
 class ElizaModelManager
 @Inject
@@ -125,7 +114,7 @@ constructor(
         // STEP 2: Check for previous crashes and adjust strategy
         checkForPreviousCrashes()
         
-        // STEP 3: Load models using Gallery's exact pattern (now crash-aware and user-preference-aware)
+        // STEP 3: Load models using Gallery's pattern (now crash-aware and user-preference-aware)
         loadElizaModels()
         
         // STEP 4: Initialize HuggingFace API token for easy authentication
@@ -134,7 +123,6 @@ constructor(
 
     /**
      * Public function to refresh models - useful for fixing state corruption
-     * Follows Gallery's model reloading pattern
      */
     fun refreshModels() {
         Log.d(TAG, "Refreshing models to fix any state corruption...")
@@ -207,7 +195,7 @@ constructor(
     }
 
     /**
-     * Select a model and update UI state - copied EXACTLY from Gallery
+     * Select a model and update UI state 
      * This is crucial for model selection to work properly
      */
     fun selectModel(model: Model) {
@@ -917,7 +905,6 @@ constructor(
     
     /**
      * Start actual download with optional access token
-     * Copied from Gallery's download pattern
      */
     private fun startDownloadWithToken(model: Model, accessToken: String?) {
         Log.d(TAG, "Starting download for '${model.name}' with token: ${if (accessToken != null) "provided" else "none"}")
@@ -1067,7 +1054,6 @@ constructor(
 
     /**
      * EXACT COPY of Gallery's getModelUrlResponse method
-     * No modifications - copied exactly from Gallery's ModelManagerViewModel.kt line 396-411
      */
     fun getModelUrlResponse(model: Model, accessToken: String? = null): Int {
         try {
@@ -1088,7 +1074,6 @@ constructor(
 
     /**
      * Get current token status and data
-     * Copied from Gallery's getTokenStatusAndData
      */
     fun getTokenStatusAndData(): TokenStatusAndData {
         var tokenStatus = TokenStatus.NOT_STORED

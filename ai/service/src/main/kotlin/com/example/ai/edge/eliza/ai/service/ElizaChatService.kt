@@ -40,7 +40,6 @@ private const val TAG = "ElizaChatViewModel"
 
 /**
  * Gallery-style chat ViewModel for Eliza with RAG enhancement
- * Copied exactly from Gallery's LlmChatViewModelBase pattern, enhanced with RAG
  */
 @HiltViewModel
 open class ElizaChatViewModel @Inject constructor(

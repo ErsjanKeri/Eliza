@@ -25,7 +25,7 @@ import com.example.ai.edge.eliza.core.data.repository.AccessTokenData
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
-/** Repository for managing data using Proto DataStore (copied exactly from Gallery). */
+/** Repository for managing data using Proto DataStore . */
 class DefaultDataStoreRepository(private val dataStore: DataStore<ElizaSettings>) : DataStoreRepository {
   override fun saveTextInputHistory(history: List<String>) {
     runBlocking {

@@ -69,10 +69,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * Gallery-style model download status panel
- * Copied exactly from Gallery's ModelDownloadStatusInfoPanel pattern
- */
 @Composable
 fun ModelDownloadPanel(
     model: Model,
@@ -83,7 +79,6 @@ fun ModelDownloadPanel(
     val context = LocalContext.current
     val uiState by modelManager.uiState.collectAsState()
     
-    // Gallery's exact status derivation pattern
     val downloadStatus by remember {
         derivedStateOf { uiState.modelDownloadStatus[model.name] }
     }
@@ -91,13 +86,11 @@ fun ModelDownloadPanel(
         derivedStateOf { uiState.modelInitializationStatus[model.name] }
     }
     
-    // Gallery's exact conditional display pattern with delays
     var shouldShowDownloadingAnimation by remember { mutableStateOf(false) }
     var downloadingAnimationConditionMet by remember { mutableStateOf(false) }
     var shouldShowDownloadModelButton by remember { mutableStateOf(false) }
     var downloadModelButtonConditionMet by remember { mutableStateOf(false) }
 
-    // Gallery's exact condition logic
     downloadingAnimationConditionMet =
         downloadStatus?.status == ModelDownloadStatusType.IN_PROGRESS ||
         downloadStatus?.status == ModelDownloadStatusType.PARTIALLY_DOWNLOADED ||
@@ -107,7 +100,6 @@ fun ModelDownloadPanel(
         downloadStatus?.status == ModelDownloadStatusType.FAILED ||
         downloadStatus?.status == ModelDownloadStatusType.NOT_DOWNLOADED
 
-    // Gallery's exact delay pattern to prevent UI flickering
     LaunchedEffect(downloadingAnimationConditionMet) {
         if (downloadingAnimationConditionMet) {
             delay(100)
@@ -293,7 +285,6 @@ private fun ModelDownloadingContent(
             }
         }
 
-        // Gallery's cancel button pattern
         if (downloadStatus?.status == ModelDownloadStatusType.IN_PROGRESS ||
             downloadStatus?.status == ModelDownloadStatusType.UNZIPPING) {
             IconButton(
@@ -358,12 +349,10 @@ private fun ModelDownloadButton(
             color = MaterialTheme.colorScheme.primary
         )
         
-        // Gallery's download button pattern with proper threading
         Button(
             onClick = { 
                 if (!isProcessing) {
                     isProcessing = true
-                    // EXACT Gallery pattern: Use Dispatchers.IO for network operations
                     scope.launch(Dispatchers.IO) {
                         try {
                             // Call the download method which now uses proper threading

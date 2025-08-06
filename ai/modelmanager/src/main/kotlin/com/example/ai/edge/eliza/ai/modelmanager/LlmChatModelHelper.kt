@@ -19,7 +19,6 @@ package com.example.ai.edge.eliza.ai.modelmanager
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
-// Import Gallery-compatible classes from core.model
 import com.example.ai.edge.eliza.core.model.Accelerator
 import com.example.ai.edge.eliza.core.model.ConfigKey
 import com.example.ai.edge.eliza.core.model.DEFAULT_MAX_TOKEN
@@ -28,7 +27,6 @@ import com.example.ai.edge.eliza.core.model.DEFAULT_TOPK
 import com.example.ai.edge.eliza.core.model.DEFAULT_TOPP
 import com.example.ai.edge.eliza.core.model.MAX_IMAGE_COUNT
 import com.example.ai.edge.eliza.core.model.Model
-// cleanUpMediapipeTaskErrorMessage function now defined locally in Gallery style
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.genai.llminference.GraphOptions
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
@@ -36,10 +34,6 @@ import com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession
 
 private const val TAG = "ElizaLlmChatModelHelper"
 
-/**
- * Gallery's exact MediaPipe LLM inference helper
- * Copied exactly from Gallery's LlmChatModelHelper.kt
- */
 
 typealias ResultListener = (partialResult: String, done: Boolean) -> Unit
 typealias CleanUpListener = () -> Unit
@@ -224,9 +218,6 @@ object LlmChatModelHelper {
     }
 }
 
-/**
- * EXACT COPY of Gallery's cleanUpMediapipeTaskErrorMessage from Utils.kt
- */
 private fun cleanUpMediapipeTaskErrorMessage(message: String): String {
     val index = message.indexOf("=== Source Location Trace")
     if (index >= 0) {

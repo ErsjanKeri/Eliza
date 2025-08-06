@@ -78,7 +78,6 @@ import androidx.core.content.ContextCompat
 
 /**
  * Composable function to display a text input field for composing chat messages.
- * This implementation exactly copies Gallery's MessageInputText structure.
  */
 @Composable
 fun MessageInputText(
@@ -438,10 +437,6 @@ private fun createTempPictureUri(context: android.content.Context): Uri {
     )
 }
 
-/**
- * Helper function to create messages from picked images and text.
- * EXACT COPY of Gallery's createMessagesToSend function.
- */
 private fun createMessagesToSend(
     pickedImages: List<Bitmap>,
     text: String,

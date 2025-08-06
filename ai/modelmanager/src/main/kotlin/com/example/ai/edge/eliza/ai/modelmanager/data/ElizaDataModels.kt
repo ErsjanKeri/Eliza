@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import java.io.File
 import java.util.regex.Pattern
 
-// Import Gallery-compatible classes from core.model
 import com.example.ai.edge.eliza.core.model.Model
 import com.example.ai.edge.eliza.core.model.ModelDataFile
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatus
@@ -86,12 +85,6 @@ data class Task(
   val updateTrigger: MutableState<Long> = mutableLongStateOf(0),
 )
 
-// All constants and functions are now imported from core.model to ensure Gallery compatibility
-
-/**
- * Gallery's exact MediaPipe error message cleanup function
- * Copied exactly from Gallery's Utils.kt
- */
 fun cleanUpMediapipeTaskErrorMessage(message: String): String {
     val index = message.indexOf("=== Source Location Trace")
     if (index >= 0) {

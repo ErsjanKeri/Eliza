@@ -205,10 +205,6 @@ private fun handleImageSelected(
   }
 }
 
-/**
- * Helper function to create a temporary picture URI.
- * Matches Gallery's exact implementation using cacheDir.
- */
 private fun createTempPictureUri(
   context: Context,
   fileName: String = "picture_${System.currentTimeMillis()}",
