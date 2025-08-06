@@ -199,7 +199,7 @@ fun MemoryWarningDialog(
                             else -> stringResource(R.string.proceed_button)
                         }
                     )
-x                }
+                }
             }
         },
         dismissButton = null // Using custom button layout above
