@@ -38,6 +38,7 @@ ELIZA's core intelligence is powered by **Gemma 3n**, Google's powerful and effi
 * **Data and AI Services Layer:** Contains the `Eliza Database` (our comprehensive digital library), responsible for content indexing, embedding generation, and rapid vector search capabilities to feed relevant information to Gemma 3n.
 
 This robust design ensures ELIZA can provide grounded, accurate, and dynamic educational content, truly elevating human potential.
+** Add two links to the full technical write up for the architechture of the app and one about the model ! - inivte them for a deep dive into those two files!!!
 
 ---
 ## 📁 Repository Structure
@@ -79,11 +80,6 @@ Step2: Connect .......
 
 
 Happy Learning!
-
-## 💡 Technical Deep Dive
-
-For a comprehensive understanding of ELIZA's architecture, the technical challenges we overcame, and our engineering decisions, please read our full technical verification report:
-[**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md)
 
 ## 📸 Demo Video
 
