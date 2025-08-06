@@ -22,7 +22,7 @@ ELIZA is built to solve these critical problems. We believe education should be 
 * 🌍 **Universal Accessibility:** Learn anytime, anywhere, in your preferred language, regardless of internet access.
 * 🧠 **Personalized Learning Paths:** Adapts intelligently to individual learning profiles and study preferences.
 * 🔌 **Offline Content Generation:** Instantly generates exercises and text-based explanations locally using **Gemma 3n**, perfect for remote or low-connectivity environments.
-* 🎬 **Dynamic Video Explanations:** Transforms complex concepts into engaging, whiteboard-style animated videos with translated voiceovers, powered by **Gemma 3n's text explanation and prompts it to generate specific Manim code**.
+* 🎬 **Dynamic Video Explanations:** Transforms complex concepts into engaging, whiteboard-style animated videos through external [ElizaServer](https://github.com/azizialtin/video-generation-service.git) integration, providing visual learning when online.
 * 💬 **Context-Aware Chat (RAG Enhanced):** Provides intelligent, relevant responses to student queries by retrieving and integrating information from its comprehensive knowledge base.
 * 🖼️ **Multimodal Input:** Understands and responds to both text and image inputs, guiding students to relevant learning materials.
 * 🔄 **Adaptive Practice:** Generates new practice questions at selected difficulty levels for continuous mastery and deeper understanding.
@@ -123,6 +123,7 @@ Eliza/
 ├── Design.md                     # 📋 Technical architecture documentation
 ├── Tasks.md                      # 📝 Development roadmap
 ├── inference.md                  # 🧠 AI inference flow documentation
+├── Technical Write-up.md         # 🏆 Comprehensive technical documentation (Kaggle competition)
 └── README.md                     # 📖 Project overview (this file)
 ```
 
@@ -135,6 +136,27 @@ Eliza/
 - **Build System:** Modern Gradle with version catalogs & KTS configuration
 
 This structure follows **NowInAndroid patterns** ensuring scalability, testability, and maintainability for enterprise-grade Android development.
+
+---
+
+## 📋 **Technical Documentation**
+
+### **🏆 Comprehensive Technical Write-up (Kaggle Competition)**
+
+For an in-depth technical analysis of ELIZA's architecture, implementation strategies, and engineering achievements, please refer to our comprehensive **[Technical Write-up](Technical%20Write-up.md)**.
+
+This document provides:
+- **Detailed System Architecture**: Complete breakdown of the 13-module Android architecture
+- **AI Integration Deep Dive**: Dual Gemma 3n models, RAG implementation, and vector embeddings
+- **External Service Integration**: ElizaServer video generation pipeline
+- **Technical Challenges & Solutions**: Real-world engineering problems and innovative solutions
+- **Performance Specifications**: Detailed technical requirements and optimization strategies
+- **Universal Education Vision**: Our mission to democratize world-class education globally
+
+The Technical Write-up serves as both a comprehensive technical reference and an inspiring vision statement for ELIZA's transformative educational mission.
+
+### **Additional Documentation**
+- **[inference.md](inference.md)**: Detailed RAG system implementation and AI inference flow
 
 ---
 
@@ -178,14 +200,14 @@ sdk.dir=/path/to/your/Android/Sdk
 # Required: HuggingFace API token for Gemma 3n model downloads
 HUGGINGFACE_API_TOKEN=your_huggingface_token_here
 
-# Required: External video explanation service URL
+# Required: ElizaServer API URL for video explanation service
 ELIZA_SERVER_URL=https://your-video-service.com/api
 ```
 
 **Configuration Notes:**
 - **sdk.dir**: Usually auto-configured by Android Studio
 - **HUGGINGFACE_API_TOKEN**: Required for downloading Gemma 3n models, your HuggingFace account should accept their terms
-- **ELIZA_SERVER_URL**: Required for video explanation feature
+- **ELIZA_SERVER_URL**: Required for video explanation feature (ElizaServer API endpoint)
 
 #### **Step 4: Open Project in Android Studio**
 

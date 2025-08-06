@@ -84,7 +84,7 @@ When Enhanced RAG is enabled but fails:
 ### 4. **RAG System**
 - **`RagProviderFactory`**: Creates appropriate RAG providers based on context and toggle state
 - **`EnhancedRagProvider`**: Vector-based semantic similarity search with full educational context
-- **`Basic RAG Providers`**: Full educational context providers (ExerciseRagProvider, ChapterRagProvider, etc.)
+- **`Basic RAG Providers`**: Context-specific providers (ChapterRagProvider, ExerciseRagProvider, RevisionRagProvider, GeneralRagProvider, CourseSuggestionRagProvider)
 - **`SystemInstructionProvider`**: Centralized system instructions for all RAG providers (eliminates duplication)
 - **`TextEmbeddingService`**: MediaPipe-based text embedding using universal_sentence_encoder.tflite
 
@@ -525,9 +525,14 @@ ContentChunkEntity {
     title: String,
     content: String, // Actual educational content
     chunkType: String, // SUMMARY, CHAPTER_SECTION, EXAMPLE, etc.
-    embedding: FloatArray, // 512-dimensional vector from MediaPipe
     source: String,
-    metadata: Map<String, String>
+    startPosition: Int, // Starting character position in original text
+    endPosition: Int, // Ending character position in original text
+    tokenCount: Int, // Approximate token count
+    embedding: FloatArray, // Vector embedding from MediaPipe (dimension determined by model)
+    metadata: Map<String, String>, // Additional metadata
+    createdAt: Long, // Creation timestamp
+    updatedAt: Long // Last update timestamp
 }
 ```
 
@@ -542,7 +547,7 @@ ContentChunkEntity {
 
 ### **Embedding Model**
 - **Model**: `universal_sentence_encoder.tflite` (6.1MB)
-- **Dimensions**: 512-dimensional embeddings
+- **Dimensions**: Vector embeddings (dimension determined by MediaPipe model)
 - **Initialization**: ~2-3 seconds on app startup
 - **Inference**: ~50-100ms per text embedding
 
@@ -637,13 +642,17 @@ flowchart TD
     direction TB
         RPF["RagProviderFactory"]
         ERP["EnhancedRagProvider"]
-        GRP["GeneratorRagProvider"]
+        CRP["ChapterRagProvider"]
+        ERRP["ExerciseRagProvider"]
+        RRP["RevisionRagProvider"]
+        GRP["GeneralRagProvider"]
+        CSRP["CourseSuggestionRagProvider"]
         LLMCH["LlmChatModelHelper"]
         RIS["RagIndexingService"]
         CCR["CourseRepository"]
         CCH["ContentChunkingService"]
         TES["TextEmbeddingService"]
-        USEL["universal_sentence_encoder_lite"]
+        USEL["universal_sentence_encoder.tflite"]
         VSD["VectorStorageDatabase"]
         CCD["ContentChunkDao"]
         GM["Gemma Model"]
@@ -651,7 +660,7 @@ flowchart TD
   end
     RECS -- selects provider --> RPF
     RPF -- if Toggle ON --> ERP
-    RPF -- if Toggle OFF --> GRP
+    RPF -- if Toggle OFF --> CRP & ERRP & RRP & GRP & CSRP
     RECS --> LLMCH
     RECS -.-> RIS & CCR
     RIS --> CCH & TES & RINIT

@@ -110,7 +110,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 }
 
-// Protobuf configuration (copied from Gallery)
+// Protobuf configuration 
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:4.26.1"
