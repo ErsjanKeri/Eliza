@@ -79,8 +79,25 @@ class EnhancedRagProvider @Inject constructor(
             // Get candidate chunks based on context
             val candidateChunks = getCandidateChunks(context)
             if (candidateChunks.isEmpty()) {
-                Log.w(TAG, "No indexed content found for context, attempting to index")
-                indexContextContent(context)
+                Log.w(TAG, "No indexed content found for context, attempting to index and retry")
+                val indexingSuccess = indexContextContent(context)
+                
+                if (indexingSuccess) {
+                    // Retry getting chunks after indexing
+                    Log.d(TAG, "Indexing completed, retrying chunk retrieval")
+                    val retryChunks = getCandidateChunks(context)
+                    if (retryChunks.isNotEmpty()) {
+                        // Successfully indexed, continue with search
+                        val similarChunks = findSimilarChunks(queryEmbedding, retryChunks, maxChunks)
+                        Log.d(TAG, "Found ${similarChunks.size} relevant chunks after indexing in ${System.currentTimeMillis() - startTime}ms")
+                        return similarChunks
+                    } else {
+                        Log.w(TAG, "No content found even after indexing, falling back to basic RAG")
+                    }
+                } else {
+                    Log.w(TAG, "Indexing failed, falling back to basic RAG")
+                }
+                
                 return getBasicContent(context, maxChunks)
             }
             
@@ -414,24 +431,29 @@ class EnhancedRagProvider @Inject constructor(
     
     /**
      * Trigger indexing for context content if not already indexed.
+     * Returns true if indexing completed successfully, false otherwise.
      */
-    private suspend fun indexContextContent(context: ChatContext) {
-        try {
+    private suspend fun indexContextContent(context: ChatContext): Boolean {
+        return try {
             when (context) {
                 is ChatContext.ChapterReading -> {
                     Log.d(TAG, "Triggering indexing for chapter: ${context.chapterId}")
                     ragIndexingService.indexChapter(context.chapterId)
+                    true
                 }
                 is ChatContext.ExerciseSolving -> {
                     Log.d(TAG, "Triggering indexing for exercise chapter: ${context.chapterId}")
                     ragIndexingService.indexChapter(context.chapterId)
+                    true
                 }
                 else -> {
                     Log.d(TAG, "Context type doesn't support automatic indexing")
+                    false
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error triggering content indexing", e)
+            false
         }
     }
 }
