@@ -2,85 +2,125 @@
 
 ## Empowering Education for Everyone, Everywhere
 
-ELIZA is an innovative universal learning platform designed to break down educational barriers, making knowledge accessible to anyone, regardless of their location, financial situation, or language. Powered by Gemma 3n, ELIZA provides a personalized and interactive learning experience both online and offline.
-
-## ✨ Features
-
-* **Universal Digital Library:** Converts comprehensive educational materials into a proprietary "Eliza database" for efficient access.
-
-* **Offline Accessibility:** Generates instant exercises and explanations in text format even without an internet connection, leveraging Gemma 3n.
-
-* **Multilingual Interaction:** Supports user interaction in their preferred language, with seamless translation capabilities for both input and output.
-
-* **Personalized Learning Pace:** Allows users to learn at their own speed, adapting to individual needs.
-
-* **Interactive Explanations:** When online, leverages Gemma 3n to generate Manim code for engaging whiteboard-style video explanations, voiced in the user's original language via Google's translation API.
-
-* **High-Quality Content:** Utilizes Gemma's powerful capabilities for problem generation, solving, explanation, and code generation to ensure consistent, high-quality learning experiences.
-
-* **Efficient Backend:** Designed for exceptional backend efficiency, ensuring smooth and responsive performance.
-
-## 💡 How It Works
-
-ELIZA operates in two primary modes:
-
-1.  **Offline Mode:**
-
-    * The platform accesses its pre-built "Eliza database" of universal books.
-
-    * User prompts are processed locally.
-
-    * Gemma 3n generates relevant exercises and explanations, delivering them as text directly to the user.
-
-2.  **Online Mode:**
-
-    * User prompts are translated into English using Google Translate.
-
-    * The translated prompt is sent to Gemma 3n for question generation or explanation content.
-
-    * **For Questions:** Gemma generates questions, which are then translated back into the user's original language and presented as text.
-
-    * **For Explanations:** Gemma generates Manim code, which ELIZA uses to create dynamic whiteboard-style animations. These animations are then voiced in the user's original language using Google's translation API.
-
-## 🚀 Getting Started
-
-*(This section would typically include instructions on how to set up and run the project. Since this is a conceptual project description, specific steps are placeholder. You would replace these with actual installation and usage instructions.)*
-
-To get a local copy up and running, follow these simple steps:
-
-1.  **Clone the repository:**
-
-    ```bash
-    git clone [https://github.com/your-username/eliza.git](https://github.com/your-username/eliza.git)
-    ```
-
-2.  **Navigate to the project directory:**
-
-    ```bash
-    cd eliza
-    ```
-
-3.  **Install dependencies:**
-
-    ```bash
-    # Example: npm install or pip install -r requirements.txt
-    ```
-
-4.  **Run the application:**
-
-    ```bash
-    # Example: npm start or python app.py
-    ```
-
-## 📞 Contact
-
-For more information about ELIZA, please visit our GitHub repository or reach out to the project creators:
-
-* **Altin: altinshazizi@gmail.com**
-* **Ersi: ersjankeri@gmail.com**
-
-Feel free to open an issue on GitHub if you have any questions or suggestions!
+ELIZA is an innovative AI-powered learning platform designed to break down traditional barriers of location, cost, and language in education. By leveraging cutting-edge artificial intelligence, ELIZA offers personalized and engaging learning experiences that adapt to every student's unique needs, whether they are online or offline.
 
 ---
 
-*Named ELIZA as a playful homage to the very first AI chatbot from the 20th century, reminding us that AI isn't some futuristic fantasy; it's been evolving for decades! Today, this evolution allows us to build an AI that genuinely elevates human potential, rather than just mimicking it.*
+## 🌟 Why ELIZA?
+
+Millions worldwide face significant hurdles in accessing quality education. Studies show:
+* **172 million students** encounter systemic barriers.
+* **65%** feel disengaged in traditional classrooms.
+* **Over 70%** experience anxiety about asking questions in class.
+
+ELIZA is built to solve these critical problems. We believe education should be for everyone, and our platform is designed to unlock a world of knowledge – offline, in your own language, and at your own pace.
+
+---
+
+## ✨ Key Features
+
+* 🌍 **Universal Accessibility:** Learn anytime, anywhere, in your preferred language, regardless of internet access.
+* 🧠 **Personalized Learning Paths:** Adapts intelligently to individual learning profiles and study preferences.
+* 🔌 **Offline Content Generation:** Instantly generates exercises and text-based explanations locally using **Gemma 3n**, perfect for remote or low-connectivity environments.
+* 🎬 **Dynamic Video Explanations:** Transforms complex concepts into engaging, whiteboard-style animated videos with translated voiceovers, powered by **Gemma 3n's text explanation and prompts it to generate specific Manim code**.
+* 💬 **Context-Aware Chat (RAG Enhanced):** Provides intelligent, relevant responses to student queries by retrieving and integrating information from its comprehensive knowledge base.
+* 🖼️ **Multimodal Input:** Understands and responds to both text and image inputs, guiding students to relevant learning materials.
+* 🔄 **Adaptive Practice:** Generates new practice questions at selected difficulty levels for continuous mastery and deeper understanding.
+
+---
+
+## ⚙️ How ELIZA Works (Technical Highlights)
+
+ELIZA's core intelligence is powered by **Gemma 3n**, Google's powerful and efficient AI model, enabling high-quality content generation and intelligent responses. Our robust, layered architecture ensures scalability, maintainability, and seamless operation:
+
+* **User Interaction Layer:** Handles the adaptable and intuitive user interface, capturing diverse inputs and presenting responses.
+* **Application Logic Layer:** Manages the entire chat flow and personalized learning experiences, leveraging our advanced **Retrieval-Augmented Generation (RAG)** system for highly context-aware interactions. This ensures responses are grounded in accurate information.
+* **Data and AI Services Layer:** Contains the `Eliza Database` (our comprehensive digital library), responsible for content indexing, embedding generation, and rapid vector search capabilities to feed relevant information to Gemma 3n.
+
+This robust design ensures ELIZA can provide grounded, accurate, and dynamic educational content, truly elevating human potential.
+** Add two links to the full technical write up for the architechture of the app and one about the model ! - inivte them for a deep dive into those two files!!!
+
+---
+## 📁 Repository Structure
+
+The ELIZA project follows a clear and modular repository structure to facilitate development, collaboration, and understanding:
+Eliza/
+├── .github/              # GitHub Actions workflows for CI/CD
+├── src/                  # Main application source code (UI, Application Logic)
+│   ├── ui/               # User interface components
+│   ├── components/       # Reusable UI components
+│   └── views/            # Specific application views/screens
+├── services/             # Core AI and data services (Data & AI Services Layer)
+│   ├── rag/              # Retrieval-Augmented Generation logic
+│   ├── database/         # Database interaction and management
+│   ├── ai_models/        # AI model integration and handling
+│   └── translation/      # Translation service integration
+├── models/               # Specific AI model definitions or interaction code
+├── docs/                 # Detailed project documentation
+│   ├── ARCHITECTURE.md   # Comprehensive architecture overview
+│   ├── CONTRIBUTING.md   # Guidelines for contributing to the project
+│   └── USAGE.md          # Detailed usage instructions for features
+├── examples/             # Small, runnable feature demonstrations
+├── data/                 # Eliza Database content, schemas, sample data
+├── scripts/              # Utility scripts (build, deployment, Manim rendering)
+├── assets/               # Images, videos, and other media assets
+├── tests/                # All unit, integration, and end-to-end tests
+├── .gitignore            # Specifies intentionally untracked files to ignore
+├── README.md             # Project overview (this file)
+├── LICENSE               # Project licensing information
+└── package.json / requirements.txt / etc. # Project dependencies and configuration
+
+---
+
+## 🚀 Getting Started
+
+Eliza is not yet available in PlayStore or IOS however, in order to access it please follow the below steps: 
+Step1: Install Android Studio
+Step2: Connect .......
+
+
+Happy Learning!
+
+## 📸 Demo Video
+
+[![Watch the ELIZA Demo Video](https://img.youtube.com/vi/[YOUR_VIDEO_ID]/maxresdefault.jpg)](https://www.youtube.com/watch?v=[YOUR_VIDEO_ID])
+
+---
+
+## 🛠️ Technologies Used
+
+* **Core AI:** Gemma 3n
+* **Language Models:** Google Translate API
+* **Animation:** Manim
+* **Database:** Eliza Database (Custom/Vector Storage)
+* **Key Concepts:** Retrieval-Augmented Generation (RAG)
+* *(Add more specific languages, frameworks, or libraries if applicable, e.g., Python, JavaScript, React, TensorFlow, etc.)*
+
+---
+
+## 🛣️ Future Enhancements and Considerations
+
+We are continuously working to enhance ELIZA. Our future roadmap includes:
+* **Improving App Performance and Scope:** Due to current limitations in our data and capacity, we are using external APIs for translation and text-to-code generation. Our long-term vision is to perform functions like translation and Manim code generation directly within the app, leveraging a larger, finely tuned dataset. This will significantly boost performance and create a more robust, self-contained user experience.
+* **Boosting User Engagement:** To make learning more interactive and enjoyable, we plan to implement **gamification** (points, badges) and enable **social interaction** for collaboration among students.
+* **A Data-Driven Approach to Learning:** We aim to create a comprehensive data feedback loop. This will provide valuable insights for **teachers** (student performance, struggling areas), **institutions** (academic trends, curriculum improvement), and **parents** (transparent view of progress, targeted support).
+
+---
+
+
+## 📄 License
+
+This project is open-source and licensed under the [MIT License](https://www.google.com/search?q=LICENSE).
+* Check and change this
+---
+
+## 📞 Contact
+
+Have questions or want to connect? Reach out to us!
+
+* **Altin:** altinshazizi@gmail.com
+
+* **Ersi:** ersjankeri@gmail.com
+
+---
+*Named ELIZA as a homage to the first AI chatbot from the 20th century, a testament to how far AI has come. Today, AI like me is no longer a simple conversation partner; it's a tool that genuinely elevates human potential.*

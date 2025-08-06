@@ -614,118 +614,69 @@ if (enhancementResult.confidence >= 0.7) {
 ## Architecture Diagram
 
 ```mermaid
-graph TB
-    %% User Interface Layer
-    UI[User Interface]
-    CV[ChatView]
-    ECV[EnhancedChapterChatView]
-    EEV[EnhancedExerciseHelpChatView]
-    RTC[RagToggleComponent]
-    
-    %% ViewModel Layer
-    CVM[ChatViewModel]
-    EVM[EnhancedChatViewModel]
-    RTV[RagToggleViewModel]
-    
-    %% Service Layer
-    ECS[ElizaChatService]
-    RECS[RagEnhancedChatService]
-    
-    %% RAG System
-    RPF[RagProviderFactory]
-    ERP[EnhancedRagProvider]
-    CRP[ChapterRagProvider]
-    GRP[GeneralRagProvider]
-    
-    %% Content & Embedding
-    TES[TextEmbeddingService]
-    RIS[RagIndexingService]
-    CCS[ContentChunkingService]
-    
-    %% Data Layer
-    CR[CourseRepository]
-    VSD[VectorStorageDatabase]
-    CCD[ContentChunkDao]
-    
-    %% Model Layer
-    LCMH[LlmChatModelHelper]
-    GM[Gemma Model]
-    
-    %% Initialization
-    RInit[RagInitializationService]
-    
-    %% User Flow
-    UI --> CV
-    UI --> ECV
-    UI --> EEV
-    UI --> RTC
-    
-    %% ViewModel Connections
+---
+config:
+  theme: neo-dark
+  layout: dagre
+---
+flowchart TD
+ subgraph subGraph0["1 User Interaction Layer"]
+    direction TB
+        UI["User Interface"]
+        CV("ChatView<br>(Standard chat)")
+        ECV("EnhancedChapterChatView<br>(Chapter context)")
+        EEV("EnhancedExerciseHelpChatView<br>(Exercise context)")
+  end
+ subgraph subGraph1["2 Application Logic Layer"]
+    direction TB
+        CVM["ChatViewModel"]
+        ECS["ElizaChatService"]
+        RECS["RagEnhancedChatService"]
+  end
+ subgraph subGraph2["3 Data and AI Services Layer"]
+    direction TB
+        RPF["RagProviderFactory"]
+        ERP["EnhancedRagProvider"]
+        GRP["GeneratorRagProvider"]
+        LLMCH["LlmChatModelHelper"]
+        RIS["RagIndexingService"]
+        CCR["CourseRepository"]
+        CCH["ContentChunkingService"]
+        TES["TextEmbeddingService"]
+        USEL["universal_sentence_encoder_lite"]
+        VSD["VectorStorageDatabase"]
+        CCD["ContentChunkDao"]
+        GM["Gemma Model"]
+        RINIT["RagInitializationService"]
+  end
+    RECS -- selects provider --> RPF
+    RPF -- if Toggle ON --> ERP
+    RPF -- if Toggle OFF --> GRP
+    RECS --> LLMCH
+    RECS -.-> RIS & CCR
+    RIS --> CCH & TES & RINIT
+    TES --> USEL & VSD
+    LLMCH --> CCD & GM
+    CCD --> LLMCH
+    UI --> CV & ECV & EEV
     CV --> CVM
-    ECV --> EVM
-    EEV --> EVM
-    RTC --> RTV
-    
-    %% Data Loading
-    EVM --> CR
-    EVM --> |Creates ChatContext| CVM
-    
-    %% Service Chain
-    CVM --> ECS
-    ECS --> |With Context| RECS
-    ECS --> |Without Context| LCMH
-    
-    %% RAG Processing
-    RECS --> RPF
-    RPF --> |Toggle ON| ERP
-    RPF --> |Toggle OFF| CRP
-    RPF --> |Toggle OFF| GRP
-    
-    %% RAG Toggle Management
-    RTV --> RPF
-    RTV --> RInit
-    
-    %% Content Enhancement
-    ERP --> TES
-    ERP --> CCD
-    ERP --> |Query Embedding| TES
-    ERP --> |Vector Search| CCD
-    
-    %% Content Processing
-    TES --> |MediaPipe| MP[universal_sentence_encoder.tflite]
-    
-    %% Model Inference
-    RECS --> |Enhanced Prompt| LCMH
-    CRP --> |Basic Prompt| LCMH
-    LCMH --> GM
-    
-    %% Initialization Flow
-    RInit --> TES
-    RInit --> RIS
-    RIS --> CCS
-    RIS --> TES
-    RIS --> CCD
-    RIS --> CR
-    
-    %% Data Flow
-    CR --> |Course Data| RIS
-    CCS --> |Content Chunks| TES
-    TES --> |Embeddings| CCD
-    
-    %% Styling
-    classDef ui fill:#e1f5fe
-    classDef viewmodel fill:#f3e5f5
-    classDef service fill:#e8f5e8
-    classDef rag fill:#fff3e0
-    classDef data fill:#fce4ec
-    classDef model fill:#f1f8e9
-    
-    class UI,CV,ECV,EEV,RTC ui
-    class CVM,EVM,RTV viewmodel
-    class ECS,RECS service
-    class RPF,ERP,CRP,GRP,TES,RIS,CCS,RInit rag
-    class CR,VSD,CCD data
-    class LCMH,GM,MP model
+    ECV --> CVM
+    EEV --> CVM
+    CVM -- Basic chat --> ECS
+    CVM -- "Context-aware chat" --> RECS
+    ECS -- Fallback or handoff --> RECS
+    RECS -- Uses --> CCR
+    RECS -- Passes Query Embedding --> LLMCH
+    LLMCH -- Vector Search --> CCD
+    CCD -- Provides Content Chunks --> LLMCH
+    LLMCH -- AI response --> GM
+    TES -- Creates Embeddings --> USEL
+    TES -- Stores Embeddings --> VSD
+    CCR -.-> RPF & RIS
+    classDef userLayer fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef logicLayer fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef dataLayer fill:#fff8e1,stroke:#ffb300,stroke-width:2px
+    classDef storageLayer fill:#fce4ec,stroke:#c2185b,stroke-width:2px
 ```
 
 ## Key Integration Points
