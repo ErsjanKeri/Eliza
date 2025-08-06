@@ -52,7 +52,7 @@ enum class TaskType(val label: String, val id: String) {
   ELIZA_EXERCISE_HELP(label = "Exercise Help", id = "eliza_exercise_help"),
 }
 
-/** Data class for a task. Copied from Gallery. */
+/** Data class for a task */
 data class Task(
   /** Type of the task. */
   val type: TaskType,

@@ -682,7 +682,7 @@ private fun GeneratedQuestionPreview(
                             modifier = Modifier.fillMaxWidth() // 100% width as requested
                         ) {
                             Text(
-                                text = "${('A' + index)} $option", // No indication of correct answer
+                                text = "${('A' + index)} ${option.get(userLanguage)}", // No indication of correct answer
                                 style = MaterialTheme.typography.bodyMedium, // Slightly larger text for better readability
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, // Uniform text color
                                 modifier = Modifier.padding(16.dp) // More generous padding for elegance

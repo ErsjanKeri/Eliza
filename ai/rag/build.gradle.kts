@@ -10,6 +10,10 @@ android {
     namespace = "com.example.ai.edge.eliza.ai.rag"
     compileSdk = 34
 
+    sourceSets {
+        getByName("main").java.srcDirs("src/main/kotlin")
+    }
+
     defaultConfig {
         minSdk = 24
 

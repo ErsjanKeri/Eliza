@@ -22,30 +22,40 @@ object ExercisePromptTemplates {
         return """
             Create a new math question similar to this one:
             
-            ORIGINAL: "${original.questionText.get(language)}"
+            ORIGINAL QUESTION: "${original.questionText.get(language)}"
             CORRECT ANSWER: ${original.options[original.correctAnswerIndex].get(language)}
             
             TASK: ${difficulty.promptModifier}
-            CONCEPT: ${request.conceptFocus}
             
-            Generate your response in EXACTLY this format (no extra text):
+            You must respond in EXACTLY this format with no extra text:
             
-            questionText: ${createExampleQuestion(original, difficulty, language)}
-            option1: ${getExampleOption(original, 0, language)}
-            option2: ${getExampleOption(original, 1, language)}
-            option3: ${getExampleOption(original, 2, language)}
-            option4: ${getExampleOption(original, 3, language)}
-            correctAnswerIndex: ${original.correctAnswerIndex}
-            explanation: ${original.explanation.get(language).replace(":", " -").take(50)}
+            questionText: [your new question here]
+            option1: [first answer choice]
+            option2: [second answer choice] 
+            option3: [third answer choice]
+            option4: [fourth answer choice]
+            correctAnswerIndex: [0, 1, 2, or 3]
+            explanation: [brief explanation of the solution]
             conceptFocus: ${request.conceptFocus}
             difficultyAchieved: ${difficulty.name.lowercase()}
             
-            RULES:
-            - ANSWER must be correct! this is very important! make sure it is correct before generating the question! 
-            - Change numbers but keep same concept
-            - One answer per line
-            - No colons in answers (use = instead)
-            - Follow format exactly
+            EXAMPLE FORMAT:
+            questionText: Find x when 3x + 5 = 14
+            option1: x = 3
+            option2: x = 4  
+            option3: x = 2
+            option4: x = 5
+            correctAnswerIndex: 0
+            explanation: Subtract 5 from both sides to get 3x = 9, then divide by 3
+            conceptFocus: ${request.conceptFocus}
+            difficultyAchieved: ${difficulty.name.lowercase()}
+            
+            IMPORTANT RULES:
+            - Make sure your answer is mathematically correct
+            - Use different numbers than the original
+            - Keep the same mathematical concept
+            - Do not use colons in your answer choices
+            - Follow the exact format above
 
         """.trimIndent()
     }

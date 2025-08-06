@@ -11,6 +11,10 @@ android {
     namespace = "com.example.ai.edge.eliza"
     compileSdk = 36
 
+    sourceSets {
+        getByName("main").java.srcDirs("src/main/kotlin")
+    }
+
     defaultConfig {
         applicationId = "com.example.ai.edge.eliza"
         minSdk = 26
@@ -61,7 +65,6 @@ dependencies {
     
     // AI modules
     implementation(project(":ai:modelmanager"))
-    implementation(project(":ai:inference"))
     implementation(project(":ai:rag"))
     implementation(project(":ai:service"))
 

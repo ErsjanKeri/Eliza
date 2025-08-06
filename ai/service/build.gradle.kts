@@ -59,7 +59,6 @@ dependencies {
     implementation(project(":core:network"))
     
     // AI modules
-    implementation(project(":ai:inference"))
     implementation(project(":ai:modelmanager"))
     implementation(project(":ai:rag"))
     

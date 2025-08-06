@@ -35,9 +35,12 @@ class ExerciseResponseParser @Inject constructor() {
                 return response
             }
             
-            // Fallback to JSON parsing if line format fails
-            Log.d(TAG, "Line format failed, trying JSON fallback...")
-            tryJsonParsing(aiResponse)
+            // Fallback to enhanced regex parsing if line format fails
+            Log.d(TAG, "Line format failed, trying enhanced regex parsing...")
+            tryEnhancedRegexParsing(aiResponse) ?: run {
+                Log.d(TAG, "Enhanced regex failed, trying JSON fallback...")
+                tryJsonParsing(aiResponse)
+            }
             
         } catch (e: IllegalArgumentException) {
             Log.e(TAG, "Validation failed", e)
@@ -59,7 +62,7 @@ class ExerciseResponseParser @Inject constructor() {
             val lines = aiResponse.trim().lines()
             val data = mutableMapOf<String, String>()
             
-            // Extract key-value pairs from lines
+            // Extract key-value pairs from lines with enhanced parsing
             for (line in lines) {
                 val trimmedLine = line.trim()
                 if (trimmedLine.contains(":") && !trimmedLine.startsWith("//") && !trimmedLine.startsWith("#")) {
@@ -67,7 +70,16 @@ class ExerciseResponseParser @Inject constructor() {
                     if (parts.size == 2) {
                         val key = parts[0].trim().lowercase()
                         val value = parts[1].trim()
-                        data[key] = value
+                        
+                        // Clean up common AI artifacts
+                        val cleanValue = value
+                            .removePrefix("[")
+                            .removeSuffix("]")
+                            .removePrefix("\"")
+                            .removeSuffix("\"")
+                            .trim()
+                        
+                        data[key] = cleanValue
                     }
                 }
             }
@@ -102,6 +114,110 @@ class ExerciseResponseParser @Inject constructor() {
             
         } catch (e: Exception) {
             Log.e(TAG, "Line-by-line parsing failed", e)
+            null
+        }
+    }
+    
+    /**
+     * Enhanced regex parsing that's more flexible than line-by-line format.
+     * Handles cases where AI doesn't follow exact format but includes the content.
+     */
+    private fun tryEnhancedRegexParsing(aiResponse: String): ExerciseGenerationResponse? {
+        return try {
+            Log.d(TAG, "Attempting enhanced regex parsing...")
+            
+            val data = mutableMapOf<String, String>()
+            
+            // More flexible regex patterns for each field
+            val patterns = mapOf(
+                "questiontext" to listOf(
+                    "questionText\\s*:(.+?)(?=option1|$)".toRegex(RegexOption.DOT_MATCHES_ALL),
+                    "Question\\s*:(.+?)(?=option1|$)".toRegex(RegexOption.DOT_MATCHES_ALL),
+                    "questionText\\s*:(.+?)(?=\\n|$)".toRegex(),
+                    "Question\\s*:(.+?)(?=\\n|$)".toRegex()
+                ),
+                "option1" to listOf(
+                    "option1\\s*:(.+?)(?=option2|\\n|$)".toRegex(),
+                    "A[\\)\\.]?\\s*(.+?)(?=option2|B[\\)\\.]|\\n|$)".toRegex()
+                ),
+                "option2" to listOf(
+                    "option2\\s*:(.+?)(?=option3|\\n|$)".toRegex(),
+                    "B[\\)\\.]?\\s*(.+?)(?=option3|C[\\)\\.]|\\n|$)".toRegex()
+                ),
+                "option3" to listOf(
+                    "option3\\s*:(.+?)(?=option4|\\n|$)".toRegex(),
+                    "C[\\)\\.]?\\s*(.+?)(?=option4|D[\\)\\.]|\\n|$)".toRegex()
+                ),
+                "option4" to listOf(
+                    "option4\\s*:(.+?)(?=correctAnswerIndex|\\n|$)".toRegex(),
+                    "D[\\)\\.]?\\s*(.+?)(?=correctAnswerIndex|\\n|$)".toRegex()
+                ),
+                "correctanswerindex" to listOf(
+                    "correctAnswerIndex\\s*:(\\d+)".toRegex(),
+                    "correct.*answer.*index\\s*:(\\d+)".toRegex(RegexOption.IGNORE_CASE),
+                    "answer\\s*:(\\d+)".toRegex()
+                ),
+                "explanation" to listOf(
+                    "explanation\\s*:(.+?)(?=conceptFocus|difficultyAchieved|$)".toRegex(RegexOption.DOT_MATCHES_ALL),
+                    "Explanation\\s*:(.+?)(?=conceptFocus|difficultyAchieved|$)".toRegex(RegexOption.DOT_MATCHES_ALL)
+                ),
+                "conceptfocus" to listOf(
+                    "conceptFocus\\s*:(.+?)(?=difficultyAchieved|$)".toRegex(RegexOption.DOT_MATCHES_ALL)
+                ),
+                "difficultyachieved" to listOf(
+                    "difficultyAchieved\\s*:(.+?)(?=\\n|$)".toRegex()
+                )
+            )
+            
+            // Try each pattern for each field
+            for ((field, patternList) in patterns) {
+                for (pattern in patternList) {
+                    val match = pattern.find(aiResponse)
+                    if (match != null) {
+                        val value = match.groupValues[1].trim()
+                            .removePrefix("[")
+                            .removeSuffix("]")
+                            .removePrefix("\"")
+                            .removeSuffix("\"")
+                            .trim()
+                        if (value.isNotBlank()) {
+                            data[field] = value
+                            break
+                        }
+                    }
+                }
+            }
+            
+            Log.d(TAG, "Enhanced regex extracted data: $data")
+            
+            // Extract required fields
+            val questionText = data["questiontext"] ?: return null
+            val option1 = data["option1"] ?: return null
+            val option2 = data["option2"] ?: return null
+            val option3 = data["option3"] ?: return null
+            val option4 = data["option4"] ?: return null
+            val correctAnswerIndex = data["correctanswerindex"]?.toIntOrNull() ?: return null
+            
+            val options = listOf(option1, option2, option3, option4)
+            
+            // Optional fields with defaults
+            val explanation = data["explanation"] ?: "Solution steps provided"
+            val conceptFocus = data["conceptfocus"] ?: "Mathematical Problem Solving"
+            val difficultyAchieved = data["difficultyachieved"] ?: "medium"
+            
+            Log.d(TAG, "Enhanced regex parsing successful!")
+            
+            ExerciseGenerationResponse(
+                questionText = questionText,
+                options = options,
+                correctAnswerIndex = correctAnswerIndex,
+                explanation = explanation,
+                conceptFocus = conceptFocus,
+                difficultyAchieved = difficultyAchieved
+            )
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Enhanced regex parsing failed", e)
             null
         }
     }

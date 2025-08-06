@@ -30,6 +30,10 @@ android {
     namespace = "com.example.ai.edge.eliza.ai.modelmanager"
     compileSdk = 35
 
+    sourceSets {
+        getByName("main").java.srcDirs("src/main/kotlin")
+    }
+
     defaultConfig {
         minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -78,7 +82,6 @@ dependencies {
     implementation(project(":core:model"))
     
     // AI modules
-    implementation(project(":ai:inference"))
     implementation(project(":ai:rag"))
     
     // Android Core
@@ -120,7 +123,7 @@ dependencies {
     // Gson for JSON parsing
     implementation("com.google.code.gson:gson:2.10.1")
     
-    // MediaPipe for AI model inference (from Gallery)
+    // MediaPipe for AI model inference 
     implementation("com.google.mediapipe:tasks-genai:0.10.25")
     implementation("com.google.mediapipe:tasks-text:0.10.21")
     

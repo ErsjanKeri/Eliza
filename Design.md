@@ -296,12 +296,11 @@ fun createExerciseHelpChat(request: ExerciseHelpChatRequest): ChatSession {
 }
 ```
 
-**Gallery Chat Integration:**
+**Chat Integration:**
 ```kotlin
 // Copy these components 100% exactly from gallery:
 @Composable
 fun ExerciseHelpChatScreen() {
-    // Use EXACT same layout as gallery chat
     GalleryChatInterface(
         modifier = Modifier.fillMaxSize(), // 99% coverage
         showReturnButton = true,

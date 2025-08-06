@@ -37,7 +37,6 @@ include(":core:network")
 
 // AI-specific modules
 include(":ai:modelmanager")
-include(":ai:inference")
 include(":ai:rag")
 include(":ai:service")
 
