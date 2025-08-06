@@ -30,7 +30,7 @@ data class UserPreferences(
     val learningGoals: List<String> = emptyList(), // User-defined learning objectives
     val preferredDifficulty: String? = null, // "easy", "moderate", "challenging"
     val studySchedule: String? = null, // "morning", "afternoon", "evening", "flexible"
-    val language: String = "english", // "albanian", "german", "english" - default to English
+    val language: SupportedLanguage = SupportedLanguage.DEFAULT, // User's preferred language
     val isFirstTime: Boolean = true, // Whether user has set preferences before
     val lastUpdated: Long = System.currentTimeMillis() // When preferences were last modified
 ) {
@@ -50,8 +50,8 @@ data class UserPreferences(
         )
         val DIFFICULTY_LEVELS = listOf("easy", "moderate", "challenging")
         val STUDY_SCHEDULES = listOf("morning", "afternoon", "evening", "flexible")
-        val SUPPORTED_LANGUAGES = listOf("albanian", "german", "english")
-        val DEFAULT_LANGUAGE = "english"
+        val SUPPORTED_LANGUAGES = SupportedLanguage.values().toList()
+        val DEFAULT_LANGUAGE = SupportedLanguage.DEFAULT
         
         /**
          * Create default preferences for first-time users.
@@ -74,7 +74,7 @@ data class UserPreferences(
             learningGoals: List<String> = emptyList(),
             preferredDifficulty: String? = null,
             studySchedule: String? = null,
-            language: String = DEFAULT_LANGUAGE
+            language: SupportedLanguage = DEFAULT_LANGUAGE
         ): UserPreferences {
             return UserPreferences(
                 experienceLevel = experienceLevel,
@@ -104,7 +104,7 @@ data class UserPreferences(
      */
     val summary: String
         get() = buildString {
-            append("Language: ${language.replaceFirstChar { it.uppercase() }}")
+            append("Language: ${language.displayName}")
             experienceLevel?.let { 
                 append(" • Level: $it") 
             }
@@ -130,7 +130,7 @@ data class UserPreferences(
         learningGoals: List<String> = this.learningGoals,
         preferredDifficulty: String? = this.preferredDifficulty,
         studySchedule: String? = this.studySchedule,
-        language: String = this.language
+        language: SupportedLanguage = this.language
     ): UserPreferences {
         return copy(
             experienceLevel = experienceLevel,

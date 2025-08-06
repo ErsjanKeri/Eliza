@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
 import com.example.ai.edge.eliza.core.model.UserPreferences
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +32,7 @@ import javax.inject.Inject
 data class SettingsUiState(
     val isLoading: Boolean = false,
     val userPreferences: UserPreferences = UserPreferences.createDefault(),
-    val availableLanguages: List<String> = UserPreferences.SUPPORTED_LANGUAGES,
+    val availableLanguages: List<SupportedLanguage> = UserPreferences.SUPPORTED_LANGUAGES,
     val availableExperienceLevels: List<String> = UserPreferences.EXPERIENCE_LEVELS,
     val availableSubjects: List<String> = UserPreferences.COMMON_SUBJECTS,
     val availableDifficultyLevels: List<String> = UserPreferences.DIFFICULTY_LEVELS,
@@ -62,7 +63,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateLanguage(language: String) {
+    fun updateLanguage(language: SupportedLanguage) {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)

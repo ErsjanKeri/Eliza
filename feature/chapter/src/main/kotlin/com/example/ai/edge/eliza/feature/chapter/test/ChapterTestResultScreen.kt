@@ -75,12 +75,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.LaunchedEffect
+import com.example.ai.edge.eliza.core.common.R
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaBackground
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
@@ -91,6 +93,11 @@ import com.example.ai.edge.eliza.core.designsystem.theme.Orange40
 import com.example.ai.edge.eliza.core.model.TestResult
 import com.example.ai.edge.eliza.core.model.Exercise
 import com.example.ai.edge.eliza.core.model.Difficulty
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
+import com.example.ai.edge.eliza.core.model.LocalizedContent
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 /**
  * Screen showing test results with score, wrong questions, and action options.
@@ -115,6 +122,12 @@ fun ChapterTestResultScreen(
     // Set model manager in ViewModel (required because it's a @HiltViewModel)
     LaunchedEffect(Unit) {
         viewModel.setModelManager(modelManager)
+    }
+    
+    // Get user language preference
+    var userLanguage by remember { mutableStateOf(SupportedLanguage.DEFAULT) }
+    LaunchedEffect(Unit) {
+        userLanguage = viewModel.getCurrentLanguage()
     }
     
     val showDifficultyDialog by viewModel.showDifficultyDialog.collectAsState()
@@ -149,6 +162,7 @@ fun ChapterTestResultScreen(
                     AllQuestionsSection(
                         exercises = testResult.exercises,
                         userAnswers = testResult.userAnswers,
+                        userLanguage = userLanguage,
                         onRetakeQuestion = onRetakeQuestion,
                         onRequestLocalHelp = onRequestLocalHelp,
                         onRequestVideoHelp = onRequestVideoHelp,
@@ -177,6 +191,7 @@ fun ChapterTestResultScreen(
             if (showDifficultyDialog) {
                 DifficultySelectionDialog(
                     originalExercise = exercise,
+                    userLanguage = userLanguage,
                     onDifficultySelected = { difficulty, model ->
                         viewModel.generateNewQuestion(exercise, difficulty, model)
                     },
@@ -191,6 +206,7 @@ fun ChapterTestResultScreen(
             if (showGenerationDialog) {
                 ExerciseGenerationDialog(
                     generationState = state,
+                    userLanguage = userLanguage,
                     onDismiss = {
                         viewModel.dismissGenerationDialogs()
                     },
@@ -209,6 +225,7 @@ fun ChapterTestResultScreen(
             if (showTrialPractice) {
                 TrialPracticeScreen(
                     trial = trial,
+                    userLanguage = userLanguage,
                     onAnswerSubmitted = { answerIndex, isCorrect ->
                         viewModel.submitTrialAnswer(answerIndex, isCorrect)
                     },
@@ -238,7 +255,7 @@ private fun TestResultTopBar(
         title = {
             Column {
                 Text(
-                    text = "Test Results",
+                    text = stringResource(R.string.test_results),
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.SemiBold
                     )
@@ -358,6 +375,7 @@ private fun ScoreDisplay(
 private fun AllQuestionsSection(
     exercises: List<Exercise>,
     userAnswers: List<Int>,
+    userLanguage: SupportedLanguage,
     onRetakeQuestion: (Exercise) -> Unit,
     onRequestLocalHelp: (Exercise) -> Unit = {},
     onRequestVideoHelp: (Exercise) -> Unit = {},
@@ -372,7 +390,7 @@ private fun AllQuestionsSection(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Question Results",
+            text = stringResource(R.string.question_results),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
@@ -390,6 +408,7 @@ private fun AllQuestionsSection(
                 userAnswer = userAnswer,
                 isCorrect = isCorrect,
                 isExpanded = isExpanded,
+                userLanguage = userLanguage,
                 onCardClick = { 
                     expandedQuestionIndex = if (isExpanded) -1 else index
                 },
@@ -412,6 +431,7 @@ private fun QuestionResultCard(
     userAnswer: Int,
     isCorrect: Boolean,
     isExpanded: Boolean,
+    userLanguage: SupportedLanguage,
     onCardClick: () -> Unit,
     onRetakeQuestion: () -> Unit,
     onRequestLocalHelp: (Exercise) -> Unit = {},
@@ -457,7 +477,7 @@ private fun QuestionResultCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Question $questionNumber",
+                        text = stringResource(R.string.question_number_format, questionNumber),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
@@ -491,6 +511,7 @@ private fun QuestionResultCard(
                     exercise = exercise,
                     userAnswer = userAnswer,
                     isCorrect = isCorrect,
+                    userLanguage = userLanguage,
                     onRetakeQuestion = onRetakeQuestion,
                     onRequestLocalHelp = onRequestLocalHelp,
                     onRequestVideoHelp = onRequestVideoHelp,
@@ -509,6 +530,7 @@ private fun QuestionExpandedContent(
     exercise: Exercise,
     userAnswer: Int,
     isCorrect: Boolean,
+    userLanguage: SupportedLanguage,
     onRetakeQuestion: () -> Unit,
     onRequestLocalHelp: (Exercise) -> Unit = {},
     onRequestVideoHelp: (Exercise) -> Unit = {},
@@ -538,7 +560,7 @@ private fun QuestionExpandedContent(
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Text(
-                text = exercise.questionText,
+                text = exercise.questionText.get(userLanguage),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Medium
                 ),
@@ -573,13 +595,13 @@ private fun QuestionExpandedContent(
                     )
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Your answer:",
+                            text = stringResource(R.string.your_answer),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = if (userAnswer >= 0 && userAnswer < exercise.options.size) {
-                                exercise.options[userAnswer]
+                                exercise.options[userAnswer].get(userLanguage)
                             } else {
                                 "No answer provided"
                             },
@@ -605,12 +627,12 @@ private fun QuestionExpandedContent(
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Correct answer:",
+                                text = stringResource(R.string.correct_answer),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = exercise.options[exercise.correctAnswerIndex],
+                                text = exercise.options[exercise.correctAnswerIndex].get(userLanguage),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Medium
                                 ),
@@ -628,7 +650,7 @@ private fun QuestionExpandedContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Get help with this question:",
+                    text = stringResource(R.string.get_help_with_question),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -774,10 +796,15 @@ private fun ChapterTestResultScreenPreview() {
             Exercise(
                 id = "2",
                 chapterId = "chapter1",
-                questionText = "What is the slope of y = 3x + 5?",
-                options = listOf("3", "5", "-3", "8"),
+                questionText = LocalizedContent.englishOnly("What is the slope of y = 3x + 5?"),
+                options = listOf(
+                    LocalizedContent.englishOnly("3"),
+                    LocalizedContent.englishOnly("5"),
+                    LocalizedContent.englishOnly("-3"),
+                    LocalizedContent.englishOnly("8")
+                ),
                 correctAnswerIndex = 0,
-                explanation = "The coefficient of x is the slope"
+                explanation = LocalizedContent.englishOnly("The coefficient of x is the slope")
             )
         )
         

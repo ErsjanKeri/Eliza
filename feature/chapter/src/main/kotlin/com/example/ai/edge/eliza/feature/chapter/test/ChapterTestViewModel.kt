@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 import com.example.ai.edge.eliza.core.data.repository.ProgressRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import com.example.ai.edge.eliza.core.model.ChapterTest
 import com.example.ai.edge.eliza.core.model.UserAnswer
 import com.example.ai.edge.eliza.core.model.TestResult
@@ -55,6 +57,7 @@ class ChapterTestViewModel @Inject constructor(
     @ApplicationContext private val context: Context, // NEW: For model initialization
     private val courseRepository: CourseRepository,
     private val progressRepository: ProgressRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val exerciseGenerationService: ExerciseGenerationService // NEW: For AI generation
 ) : ViewModel() {
 
@@ -67,6 +70,13 @@ class ChapterTestViewModel @Inject constructor(
      */
     fun setModelManager(modelManager: ElizaModelManager) {
         this.elizaModelManager = modelManager
+    }
+    
+    /**
+     * Get the current user language preference.
+     */
+    suspend fun getCurrentLanguage(): SupportedLanguage {
+        return userPreferencesRepository.getCurrentLanguage()
     }
 
     private val _testState = MutableStateFlow<TestState>(TestState.NotStarted)
@@ -146,9 +156,10 @@ class ChapterTestViewModel @Inject constructor(
 
                 // ALWAYS start a fresh test when startTest() is called
                 // The UI button determines whether to start test or show results
+                val userLanguage = getCurrentLanguage()
                 val chapterTest = ChapterTest(
                     chapterId = chapterId,
-                    chapterTitle = chapter.title,
+                    chapterTitle = chapter.title.get(userLanguage),
                     exercises = exercisesToUse,
                     currentQuestionIndex = 0,
                     userAnswers = List(exercisesToUse.size) { null }
@@ -456,9 +467,10 @@ class ChapterTestViewModel @Inject constructor(
                     0
                 }
                 
+                val userLanguage = getCurrentLanguage()
                 val testResult = TestResult(
                     chapterId = chapterId,
-                    chapterTitle = chapter.title,
+                    chapterTitle = chapter.title.get(userLanguage),
                     score = score, // Calculated from real answers
                     correctAnswers = correctAnswers, // Calculated from real answers
                     totalQuestions = exercises.size,

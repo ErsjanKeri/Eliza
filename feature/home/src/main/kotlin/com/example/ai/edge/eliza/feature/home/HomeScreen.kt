@@ -47,10 +47,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ai.edge.eliza.core.common.R
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaBackground
@@ -125,12 +128,14 @@ internal fun HomeScreen(
                 HomeTab.CONTINUE_LEARNING -> {
                     continueLearningContent(
                         courseFeedState = uiState.courseFeedState,
+                        currentLanguage = uiState.currentLanguage,
                         onCourseClick = onCourseClick,
                     )
                 }
                 HomeTab.START_NEW_COURSE -> {
                     startNewCourseContent(
                         courseFeedState = uiState.courseFeedState,
+                        currentLanguage = uiState.currentLanguage,
                         onStartNewCourse = onStartNewCourse,
                     )
                 }
@@ -170,7 +175,7 @@ private fun WelcomeHeader(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Welcome back!",
+            text = stringResource(R.string.welcome_back),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary,
             textAlign = TextAlign.Center,
@@ -222,7 +227,7 @@ private fun TabSelector(
                 onClick = { onTabChange(tab) },
                 label = {
                     Text(
-                        text = tab.displayName,
+                        text = getTabDisplayName(tab),
                         style = MaterialTheme.typography.labelLarge,
                     )
                 },
@@ -245,6 +250,7 @@ private fun TabSelector(
  */
 private fun LazyStaggeredGridScope.continueLearningContent(
     courseFeedState: CourseFeedUiState,
+    currentLanguage: SupportedLanguage,
     onCourseClick: (String) -> Unit,
 ) {
     when (courseFeedState) {
@@ -274,6 +280,7 @@ private fun LazyStaggeredGridScope.continueLearningContent(
                 ) { courseWithProgress ->
                     ContinueCourseCard(
                         courseWithProgress = courseWithProgress,
+                        currentLanguage = currentLanguage,
                         onClick = { onCourseClick(courseWithProgress.course.id) },
                     )
                 }
@@ -287,6 +294,7 @@ private fun LazyStaggeredGridScope.continueLearningContent(
  */
 private fun LazyStaggeredGridScope.startNewCourseContent(
     courseFeedState: CourseFeedUiState,
+    currentLanguage: SupportedLanguage,
     onStartNewCourse: (String) -> Unit,
 ) {
     when (courseFeedState) {
@@ -316,6 +324,7 @@ private fun LazyStaggeredGridScope.startNewCourseContent(
                 ) { course ->
                     NewCourseCard(
                         course = course,
+                        currentLanguage = currentLanguage,
                         onClick = { onStartNewCourse(course.id) },
                     )
                 }
@@ -339,7 +348,7 @@ private fun LoadingIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "Loading courses...",
+            text = stringResource(R.string.loading_courses),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -397,6 +406,7 @@ private fun EmptyState(
 @Composable
 private fun ContinueCourseCard(
     courseWithProgress: CourseWithProgress,
+    currentLanguage: SupportedLanguage,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -404,8 +414,8 @@ private fun ContinueCourseCard(
     val progress = courseWithProgress.progress
     
     CourseCard(
-        title = course.title,
-        description = course.description,
+        title = course.title.get(currentLanguage),
+        description = course.description.get(currentLanguage),
         subject = course.subject.displayName,
         grade = course.grade,
         totalChapters = course.totalChapters,
@@ -436,12 +446,13 @@ private fun ContinueCourseCard(
 @Composable
 private fun NewCourseCard(
     course: Course,
+    currentLanguage: SupportedLanguage,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     CourseCard(
-        title = course.title,
-        description = course.description,
+        title = course.title.get(currentLanguage),
+        description = course.description.get(currentLanguage),
         subject = course.subject.displayName,
         grade = course.grade,
         totalChapters = course.totalChapters,
@@ -454,4 +465,12 @@ private fun NewCourseCard(
         onContinueClick = onClick,
         modifier = modifier
     )
+}
+
+@Composable
+private fun getTabDisplayName(tab: HomeTab): String {
+    return when (tab) {
+        HomeTab.CONTINUE_LEARNING -> stringResource(R.string.continue_learning)
+        HomeTab.START_NEW_COURSE -> stringResource(R.string.start_new_course)
+    }
 } 

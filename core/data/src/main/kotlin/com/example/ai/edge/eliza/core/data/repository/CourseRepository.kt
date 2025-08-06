@@ -19,6 +19,7 @@ package com.example.ai.edge.eliza.core.data.repository
 import com.example.ai.edge.eliza.core.model.Course
 import com.example.ai.edge.eliza.core.model.Exercise
 import com.example.ai.edge.eliza.core.model.Chapter
+import com.example.ai.edge.eliza.core.model.LocalizedContent
 import com.example.ai.edge.eliza.core.model.Subject
 import com.example.ai.edge.eliza.core.model.Trial
 import com.example.ai.edge.eliza.core.model.VideoExplanation
@@ -115,26 +116,28 @@ enum class DownloadStatus {
 
 /**
  * Result of submitting an exercise answer.
+ * UPDATED: explanation now supports LocalizedContent for multi-language support.
  */
 data class ExerciseResult(
     val exerciseId: String,
     val isCorrect: Boolean,
     val selectedAnswer: Int,
     val correctAnswer: Int,
-    val explanation: String,
+    val explanation: LocalizedContent,
     val timeSpent: Long = 0L,
     val hintsUsed: Int = 0
 )
 
 /**
  * Result of submitting a trial answer.
+ * UPDATED: explanation now supports LocalizedContent for multi-language support.
  */
 data class TrialResult(
     val trialId: String,
     val isCorrect: Boolean,
     val selectedAnswer: Int,
     val correctAnswer: Int,
-    val explanation: String,
+    val explanation: LocalizedContent,
     val timeSpent: Long = 0L,
     val hintsUsed: Int = 0
 )

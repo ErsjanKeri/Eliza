@@ -94,9 +94,6 @@ class ModelDownloadRepositoryImpl @Inject constructor(
     
     private val workManager = WorkManager.getInstance(context)
     
-    /**
-     * Gallery's exact SharedPreferences pattern for tracking download start times
-     */
     private val downloadStartTimeSharedPreferences =
         context.getSharedPreferences("download_start_time_ms", Context.MODE_PRIVATE)
     

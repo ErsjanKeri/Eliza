@@ -24,7 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,9 +32,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.ai.edge.eliza.ai.modelmanager.device.DeviceCapabilityChecker
+import com.example.ai.edge.eliza.core.common.R
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaOutlinedButton
 import com.example.ai.edge.eliza.core.model.Model
@@ -59,14 +61,9 @@ fun MemoryWarningDialog(
         shape = RoundedCornerShape(0.dp), // Square corners like rest of app
         icon = {
             Icon(
-                imageVector = Icons.Default.Warning,
+                imageVector = Icons.Default.Info,
                 contentDescription = "Memory Warning",
-                tint = when (compatibility.riskLevel) {
-                    DeviceCapabilityChecker.RiskLevel.WARNING -> MaterialTheme.colorScheme.primary
-                    DeviceCapabilityChecker.RiskLevel.CRITICAL -> MaterialTheme.colorScheme.error
-                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> MaterialTheme.colorScheme.error
-                    else -> MaterialTheme.colorScheme.onSurface
-                },
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(32.dp)
             )
         },
@@ -105,7 +102,7 @@ fun MemoryWarningDialog(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Device Information:",
+                        text = stringResource(R.string.device_information),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
@@ -113,27 +110,27 @@ fun MemoryWarningDialog(
                     )
                     
                     DeviceMemoryInfoRow(
-                        label = "Device",
+                        label = stringResource(R.string.device_label),
                         value = deviceInfo.deviceModel
                     )
                     
                     DeviceMemoryInfoRow(
-                        label = "Total RAM",
+                        label = stringResource(R.string.total_ram_label),
                         value = "${String.format("%.1f", deviceInfo.totalMemoryGB)} GB"
                     )
                     
                     DeviceMemoryInfoRow(
-                        label = "Available RAM",
+                        label = stringResource(R.string.available_ram_label),
                         value = "${String.format("%.1f", deviceInfo.usableMemoryGB)} GB"
                     )
                     
                     DeviceMemoryInfoRow(
-                        label = "Model requires",
+                        label = stringResource(R.string.model_requires_label),
                         value = "${String.format("%.1f", (model.estimatedPeakMemoryInBytes ?: 0L) / (1024f * 1024f * 1024f))} GB"
                     )
                     
                     DeviceMemoryInfoRow(
-                        label = "Memory usage",
+                        label = stringResource(R.string.memory_usage_label),
                         value = "${String.format("%.0f", compatibility.memoryUtilization * 100)}%",
                         valueColor = when (compatibility.riskLevel) {
                             DeviceCapabilityChecker.RiskLevel.DANGEROUS -> MaterialTheme.colorScheme.error
@@ -150,7 +147,7 @@ fun MemoryWarningDialog(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         Text(
-                            text = "Potential Issues:",
+                            text = stringResource(R.string.potential_issues),
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.SemiBold
                             ),
@@ -177,7 +174,7 @@ fun MemoryWarningDialog(
                     onClick = onCancel,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel_button))
                 }
                 
                 // Switch to safer model (if available)
@@ -186,7 +183,7 @@ fun MemoryWarningDialog(
                         onClick = onSwitchToSaferModel,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Use 2B Model")
+                        Text(stringResource(R.string.use_2b_model))
                     }
                 }
                 
@@ -197,9 +194,9 @@ fun MemoryWarningDialog(
                 ) {
                     Text(
                         text = when (compatibility.riskLevel) {
-                            DeviceCapabilityChecker.RiskLevel.DANGEROUS -> "Risk It"
-                            DeviceCapabilityChecker.RiskLevel.CRITICAL -> "Continue"
-                            else -> "Proceed"
+                            DeviceCapabilityChecker.RiskLevel.DANGEROUS -> stringResource(R.string.risk_it)
+                            DeviceCapabilityChecker.RiskLevel.CRITICAL -> stringResource(R.string.continue_button)
+                            else -> stringResource(R.string.proceed_button)
                         }
                     )
                 }
@@ -258,34 +255,34 @@ fun QuickMemoryWarningDialog(
         shape = RoundedCornerShape(0.dp), // Square corners like rest of app
         icon = {
             Icon(
-                imageVector = Icons.Default.Warning,
-                contentDescription = "Memory Warning",
-                tint = when (riskLevel) {
-                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> MaterialTheme.colorScheme.error
-                    DeviceCapabilityChecker.RiskLevel.CRITICAL -> MaterialTheme.colorScheme.error
-                    else -> MaterialTheme.colorScheme.primary
-                },
+                imageVector = Icons.Default.Info,
+                contentDescription = stringResource(R.string.memory_warning_content_description),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp)
             )
         },
         title = {
             Text(
                 text = when (riskLevel) {
-                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> "High Memory Usage Detected"
-                    DeviceCapabilityChecker.RiskLevel.CRITICAL -> "Memory Warning"
-                    else -> "High Memory Usage"
+                    DeviceCapabilityChecker.RiskLevel.DANGEROUS -> stringResource(R.string.high_memory_usage_detected)
+                    DeviceCapabilityChecker.RiskLevel.CRITICAL -> stringResource(R.string.memory_warning_title)
+                    else -> stringResource(R.string.high_memory_usage)
                 },
                 style = MaterialTheme.typography.titleLarge
             )
         },
         text = {
             Text(
-                text = "Loading $modelName will use ${String.format("%.0f", memoryUsagePercent)}% of your device's available memory.\n\n" +
-                        when (riskLevel) {
-                            DeviceCapabilityChecker.RiskLevel.DANGEROUS -> "This may cause the app to crash."
-                            DeviceCapabilityChecker.RiskLevel.CRITICAL -> "This may affect app stability."
-                            else -> "Consider closing other apps first."
-                        },
+                text = stringResource(
+                    R.string.memory_usage_warning,
+                    modelName,
+                    memoryUsagePercent,
+                    when (riskLevel) {
+                        DeviceCapabilityChecker.RiskLevel.DANGEROUS -> stringResource(R.string.memory_crash_warning)
+                        DeviceCapabilityChecker.RiskLevel.CRITICAL -> stringResource(R.string.memory_stability_warning)
+                        else -> stringResource(R.string.memory_close_apps_suggestion)
+                    }
+                ),
                 style = MaterialTheme.typography.bodyMedium
             )
         },
@@ -296,13 +293,13 @@ fun QuickMemoryWarningDialog(
                 ElizaOutlinedButton(
                     onClick = onCancel
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel_button))
                 }
                 
                 ElizaButton(
                     onClick = onProceed
                 ) {
-                    Text("Continue")
+                    Text(stringResource(R.string.continue_button))
                 }
             }
         }

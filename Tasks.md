@@ -42,25 +42,15 @@
 ### **Language System Architecture**
 - [ ] **Implement language persistence system** - Store language preference in DataStore, load language setting on app startup, apply language to all app text and AI responses, handle language changes dynamically
 
----
-
-## 🎥 **CATEGORY 6: VIDEO & MEDIA FEATURES**
-*Priority: MEDIUM - Enhanced Features*
-
-### **Video Message System**
-- [ ] **Add video request functionality to chat** - Implement video request button in chat interface, handle video response integration in messages, create video player component for chat messages
-
-- [ ] **Implement local video storage** - Set up local video download and storage system, handle video caching and management, implement proper error handling for video failures, ensure offline video playback capability
-
-- [ ] **Integrate video with existing explanation system** - Connect video messages with current video explanation system, ensure proper video message display in chat, handle video loading states and errors
+- [ ] **Future: Image localization support** - When course content includes images with text, implement system to support translated images or image overlays. Currently no images in course content, but design should accommodate this future need.
 
 
----
 
 
 ### **Test System Data Flow LAST TASK** DATA FLOW is a huge task, this will be final as it takes a lot of time! 
 - [ ] **Fix test retaking answer persistence** - Ensure test answers properly save to database when retaking tests, fix UserAnswer record updates, implement proper data flow for retaken tests, ensure "best attempt" progress tracking works correctly
 This is very important! a proper data flow is what makes the app working, make sure the chat messages and sessions are also stored and created! currently there are no data updates throughout the app! 
+
 
 ### **CRITICAL: Video Chat Message Persistence** 
 - [ ] **Implement complete video message persistence** - Currently video messages are LOST when navigating away from chat because they only exist in local UI state. Need to:

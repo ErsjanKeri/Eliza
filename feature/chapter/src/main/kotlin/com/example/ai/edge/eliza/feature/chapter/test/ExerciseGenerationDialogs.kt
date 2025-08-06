@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_CHAT
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ElizaModelManager
 import com.example.ai.edge.eliza.ai.modelmanager.manager.ModelInitializationStatusType
@@ -67,6 +68,7 @@ import com.example.ai.edge.eliza.feature.chat.ui.MemoryWarningDialog
 @Composable
 fun DifficultySelectionDialog(
     originalExercise: Exercise,
+    userLanguage: SupportedLanguage,
     onDifficultySelected: (RelativeDifficulty, Model) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
@@ -151,7 +153,7 @@ fun DifficultySelectionDialog(
                             color = Color.White // Pure white text as requested
                         )
                         Text(
-                            text = originalExercise.questionText,
+                            text = originalExercise.questionText.get(userLanguage),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White, // Pure white text as requested
                             modifier = Modifier.padding(top = 4.dp)
@@ -179,7 +181,7 @@ fun DifficultySelectionDialog(
                 
                 // Concept focus display
                 Text(
-                    text = "Concept Focus: ${originalExercise.explanation.take(50)}...",
+                    text = "Concept Focus: ${originalExercise.explanation.get(userLanguage).take(50)}...",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -354,6 +356,7 @@ private fun DifficultyOption(
 @Composable
 fun ExerciseGenerationDialog(
     generationState: GenerationResult,
+    userLanguage: SupportedLanguage,
     onDismiss: () -> Unit,
     onPracticeQuestion: (Trial) -> Unit,
     onGenerateAnother: () -> Unit,
@@ -399,7 +402,7 @@ fun ExerciseGenerationDialog(
                     LoadingContent(message = generationState.message)
                 }
                 is GenerationResult.Success -> {
-                    GeneratedQuestionPreview(trial = generationState.trial)
+                    GeneratedQuestionPreview(trial = generationState.trial, userLanguage = userLanguage)
                 }
                 is GenerationResult.Error -> {
                     ErrorContent(message = generationState.message)
@@ -623,6 +626,7 @@ private fun ErrorContent(
 @Composable
 private fun GeneratedQuestionPreview(
     trial: Trial,
+    userLanguage: SupportedLanguage,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -655,7 +659,7 @@ private fun GeneratedQuestionPreview(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = trial.questionText,
+                    text = trial.questionText.get(userLanguage),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
                     )

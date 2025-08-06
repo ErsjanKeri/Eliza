@@ -58,8 +58,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ai.edge.eliza.ai.modelmanager.data.TASK_ELIZA_CHAT
+import com.example.ai.edge.eliza.core.common.R
 // Import Gallery-compatible ModelDownloadStatusType from core.model
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.ModelDownloadStatusType
@@ -433,7 +435,7 @@ fun ChatView(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "No models available for this task",
+                                text = stringResource(R.string.no_models_available),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -565,7 +567,7 @@ fun EnhancedChapterChatView(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Error loading chapter",
+                        text = stringResource(R.string.error_loading_chapter),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -634,7 +636,7 @@ fun EnhancedExerciseHelpChatView(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Error loading exercise",
+                        text = stringResource(R.string.error_loading_exercise),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -736,7 +738,7 @@ fun EnhancedCourseSuggestionChatView(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Error loading course suggestions",
+                        text = stringResource(R.string.error_loading_course_suggestions),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.error
                     )

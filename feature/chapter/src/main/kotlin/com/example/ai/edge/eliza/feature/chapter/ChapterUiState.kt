@@ -17,6 +17,7 @@
 package com.example.ai.edge.eliza.feature.chapter
 
 import com.example.ai.edge.eliza.core.model.Chapter
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 
 /**
  * A sealed hierarchy describing the chapter content state.
@@ -49,6 +50,9 @@ sealed interface ChapterContentUiState {
 data class ChapterScreenUiState(
     val contentState: ChapterContentUiState = ChapterContentUiState.Loading,
     val isLoading: Boolean = false,
+    val currentLanguage: SupportedLanguage = SupportedLanguage.DEFAULT,
+    val chapterTitle: String = "",
+    val chapterContent: String = ""
 ) {
     /**
      * True if chapter content is loaded successfully.

@@ -16,6 +16,9 @@
 
 package com.example.ai.edge.eliza.core.data.repository
 
+import android.content.Context
+import android.content.SharedPreferences
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import com.example.ai.edge.eliza.core.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,12 +38,18 @@ import javax.inject.Singleton
  */
 @Singleton
 class DefaultUserPreferencesRepository @Inject constructor(
-    private val dataStoreRepository: DataStoreRepository
+    private val dataStoreRepository: DataStoreRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) : UserPreferencesRepository {
     
     private val mutex = Mutex()
     private val _userPreferences = MutableStateFlow<UserPreferences?>(null)
     private val userPreferencesFlow: StateFlow<UserPreferences?> = _userPreferences.asStateFlow()
+    
+    // SharedPreferences for immediate language access (used by LocaleHelper)
+    private val sharedPrefs: SharedPreferences by lazy {
+        context.getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
+    }
     
     override fun getUserPreferences(): Flow<UserPreferences> {
         return kotlinx.coroutines.flow.flow {
@@ -80,7 +89,7 @@ class DefaultUserPreferencesRepository @Inject constructor(
         learningGoals: List<String>?,
         preferredDifficulty: String?,
         studySchedule: String?,
-        language: String?
+        language: SupportedLanguage?
     ) {
         val currentPreferences = getCurrentUserPreferences()
         val updatedPreferences = currentPreferences.update(
@@ -95,11 +104,17 @@ class DefaultUserPreferencesRepository @Inject constructor(
         saveUserPreferences(updatedPreferences)
     }
     
-    override suspend fun getCurrentLanguage(): String {
+    override suspend fun getCurrentLanguage(): SupportedLanguage {
         return getCurrentUserPreferences().language
     }
     
-    override suspend fun updateLanguage(language: String) {
+    override suspend fun updateLanguage(language: SupportedLanguage) {
+        // Save to SharedPreferences immediately for LocaleHelper access
+        sharedPrefs.edit()
+            .putString("language", language.toLegacyString())
+            .apply()
+        
+        // Also save to DataStore for full preferences system
         updateUserPreferences(language = language)
     }
     
@@ -134,7 +149,7 @@ class DefaultUserPreferencesRepository @Inject constructor(
         val preferences = getCurrentUserPreferences()
         return buildString {
             append("User Preferences:")
-            append("\nLanguage: ${preferences.language}")
+            append("\nLanguage: ${preferences.language.displayName}")
             
             preferences.experienceLevel?.let { 
                 append("\nExperience Level: $it") 
@@ -188,7 +203,7 @@ class DefaultUserPreferencesRepository @Inject constructor(
         val subjects = preferences.preferredSubjects.joinToString(",")
         val timeHours = preferences.availableTimeHours?.toString() ?: ""
         val goals = preferences.learningGoals.joinToString(",")
-        val language = preferences.language
+        val language = preferences.language.toLegacyString()
         
         return "$experienceLevel|$subjects|$timeHours|$goals|$language"
     }
@@ -206,7 +221,7 @@ class DefaultUserPreferencesRepository @Inject constructor(
                     preferredSubjects = parts[1].split(",").filter { it.isNotEmpty() },
                     availableTimeHours = parts[2].takeIf { it.isNotEmpty() }?.toIntOrNull(),
                     learningGoals = parts[3].split(",").filter { it.isNotEmpty() },
-                    language = parts[4].takeIf { it.isNotEmpty() } ?: UserPreferences.DEFAULT_LANGUAGE
+                    language = parts[4].takeIf { it.isNotEmpty() }?.let { SupportedLanguage.fromLegacyString(it) } ?: UserPreferences.DEFAULT_LANGUAGE
                 )
             } else if (parts.size >= 4) {
                 // Backwards compatibility for old format without language

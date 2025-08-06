@@ -25,6 +25,12 @@ import androidx.navigation.navArgument
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +42,9 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
+import com.example.ai.edge.eliza.core.common.R
 import com.example.ai.edge.eliza.feature.chapter.ChapterScreen
 import com.example.ai.edge.eliza.feature.chapter.test.ChapterTestScreen
 import com.example.ai.edge.eliza.feature.chapter.test.ChapterTestResultScreen
@@ -198,7 +206,7 @@ fun NavGraphBuilder.chapterTestScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Test Error",
+                        text = stringResource(R.string.test_error),
                         style = MaterialTheme.typography.headlineMedium
                     )
                     Text(
@@ -273,6 +281,12 @@ fun NavGraphBuilder.chapterTestResultScreen(
         val viewModel: ChapterTestViewModel = hiltViewModel()
         val testState by viewModel.testState.collectAsState()
         
+        // Get user language preference
+        var userLanguage by remember { mutableStateOf(SupportedLanguage.DEFAULT) }
+        LaunchedEffect(Unit) {
+            userLanguage = viewModel.getCurrentLanguage()
+        }
+        
         // Try to get the full test result from ViewModel if available
         val testResult = when (testState) {
             is TestState.Completed -> (testState as TestState.Completed).result
@@ -309,30 +323,30 @@ fun NavGraphBuilder.chapterTestResultScreen(
                 // Navigate to exercise help chat with local AI using actual exercise ID
                 val userAnswerText = testResult.userAnswers.getOrNull(testResult.exercises.indexOf(exercise))?.let { answerIndex ->
                     if (answerIndex >= 0 && answerIndex < exercise.options.size) {
-                        exercise.options[answerIndex]
+                        exercise.options[answerIndex].get(userLanguage)
                     } else {
                         "No answer"
                     }
                 } ?: "No answer"
-                val correctAnswerText = exercise.options[exercise.correctAnswerIndex]
+                val correctAnswerText = exercise.options[exercise.correctAnswerIndex].get(userLanguage)
                 
                 // Use actual exercise.id instead of constructing artificial ID
-                onNavigateToExerciseHelp(testResult.chapterId, exercise.id, exercise.questionText, userAnswerText, correctAnswerText)
+                onNavigateToExerciseHelp(testResult.chapterId, exercise.id, exercise.questionText.get(userLanguage), userAnswerText, correctAnswerText)
             },
             // TODO: this will need to be deleted! 
             onRequestVideoHelp = { exercise ->
                 // Navigate to exercise help chat with video request using actual exercise ID
                 val userAnswerText = testResult.userAnswers.getOrNull(testResult.exercises.indexOf(exercise))?.let { answerIndex ->
                     if (answerIndex >= 0 && answerIndex < exercise.options.size) {
-                        exercise.options[answerIndex]
+                        exercise.options[answerIndex].get(userLanguage)
                     } else {
                         "No answer"
                     }
                 } ?: "No answer"
-                val correctAnswerText = exercise.options[exercise.correctAnswerIndex]
+                val correctAnswerText = exercise.options[exercise.correctAnswerIndex].get(userLanguage)
                 
                 // Use actual exercise.id instead of constructing artificial ID
-                onNavigateToExerciseHelp(testResult.chapterId, exercise.id, exercise.questionText, userAnswerText, correctAnswerText)
+                onNavigateToExerciseHelp(testResult.chapterId, exercise.id, exercise.questionText.get(userLanguage), userAnswerText, correctAnswerText)
             },
             onGenerateNewQuestion = { exercise ->
                 // NEW: Wire to ViewModel's generation functionality

@@ -35,10 +35,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ai.edge.eliza.core.common.R
 import com.example.ai.edge.eliza.core.designsystem.component.ChapterPath
 import com.example.ai.edge.eliza.core.designsystem.component.CourseHeader
 
@@ -67,7 +69,7 @@ fun CourseProgressScreen(
         topBar = {
             TopAppBar(
                 title = { 
-                    Text(uiState.course?.title ?: "Course Progress") 
+                    Text(uiState.courseTitle.ifEmpty { "Course Progress" }) 
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -106,7 +108,7 @@ fun CourseProgressScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Error loading course",
+                                text = stringResource(R.string.error_loading_course),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -128,8 +130,8 @@ fun CourseProgressScreen(
                         // Course header
                         uiState.course?.let { course ->
                             CourseHeader(
-                                title = course.title,
-                                description = course.description,
+                                title = uiState.courseTitle,
+                                description = uiState.courseDescription,
                                 subject = course.subject.displayName,
                                 grade = course.grade,
                                 estimatedHours = course.estimatedHours,
@@ -159,7 +161,7 @@ fun CourseProgressScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No chapters available for this course",
+                            text = stringResource(R.string.no_chapters_available),
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center
                         )

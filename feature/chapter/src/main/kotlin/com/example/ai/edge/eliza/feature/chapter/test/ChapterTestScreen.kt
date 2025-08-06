@@ -58,10 +58,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.ai.edge.eliza.core.common.R
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaBackground
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaOutlinedButton
@@ -70,6 +72,15 @@ import com.example.ai.edge.eliza.core.designsystem.theme.LocalTestColors
 import com.example.ai.edge.eliza.core.model.ChapterTest
 import com.example.ai.edge.eliza.core.model.Exercise
 import com.example.ai.edge.eliza.core.model.Difficulty
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
+import com.example.ai.edge.eliza.core.model.LocalizedContent
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 
 /**
  * Main screen for taking chapter tests with Kahoot-inspired design.
@@ -86,6 +97,14 @@ fun ChapterTestScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Get ViewModel to access user preferences
+    val viewModel: ChapterTestViewModel = hiltViewModel()
+    
+    // Get user language preference from user preferences
+    var userLanguage by remember { mutableStateOf(SupportedLanguage.DEFAULT) }
+    LaunchedEffect(Unit) {
+        userLanguage = viewModel.getCurrentLanguage()
+    }
     ElizaBackground(modifier = modifier) {
         Scaffold(
             topBar = {
@@ -120,6 +139,7 @@ fun ChapterTestScreen(
                     exercise = currentExercise,
                     questionNumber = chapterTest.currentQuestionIndex + 1,
                     userAnswer = chapterTest.userAnswers[chapterTest.currentQuestionIndex],
+                    userLanguage = userLanguage,
                     onAnswerSelected = onAnswerSelected
                 )
                 
@@ -157,7 +177,7 @@ private fun ChapterTestTopBar(
             title = {
                 Column {
                     Text(
-                        text = "Chapter Test",
+                        text = stringResource(R.string.chapter_test),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.SemiBold
                         )
@@ -276,6 +296,7 @@ private fun QuestionDisplay(
     exercise: Exercise,
     questionNumber: Int,
     userAnswer: Int?,
+    userLanguage: SupportedLanguage,
     onAnswerSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -295,7 +316,7 @@ private fun QuestionDisplay(
                 modifier = Modifier.padding(24.dp)
             ) {
                 Text(
-                    text = "Question $questionNumber",
+                    text = stringResource(R.string.question_number_format, questionNumber),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -303,7 +324,7 @@ private fun QuestionDisplay(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = exercise.questionText,
+                    text = exercise.questionText.get(userLanguage),
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Medium
                     ),
@@ -316,6 +337,7 @@ private fun QuestionDisplay(
         KahootAnswerOptions(
             options = exercise.options,
             selectedAnswer = userAnswer,
+            userLanguage = userLanguage,
             onAnswerSelected = onAnswerSelected
         )
     }
@@ -327,8 +349,9 @@ private fun QuestionDisplay(
  */
 @Composable
 private fun KahootAnswerOptions(
-    options: List<String>,
+    options: List<LocalizedContent>,
     selectedAnswer: Int?,
+    userLanguage: SupportedLanguage,
     onAnswerSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -397,7 +420,7 @@ private fun KahootAnswerOptions(
                     
                     // Option text
                     Text(
-                        text = option,
+                        text = option.get(userLanguage),
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                         ),
@@ -481,18 +504,28 @@ private fun ChapterTestScreenPreview() {
             Exercise(
                 id = "1",
                 chapterId = "chapter1",
-                questionText = "What is the solution to 2x + 7 = 19?",
-                options = listOf("x = 5", "x = 6", "x = 7", "x = 8"),
+                questionText = LocalizedContent.englishOnly("What is the solution to 2x + 7 = 19?"),
+                options = listOf(
+                    LocalizedContent.englishOnly("x = 5"),
+                    LocalizedContent.englishOnly("x = 6"),
+                    LocalizedContent.englishOnly("x = 7"),
+                    LocalizedContent.englishOnly("x = 8")
+                ),
                 correctAnswerIndex = 1,
-                explanation = "Subtract 7, then divide by 2"
+                explanation = LocalizedContent.englishOnly("Subtract 7, then divide by 2")
             ),
             Exercise(
                 id = "2", 
                 chapterId = "chapter1",
-                questionText = "What is the slope of y = 3x + 5?",
-                options = listOf("3", "5", "-3", "8"),
+                questionText = LocalizedContent.englishOnly("What is the slope of y = 3x + 5?"),
+                options = listOf(
+                    LocalizedContent.englishOnly("3"),
+                    LocalizedContent.englishOnly("5"),
+                    LocalizedContent.englishOnly("-3"),
+                    LocalizedContent.englishOnly("8")
+                ),
                 correctAnswerIndex = 0,
-                explanation = "The coefficient of x is the slope"
+                explanation = LocalizedContent.englishOnly("The coefficient of x is the slope")
             )
         )
         

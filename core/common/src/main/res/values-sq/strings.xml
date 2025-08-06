@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Branding -->
+    <string name="app_name">Eliza</string>
+    
+    <!-- Navigation -->
+    <string name="home">Ballina</string>
+    <string name="course_suggestions">Sugjerime</string>
+    <string name="settings">Cilësimet</string>
+    
+    <!-- Common Actions -->
+    <string name="continue_action">Vazhdo</string>
+    <string name="start">Fillo</string>
+    <string name="back">Kthehu</string>
+    <string name="next">Tjetri</string>
+    <string name="submit">Dërgo</string>
+    <string name="cancel">Anulo</string>
+    <string name="save">Ruaj</string>
+    <string name="edit">Ndrysho</string>
+    <string name="delete">Fshi</string>
+    <string name="close">Mbyll</string>
+    <string name="ok">OK</string>
+    <string name="try_again">Provo Përsëri</string>
+    
+    <!-- Loading and Status -->
+    <string name="loading">Duke u ngarkuar…</string>
+    <string name="loading_courses">Duke ngarkuar kurset…</string>
+    <string name="loading_chapter">Duke ngarkuar kapitullin…</string>
+    <string name="loading_results">Duke ngarkuar rezultatet…</string>
+    <string name="not_connected">Nuk jeni të lidhur me internetin</string>
+    
+    <!-- Home Screen -->
+    <string name="welcome_back">Mirë se erdhe përsëri!</string>
+    
+    <!-- Course Related -->
+    <string name="progress">Progresi</string>
+    <string name="about_this_course">Rreth këtij kursi</string>
+    <string name="progress_format">Progresi: %1$d nga %2$d kapituj të përfunduar (%3$d%%)</string>
+    <string name="error_loading_course">Gabim në ngarkimin e kursit</string>
+    <string name="no_chapters_available">Nuk ka kapituj të disponueshëm për këtë kurs</string>
+    <string name="estimated_time">Koha e Vlerësuar</string>
+    <string name="available_offline">I disponueshëm offline</string>
+    <string name="requires_internet">Kërkon internet</string>
+    
+    <!-- Chapter Related -->
+    <string name="chapter_complete">Kapitulli i Përfunduar</string>
+    <string name="error_loading_chapter">Gabim në ngarkimin e kapitullit</string>
+    <string name="no_chapter_content_available">Nuk ka përmbajtje të disponueshme për kapitullin</string>
+    <string name="attempts_format">Përpjekje: %1$d</string>
+    
+    <!-- Test Related -->
+    <string name="chapter_test">Testi i Kapitullit</string>
+    <string name="test_results">Rezultatet e Testit</string>
+    <string name="question_results">Rezultatet e Pyetjeve</string>
+    <string name="question_number_format">Pyetja %1$d</string>
+    <string name="your_answer">Përgjigja juaj:</string>
+    <string name="correct_answer">Përgjigja e saktë:</string>
+    <string name="get_help_with_question">Merrni ndihmë me këtë pyetje:</string>
+    <string name="starting_test">Duke filluar testin…</string>
+    <string name="test_error">Gabim në Test</string>
+    
+    <!-- Exercise Generation -->
+    <string name="generate_new_practice_question">Gjenero Pyetje të Re Praktike</string>
+    <string name="original_question">Pyetja Origjinale:</string>
+    <string name="select_difficulty">Zgjidh Vështirësinë:</string>
+    <string name="concept_focus_format">Fokusi i Konceptit: %1$s…</string>
+    <string name="generate_another">Gjenero Tjetër</string>
+    <string name="practice_this_question">Praktiko Këtë Pyetje</string>
+    <string name="retry_generation_error">Ju lutemi provoni përsëri me një nivel tjetër vështirësie ose kontrolloni lidhjen tuaj me internetin.</string>
+    <string name="generated_with_model_format">E gjeneruar me Gemma 3n (Vështirësia %1$s)</string>
+    <string name="question_label">Pyetja:</string>
+    
+    <!-- Practice Screen -->
+    <string name="practice_question">Pyetja Praktike</string>
+    <string name="ai_generated_practice_question">Pyetje Praktike e Gjeneruar nga AI</string>
+    <string name="difficulty_format">Vështirësia: %1$s</string>
+    <string name="ai_explanation">Shpjegimi i AI:</string>
+    
+    <!-- Settings -->
+    <string name="language_section">Gjuha</string>
+    <string name="learning_profile_section">Profili i Të Mësuarit</string>
+    <string name="study_preferences_section">Preferencat e Studimit</string>
+    <string name="learning_goals_section">Objektivat e Të Mësuarit</string>
+    <string name="experience_level">Niveli i Përvojës</string>
+    <string name="preferred_subjects">Lëndët e Preferuara</string>
+    <string name="available_time_hours_per_week">Koha e Disponueshme (orë në javë)</string>
+    <string name="preferred_difficulty">Vështirësia e Preferuar</string>
+    <string name="preferred_study_time">Koha e Preferuar e Studimit</string>
+    <string name="hours_per_week">Orë në javë</string>
+    <string name="app_language">Gjuha e Aplikacionit</string>
+    <string name="reset_settings">Rivendos Cilësimet</string>
+    <string name="reset_settings_description">Kjo do të rivendosë të gjitha preferencat tuaja në vlerat fillestare.</string>
+    
+    <!-- Chat Related -->
+    <string name="eliza_name">Eliza</string>
+    <string name="no_models_available">Nuk ka modele të disponueshme për këtë detyrë</string>
+    <string name="error_loading_exercise">Gabim në ngarkimin e ushtrimit</string>
+    
+    <!-- Memory Warning Dialog -->
+    <string name="device_information">Informacioni i Pajisjes:</string>
+    <string name="potential_issues">Probleme Potenciale:</string>
+    <string name="memory_warning_content_description">Paralajmërim Memorie</string>
+    <string name="high_memory_usage_detected">U Zbulua Përdorim i Lartë i Memories</string>
+    <string name="memory_warning_title">Paralajmërim Memorie</string>
+    <string name="high_memory_usage">Përdorim i Lartë i Memories</string>
+    <string name="device_label">Pajisja</string>
+    <string name="total_ram_label">RAM Totale</string>
+    <string name="available_ram_label">RAM e Disponueshme</string>
+    <string name="model_requires_label">Modeli kërkon</string>
+    <string name="memory_usage_label">Përdorimi i memories</string>
+    <string name="cancel_button">Anulo</string>
+    <string name="use_2b_model">Përdor Modelin 2B</string>
+    <string name="risk_it">Rreziko</string>
+    <string name="continue_button">Vazhdo</string>
+    <string name="proceed_button">Vazhdo</string>
+    <string name="memory_usage_warning">Ngarkimi i %1$s do të përdorë %2$.0f%% të memories së disponueshme të pajisjes suaj.\n\n%3$s</string>
+    <string name="memory_crash_warning">Kjo mund të shkaktojë mbylljen e aplikacionit.</string>
+    <string name="memory_stability_warning">Kjo mund të ndikojë në stabilitetin e aplikacionit.</string>
+    <string name="memory_close_apps_suggestion">Konsideroni të mbyllni aplikacionet e tjera fillimisht.</string>
+    <string name="error_loading_course_suggestions">Gabim në ngarkimin e sugjerimeve të kursit</string>
+    <string name="recommended_courses">Kurse të Rekomanduara</string>
+    <string name="chat_sessions">Sesionet e Chat-it</string>
+    <string name="open_chapter_to_view_sessions">Hapni një kapitull për të parë sesionet e lidhura të chat-it</string>
+    
+    <!-- Model Management -->
+    <string name="eliza_ready">Eliza është gati!</string>
+    <string name="eliza_cannot_run">Eliza nuk mund të funksionojë në këtë pajisje :(</string>
+    <string name="eliza_getting_ready">Eliza po përgatitet…</string>
+    <string name="feel_free_to_switch_apps">Mund të ndërroni aplikacione ose ta mbyllni pajisjen.\nEliza do të vazhdojë përgatitjen në sfond.</string>
+    
+    <!-- Video Generation -->
+    <string name="video_explanation">Shpjegimi në Video</string>
+    <string name="video_generation_failed">Gjenerimi i Videos Dështoi</string>
+    <string name="attempt_format">Përpjekja %1$d nga %2$d</string>
+    <string name="duration_format">Kohëzgjatja: %1$s</string>
+    <string name="size_format">Madhësia: %1$s</string>
+    
+    <!-- RAG (Retrieval Augmented Generation) -->
+    <string name="rag_enhanced">RAG i përmirësuar</string>
+    <string name="enhanced_rag">RAG i Përmirësuar</string>
+    <string name="rag_description">Aktivizo përgjigje të ndërgjegjshme ndaj kontekstit duke përdorur Gjenerimin e Përmirësuar me Marrje</string>
+    <string name="not_initialized">Nuk është inicializuar</string>
+    <string name="initializing">Duke inicializuar…</string>
+    <string name="ready">Gati</string>
+    <string name="initialization_error">Gabim në inicializim</string>
+    <string name="rag_settings">Cilësimet e RAG</string>
+    <string name="rag_status">Statusi i RAG</string>
+
+    <!-- Home Screen Tabs -->
+    <string name="continue_learning">Vazhdo të Mësosh</string>
+    <string name="start_new_course">Fillo Kurs të Ri</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="error_icon_description">Gabim</string>
+    <string name="continue_button_description">Vazhdo</string>
+    <string name="back_button_description">Kthehu</string>
+    
+
+
+    <!-- Animation Labels (for developers/testing) -->
+    <string name="progress_animation_label">progress_animation</string>
+    <string name="score_animation_label">score</string>
+    <string name="arrow_rotation_label">arrow_rotation</string>
+    <string name="progress_label">progress</string>
+</resources>

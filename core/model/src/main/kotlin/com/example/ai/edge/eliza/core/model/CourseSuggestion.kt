@@ -108,18 +108,22 @@ data class CourseSuggestionResponse(
     
     /**
      * Convert to domain CourseRecommendation objects with proper metadata.
+     * Uses the specified language for localized content.
      */
-    fun toCourseRecommendations(availableCourses: List<Course>): List<CourseRecommendation> {
+    fun toCourseRecommendations(
+        availableCourses: List<Course>,
+        language: SupportedLanguage
+    ): List<CourseRecommendation> {
         return recommendedCourses.mapNotNull { aiCourse ->
             // Find the actual course from available courses
             val course = availableCourses.find { it.id == aiCourse.courseId }
             course?.let {
                 CourseRecommendation(
                     courseId = course.id,
-                    courseTitle = course.title,
+                    courseTitle = course.title.get(language), // Use user's language
                     subject = course.subject.name,
                     grade = course.grade,
-                    description = course.description,
+                    description = course.description.get(language), // Use user's language
                     relevanceReason = aiCourse.relevanceExplanation,
                     recommendedChapters = aiCourse.recommendedChapters.mapNotNull { aiChapter ->
                         // Find the actual chapter from the course
@@ -127,7 +131,7 @@ data class CourseSuggestionResponse(
                         chapter?.let { actualChapter ->
                             ChapterRecommendation(
                                 chapterId = actualChapter.id,
-                                chapterTitle = actualChapter.title,
+                                chapterTitle = actualChapter.title.get(language), // Use user's language
                                 chapterNumber = actualChapter.chapterNumber,
                                 relevanceReason = aiChapter.whyRelevant,
                                 keyTopics = aiChapter.keyTopics,

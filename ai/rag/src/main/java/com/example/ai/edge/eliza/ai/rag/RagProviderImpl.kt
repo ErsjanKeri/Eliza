@@ -17,6 +17,7 @@
 package com.example.ai.edge.eliza.ai.rag
 
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.ContentChunk
 import com.example.ai.edge.eliza.core.model.ContentChunkType
@@ -80,14 +81,14 @@ class ChapterRagProvider @Inject constructor(
         maxChunks: Int
     ): List<ContentChunk> {
         return if (context is ChatContext.ChapterReading) {
-            val chapter = courseRepository.getChapterById(context.chapterId).firstOrNull()
-            chapter?.let { 
+            // Use the localized content from context instead of going back to repository
+            context.markdownContent?.let { content ->
                 listOf(
                     ContentChunk(
                         id = "chapter_${context.chapterId}",
                         title = context.chapterTitle,
-                        content = chapter.markdownContent,
-                        source = "Chapter ${chapter.chapterNumber}",
+                        content = content,
+                        source = "Chapter ${context.chapterNumber}",
                         relevanceScore = 0.9f,
                         chunkType = ContentChunkType.CHAPTER_SECTION
                     )
@@ -142,7 +143,8 @@ class ChapterRagProvider @Inject constructor(
  * RAG provider for revision context.
  */
 class RevisionRagProvider @Inject constructor(
-    private val courseRepository: CourseRepository
+    private val courseRepository: CourseRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : RagProvider {
     
     override suspend fun getRelevantContent(
@@ -153,14 +155,15 @@ class RevisionRagProvider @Inject constructor(
         return if (context is ChatContext.Revision) {
             // Get content from completed chapters for revision
             val chunks = mutableListOf<ContentChunk>()
+            val userLanguage = userPreferencesRepository.getCurrentLanguage()
             context.completedChapterIds.take(maxChunks).forEach { chapterId ->
                 val chapter = courseRepository.getChapterById(chapterId).firstOrNull()
                 chapter?.let {
                     chunks.add(
                         ContentChunk(
                             id = "revision_$chapterId",
-                            title = chapter.title,
-                            content = chapter.markdownContent.take(300),
+                            title = chapter.title.get(userLanguage),
+                            content = chapter.markdownContent.get(userLanguage).take(300),
                             source = "Chapter ${chapter.chapterNumber}",
                             relevanceScore = 0.7f,
                             chunkType = ContentChunkType.CHAPTER_SECTION
@@ -297,14 +300,14 @@ class ExerciseRagProvider @Inject constructor(
         maxChunks: Int
     ): List<ContentChunk> {
         return if (context is ChatContext.ExerciseSolving) {
-            val chapter = courseRepository.getChapterById(context.chapterId).firstOrNull()
-            chapter?.let {
+            // Use the localized content from context instead of going back to repository
+            context.chapterContent?.let { content ->
                 listOf(
                     ContentChunk(
                         id = "exercise_${context.exerciseId}",
                         title = "Exercise Context",
-                        content = chapter.markdownContent,
-                        source = "Exercise from ${chapter.title}",
+                        content = content,
+                        source = "Exercise from ${context.chapterTitle}",
                         relevanceScore = 0.9f,
                         chunkType = ContentChunkType.PRACTICE_PROBLEM
                     )
@@ -440,6 +443,7 @@ class ExerciseRagProvider @Inject constructor(
  */
 class CourseSuggestionRagProvider @Inject constructor(
     private val courseRepository: CourseRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val systemInstructionProvider: SystemInstructionProvider
 ) : RagProvider {
     
@@ -452,24 +456,25 @@ class CourseSuggestionRagProvider @Inject constructor(
             try {
                 // Get all available courses for comprehensive course suggestions
                 val allCourses = courseRepository.getAllCourses().firstOrNull() ?: emptyList()
+                val userLanguage = userPreferencesRepository.getCurrentLanguage()
                 
                 // Create content chunks for each course with key information
                 allCourses.take(maxChunks).map { course ->
                     val courseOverview = buildString {
-                        appendLine("Course: ${course.title}")
+                        appendLine("Course: ${course.title.get(userLanguage)}")
                         appendLine("Subject: ${course.subject.name}")
                         appendLine("Grade: ${course.grade}")
-                        appendLine("Description: ${course.description}")
+                        appendLine("Description: ${course.description.get(userLanguage)}")
                         appendLine("Chapters (${course.totalChapters} total):")
                         course.chapters.forEach { chapter ->
-                            appendLine("- Chapter ${chapter.chapterNumber}: ${chapter.title}")
+                            appendLine("- Chapter ${chapter.chapterNumber}: ${chapter.title.get(userLanguage)}")
                         }
                         appendLine("Estimated completion: ${course.estimatedHours} hours")
                     }
                     
                     ContentChunk(
                         id = "course_${course.id}",
-                        title = course.title,
+                        title = course.title.get(userLanguage),
                         content = courseOverview,
                         source = "Course Overview",
                         relevanceScore = 0.8f, // High relevance for course discovery

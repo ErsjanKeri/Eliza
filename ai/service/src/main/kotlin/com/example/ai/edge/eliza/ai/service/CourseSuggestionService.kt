@@ -20,6 +20,7 @@ import android.util.Log
 import com.example.ai.edge.eliza.ai.modelmanager.LlmChatModelHelper
 import com.example.ai.edge.eliza.ai.rag.RagProviderFactory
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.Course
 import com.example.ai.edge.eliza.core.model.CourseSuggestionRequest
@@ -44,6 +45,7 @@ import kotlin.coroutines.resume
 @Singleton
 class CourseSuggestionService @Inject constructor(
     private val courseRepository: CourseRepository, // Reuse existing repository
+    private val userPreferencesRepository: UserPreferencesRepository, // For user language
     private val ragProviderFactory: RagProviderFactory // Proper Singleton-scoped RAG integration
 ) {
     
@@ -179,7 +181,8 @@ class CourseSuggestionService @Inject constructor(
             val aiSuggestionResponse = json.decodeFromString<CourseSuggestionResponse>(jsonString)
             
             // Convert to domain objects with actual course metadata
-            val courseRecommendations = aiSuggestionResponse.toCourseRecommendations(availableCourses)
+            val userLanguage = userPreferencesRepository.getCurrentLanguage()
+            val courseRecommendations = aiSuggestionResponse.toCourseRecommendations(availableCourses, userLanguage)
             
             // Calculate total estimated hours
             val totalEstimatedHours = courseRecommendations.sumOf { it.estimatedCompletionHours }
@@ -243,18 +246,21 @@ class CourseSuggestionService @Inject constructor(
     /**
      * Create fallback suggestions when AI parsing fails.
      */
-    private fun createFallbackSuggestions(
+    private suspend fun createFallbackSuggestions(
         request: CourseSuggestionRequest,
         availableCourses: List<Course>
     ): CourseSuggestionResult {
+        
+        // Get user language for localized content
+        val userLanguage = userPreferencesRepository.getCurrentLanguage()
         
         // Simple keyword matching for fallback
         val keywords = CourseSuggestionPromptTemplates.extractLearningKeywords(request.userQuery)
         
         val matchingCourses = availableCourses.filter { course ->
             keywords.any { keyword ->
-                course.title.contains(keyword, ignoreCase = true) ||
-                course.description.contains(keyword, ignoreCase = true) ||
+                course.title.get(userLanguage).contains(keyword, ignoreCase = true) ||
+                course.description.get(userLanguage).contains(keyword, ignoreCase = true) ||
                 course.subject.name.contains(keyword, ignoreCase = true)
             }
         }.take(request.maxRecommendations)
@@ -262,15 +268,15 @@ class CourseSuggestionService @Inject constructor(
         val fallbackRecommendations = matchingCourses.map { course ->
             com.example.ai.edge.eliza.core.model.CourseRecommendation(
                 courseId = course.id,
-                courseTitle = course.title,
+                courseTitle = course.title.get(userLanguage),
                 subject = course.subject.name,
                 grade = course.grade,
-                description = course.description,
+                description = course.description.get(userLanguage),
                 relevanceReason = "Matches keywords from your query: ${keywords.joinToString(", ")}",
                 recommendedChapters = course.chapters.take(3).map { chapter ->
                     com.example.ai.edge.eliza.core.model.ChapterRecommendation(
                         chapterId = chapter.id,
-                        chapterTitle = chapter.title,
+                        chapterTitle = chapter.title.get(userLanguage),
                         chapterNumber = chapter.chapterNumber,
                         relevanceReason = "Foundation chapter for this subject",
                         keyTopics = listOf("Basic concepts", "Fundamentals"),

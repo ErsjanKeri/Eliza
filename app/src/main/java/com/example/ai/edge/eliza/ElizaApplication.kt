@@ -17,21 +17,33 @@
 package com.example.ai.edge.eliza
 
 import android.app.Application
+import android.content.res.Configuration
 import android.util.Log
 import com.example.ai.edge.eliza.ai.rag.service.RagInitializationService
+import com.example.ai.edge.eliza.core.data.util.LocaleManager
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * Application class for Eliza AI Tutor app.
  * Required for Hilt dependency injection.
- * Initializes the RAG system on app startup.
+ * Initializes the RAG system and locale management on app startup.
  */
 @HiltAndroidApp
 class ElizaApplication : Application() {
     
     @Inject
     lateinit var ragInitializationService: RagInitializationService
+    
+    @Inject
+    lateinit var localeManager: LocaleManager
+    
+    // Application-level coroutine scope for async operations
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     companion object {
         private const val TAG = "ElizaApplication"
@@ -41,6 +53,9 @@ class ElizaApplication : Application() {
         super.onCreate()
         
         Log.d(TAG, "Eliza app starting...")
+        
+        // Note: Locale initialization is now handled in MainActivity.attachBaseContext()
+        // using LocaleHelper for proper timing. No need to initialize here.
         
         // Initialize the RAG system in background
         // This will index mock data and prepare embeddings for enhanced chat

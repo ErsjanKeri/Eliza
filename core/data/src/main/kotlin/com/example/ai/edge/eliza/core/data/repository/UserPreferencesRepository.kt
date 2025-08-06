@@ -16,6 +16,7 @@
 
 package com.example.ai.edge.eliza.core.data.repository
 
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import com.example.ai.edge.eliza.core.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
 
@@ -57,20 +58,20 @@ interface UserPreferencesRepository {
         learningGoals: List<String>? = null,
         preferredDifficulty: String? = null,
         studySchedule: String? = null,
-        language: String? = null
+        language: SupportedLanguage? = null
     )
     
     // Language-specific Operations
     /**
      * Get current app language setting.
-     * Returns "english" if not set.
+     * Returns SupportedLanguage.DEFAULT if not set.
      */
-    suspend fun getCurrentLanguage(): String
+    suspend fun getCurrentLanguage(): SupportedLanguage
     
     /**
      * Update only the language preference.
      */
-    suspend fun updateLanguage(language: String)
+    suspend fun updateLanguage(language: SupportedLanguage)
     
     // Learning Preferences Operations
     /**

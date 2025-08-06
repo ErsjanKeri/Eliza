@@ -20,10 +20,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 import com.example.ai.edge.eliza.core.data.repository.ProgressRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
 import com.example.ai.edge.eliza.core.designsystem.component.ChapterNodeData
 import com.example.ai.edge.eliza.core.model.Course
 import com.example.ai.edge.eliza.core.model.Chapter
 import com.example.ai.edge.eliza.core.model.ChapterProgress
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +42,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CourseProgressViewModel @Inject constructor(
     private val courseRepository: CourseRepository,
-    private val progressRepository: ProgressRepository
+    private val progressRepository: ProgressRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CourseProgressUiState())
@@ -77,6 +80,7 @@ class CourseProgressViewModel @Inject constructor(
                 }
 
                 // Transform data into ChapterNodeData for the UI
+                val userLanguage = userPreferencesRepository.getCurrentLanguage()
                 val chapterNodes = chapters.map { chapter ->
                     val isCompleted = chapterProgressList.any { 
                         it.chapterId == chapter.id && it.isCompleted 
@@ -84,7 +88,7 @@ class CourseProgressViewModel @Inject constructor(
                     
                     ChapterNodeData(
                         id = chapter.id,
-                        title = chapter.title,
+                        title = chapter.title.get(userLanguage),
                         isCompleted = isCompleted
                     )
                 }
@@ -96,6 +100,9 @@ class CourseProgressViewModel @Inject constructor(
                     chapters = chapters,
                     chapterProgress = chapterProgressList,
                     chapterNodes = chapterNodes,
+                    currentLanguage = userLanguage,
+                    courseTitle = course.title.get(userLanguage),
+                    courseDescription = course.description.get(userLanguage),
                     error = null
                 )
                 
@@ -131,5 +138,9 @@ data class CourseProgressUiState(
     val chapterProgress: List<ChapterProgress> = emptyList(),
     val chapterNodes: List<ChapterNodeData> = emptyList(),
     val error: String? = null,
-    val isHeaderExpanded: Boolean = false // Collapsed by default, shows only progress bar
+    val isHeaderExpanded: Boolean = false, // Collapsed by default, shows only progress bar
+    val currentLanguage: SupportedLanguage = SupportedLanguage.DEFAULT,
+    // Localized content for UI display
+    val courseTitle: String = "",
+    val courseDescription: String = ""
 ) 

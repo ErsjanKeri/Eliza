@@ -4,12 +4,14 @@ import android.util.Log
 import com.example.ai.edge.eliza.ai.modelmanager.LlmChatModelHelper
 import com.example.ai.edge.eliza.ai.rag.RagProviderFactory
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.Exercise
 import com.example.ai.edge.eliza.core.model.ExerciseGenerationRequest
 import com.example.ai.edge.eliza.core.model.GenerationResult
 import com.example.ai.edge.eliza.core.model.Model
 import com.example.ai.edge.eliza.core.model.RelativeDifficulty
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -26,6 +28,7 @@ import kotlin.coroutines.resume
 @Singleton
 class ExerciseGenerationService @Inject constructor(
     private val courseRepository: CourseRepository, // Reuse existing repository
+    private val userPreferencesRepository: UserPreferencesRepository, // For user language
     private val responseParser: ExerciseResponseParser,
     private val ragProviderFactory: RagProviderFactory // Proper Singleton-scoped RAG integration
 ) {
@@ -49,7 +52,8 @@ class ExerciseGenerationService @Inject constructor(
         
         try {
             // Step 1: Extract concept and get RAG context
-            val conceptFocus = ExercisePromptTemplates.extractConceptFocus(originalExercise)
+            val userLanguage = userPreferencesRepository.getCurrentLanguage()
+            val conceptFocus = ExercisePromptTemplates.extractConceptFocus(originalExercise, userLanguage)
             
             // Step 2: Get chapter and course data for proper ChatContext
             val chapter = courseRepository.getChapterById(originalExercise.chapterId).firstOrNull() 
@@ -62,6 +66,7 @@ class ExerciseGenerationService @Inject constructor(
                 course = course,
                 chapter = chapter,
                 exercise = originalExercise,
+                language = userLanguage,
                 userAnswer = "Generating practice question",
                 isTestQuestion = false
             )
@@ -75,7 +80,7 @@ class ExerciseGenerationService @Inject constructor(
             )
             
             // Step 5: Generate prompt
-            val prompt = ExercisePromptTemplates.createGenerationPrompt(request)
+            val prompt = ExercisePromptTemplates.createGenerationPrompt(request, userLanguage)
             
             Log.d(TAG, "Generated prompt length: ${prompt.length}")
             
@@ -133,7 +138,7 @@ class ExerciseGenerationService @Inject constructor(
             Log.d(TAG, "RAG-enhanced AI response received, length: ${aiResponse.length}")
             
             // Step 8: Process the AI response
-            val result = processGenerationResponse(aiResponse, request)
+            val result = processGenerationResponse(aiResponse, request, userLanguage)
             when (result) {
                 is GenerationResult.Success -> {
                     // Save to database using existing repository
@@ -166,7 +171,8 @@ class ExerciseGenerationService @Inject constructor(
      */
     private suspend fun processGenerationResponse(
         aiResponse: String,
-        request: ExerciseGenerationRequest
+        request: ExerciseGenerationRequest,
+        userLanguage: SupportedLanguage
     ): GenerationResult {
         
         return try {
@@ -177,14 +183,14 @@ class ExerciseGenerationService @Inject constructor(
                 ?: return GenerationResult.Error("Failed to parse AI response - invalid JSON format")
             
             // Additional quality validation
-            if (!isQualityQuestion(parsedResponse.questionText, request.originalExercise.questionText)) {
+            if (!isQualityQuestion(parsedResponse.questionText, request.originalExercise.questionText.get(userLanguage))) {
                 return GenerationResult.Error("Generated question quality too low")
             }
             
             // Convert to Trial using existing data model
             val trial = parsedResponse.toTrial(request.originalExercise.id)
             
-            Log.d(TAG, "Successfully created trial: ${trial.questionText.take(50)}...")
+            Log.d(TAG, "Successfully created trial: ${trial.questionText.get(userLanguage).take(50)}...")
             GenerationResult.Success(trial)
             
         } catch (e: Exception) {
@@ -194,11 +200,10 @@ class ExerciseGenerationService @Inject constructor(
     }
     
     /**
-     * Validate if the generated question meets quality standards.
+     * Validate if the generated question meets simple quality standards.
      */
     private fun isQualityQuestion(generated: String, original: String): Boolean {
         // Basic quality checks
-        if (generated.length < 20) return false
         if (generated.equals(original, ignoreCase = true)) return false
         
         // Check for common AI hallucination patterns

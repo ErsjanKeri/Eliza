@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 import com.example.ai.edge.eliza.core.data.repository.ProgressRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +42,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val courseRepository: CourseRepository,
     private val progressRepository: ProgressRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
     // Selected tab state
@@ -51,7 +53,8 @@ class HomeViewModel @Inject constructor(
     val courseFeedState: StateFlow<CourseFeedUiState> = combine(
         courseRepository.getAllCourses(),
         progressRepository.getAllUserProgress(),
-    ) { courses, progressList ->
+        userPreferencesRepository.getUserPreferences(),
+    ) { courses, progressList, userPreferences ->
         try {
             val progressMap = progressList.associateBy { it.courseId }
             
@@ -72,7 +75,7 @@ class HomeViewModel @Inject constructor(
                 .filter { course -> 
                     progressMap[course.id]?.completedChapters ?: 0 == 0 
                 }
-                .sortedBy { it.title }
+                .sortedBy { it.title.get(userPreferences.language) }
 
             CourseFeedUiState.Success(
                 continuingCourses = continuingCourses,
@@ -150,11 +153,13 @@ class HomeViewModel @Inject constructor(
         courseFeedState,
         progressState,
         selectedTab,
-    ) { feedState, progressState, tab ->
+        userPreferencesRepository.getUserPreferences(),
+    ) { feedState, progressState, tab, userPreferences ->
         HomeScreenUiState(
             courseFeedState = feedState,
             progressState = progressState,
             selectedTab = tab,
+            currentLanguage = userPreferences.language,
             isSyncing = false, // TODO: Add sync manager integration
         )
     }

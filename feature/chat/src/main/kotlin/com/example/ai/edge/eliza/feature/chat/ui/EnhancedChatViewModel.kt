@@ -24,7 +24,9 @@ import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
 import com.example.ai.edge.eliza.core.model.ChatContext
 import com.example.ai.edge.eliza.core.model.ChatSession
 import com.example.ai.edge.eliza.core.model.ChatType
+import com.example.ai.edge.eliza.core.model.LocalizedContent
 import com.example.ai.edge.eliza.core.model.Subject
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import com.example.ai.edge.eliza.feature.chat.ui.sidebar.SidebarUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,6 +64,9 @@ class EnhancedChatViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             try {
+                // Get user's language preference
+                val userLanguage = userPreferencesRepository.getCurrentLanguage()
+                
                 // Load course data
                 val course = courseRepository.getCourseById(courseId).firstOrNull()
                 if (course == null) {
@@ -82,24 +87,18 @@ class EnhancedChatViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Create proper ChatContext from real data
-                val chatContext = ChatContext.ChapterReading(
-                    courseId = course.id,
-                    courseTitle = course.title,
-                    courseSubject = course.subject.name,
-                    courseGrade = course.grade,
-                    chapterId = chapter.id,
-                    chapterTitle = chapter.title,
-                    chapterNumber = chapter.chapterNumber,
-                    markdownContent = chapter.markdownContent,
-                    totalChapters = course.totalChapters,
+                // Create proper ChatContext from real data using factory method
+                val chatContext = ChatContext.createChapterReading(
+                    course = course,
+                    chapter = chapter,
+                    language = userLanguage,
                     readingProgress = readingProgress
                 )
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     chatContext = chatContext,
-                    title = "Chat: ${chapter.title}",
+                    title = "Chat: ${chapter.title.get(userLanguage)}",
                     course = course,
                     chapter = chapter
                 )
@@ -108,8 +107,8 @@ class EnhancedChatViewModel @Inject constructor(
                 _sidebarState.value = _sidebarState.value.copy(
                     currentCourseId = course.id,
                     currentChapterId = chapter.id,
-                    currentCourseName = course.title,
-                    currentChapterName = chapter.title
+                    currentCourseName = course.title.get(userLanguage),
+                    currentChapterName = chapter.title.get(userLanguage)
                 )
 
                 // Load chat sessions for the sidebar
@@ -138,6 +137,9 @@ class EnhancedChatViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             try {
+                // Get user's language preference
+                val userLanguage = userPreferencesRepository.getCurrentLanguage()
+                
                 // Load chapter data first to get the real courseId if needed
                 val chapter = courseRepository.getChapterById(chapterId).firstOrNull()
                 if (chapter == null) {
@@ -177,6 +179,7 @@ class EnhancedChatViewModel @Inject constructor(
                     course = course,
                     chapter = chapter,
                     exercise = exercise,
+                    language = userLanguage,
                     userAnswer = userAnswer,
                     userAnswerIndex = null, // Let factory resolve this from userAnswer
                     isTestQuestion = isTestQuestion
@@ -215,14 +218,14 @@ class EnhancedChatViewModel @Inject constructor(
                         ""
                     }
                                             
-                    "$label) $option$annotationText"
+                    "$label) ${option.get(userLanguage)}$annotationText"
                 }.joinToString("\n")
 
                 // Now use the clean string template
                 val exerciseContext = """
-Exercise #$exerciseNumber Help: ${chapter.title}
+Exercise #$exerciseNumber Help: ${chapter.title.get(userLanguage)}
 
-Question: ${exercise.questionText}
+Question: ${exercise.questionText.get(userLanguage)}
 $optionsText
 
 I'm here to help you understand this problem better. What would you like to know?

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Branding -->
+    <string name="app_name">Eliza</string>
+    
+    <!-- Navigation -->
+    <string name="home">Startseite</string>
+    <string name="course_suggestions">Vorschläge</string>
+    <string name="settings">Einstellungen</string>
+    
+    <!-- Common Actions -->
+    <string name="continue_action">Fortfahren</string>
+    <string name="start">Starten</string>
+    <string name="back">Zurück</string>
+    <string name="next">Weiter</string>
+    <string name="submit">Abschicken</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="save">Speichern</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="delete">Löschen</string>
+    <string name="close">Schließen</string>
+    <string name="ok">OK</string>
+    <string name="try_again">Nochmals versuchen</string>
+    
+    <!-- Loading and Status -->
+    <string name="loading">Lädt…</string>
+    <string name="loading_courses">Lade Kurse…</string>
+    <string name="loading_chapter">Lade Kapitel…</string>
+    <string name="loading_results">Lade Ergebnisse…</string>
+    <string name="not_connected">Sie sind nicht mit dem Internet verbunden</string>
+    
+    <!-- Home Screen -->
+    <string name="welcome_back">Willkommen zurück!</string>
+    
+    <!-- Course Related -->
+    <string name="progress">Fortschritt</string>
+    <string name="about_this_course">Über diesen Kurs</string>
+    <string name="progress_format">Fortschritt: %1$d von %2$d Kapiteln abgeschlossen (%3$d%%)</string>
+    <string name="error_loading_course">Fehler beim Laden des Kurses</string>
+    <string name="no_chapters_available">Keine Kapitel für diesen Kurs verfügbar</string>
+    <string name="estimated_time">Geschätzte Zeit</string>
+    <string name="available_offline">Offline verfügbar</string>
+    <string name="requires_internet">Benötigt Internet</string>
+    
+    <!-- Chapter Related -->
+    <string name="chapter_complete">Kapitel abgeschlossen</string>
+    <string name="error_loading_chapter">Fehler beim Laden des Kapitels</string>
+    <string name="no_chapter_content_available">Kein Kapitelinhalt verfügbar</string>
+    <string name="attempts_format">Versuche: %1$d</string>
+    
+    <!-- Test Related -->
+    <string name="chapter_test">Kapiteltest</string>
+    <string name="test_results">Testergebnisse</string>
+    <string name="question_results">Fragenergebnisse</string>
+    <string name="question_number_format">Frage %1$d</string>
+    <string name="your_answer">Ihre Antwort:</string>
+    <string name="correct_answer">Richtige Antwort:</string>
+    <string name="get_help_with_question">Hilfe zu dieser Frage erhalten:</string>
+    <string name="starting_test">Starte Test…</string>
+    <string name="test_error">Testfehler</string>
+    
+    <!-- Exercise Generation -->
+    <string name="generate_new_practice_question">Neue Übungsfrage generieren</string>
+    <string name="original_question">Ursprüngliche Frage:</string>
+    <string name="select_difficulty">Schwierigkeit auswählen:</string>
+    <string name="concept_focus_format">Konzeptfokus: %1$s…</string>
+    <string name="generate_another">Weitere generieren</string>
+    <string name="practice_this_question">Diese Frage üben</string>
+    <string name="retry_generation_error">Bitte versuchen Sie es mit einem anderen Schwierigkeitsgrad erneut oder überprüfen Sie Ihre Internetverbindung.</string>
+    <string name="generated_with_model_format">Generiert mit Gemma 3n (%1$s Schwierigkeit)</string>
+    <string name="question_label">Frage:</string>
+    
+    <!-- Practice Screen -->
+    <string name="practice_question">Übungsfrage</string>
+    <string name="ai_generated_practice_question">KI-generierte Übungsfrage</string>
+    <string name="difficulty_format">Schwierigkeit: %1$s</string>
+    <string name="ai_explanation">KI-Erklärung:</string>
+    
+    <!-- Settings -->
+    <string name="language_section">Sprache</string>
+    <string name="learning_profile_section">Lernprofil</string>
+    <string name="study_preferences_section">Lernpräferenzen</string>
+    <string name="learning_goals_section">Lernziele</string>
+    <string name="experience_level">Erfahrungslevel</string>
+    <string name="preferred_subjects">Bevorzugte Fächer</string>
+    <string name="available_time_hours_per_week">Verfügbare Zeit (Stunden pro Woche)</string>
+    <string name="preferred_difficulty">Bevorzugte Schwierigkeit</string>
+    <string name="preferred_study_time">Bevorzugte Lernzeit</string>
+    <string name="hours_per_week">Stunden pro Woche</string>
+    <string name="app_language">App-Sprache</string>
+    <string name="reset_settings">Einstellungen zurücksetzen</string>
+    <string name="reset_settings_description">Dies wird alle Ihre Einstellungen auf die Standardwerte zurücksetzen.</string>
+    
+    <!-- Chat Related -->
+    <string name="eliza_name">Eliza</string>
+    <string name="no_models_available">Keine Modelle für diese Aufgabe verfügbar</string>
+    <string name="error_loading_exercise">Fehler beim Laden der Übung</string>
+    
+    <!-- Memory Warning Dialog -->
+    <string name="device_information">Geräteinformationen:</string>
+    <string name="potential_issues">Potenzielle Probleme:</string>
+    <string name="memory_warning_content_description">Speicher-Warnung</string>
+    <string name="high_memory_usage_detected">Hohe Speichernutzung erkannt</string>
+    <string name="memory_warning_title">Speicher-Warnung</string>
+    <string name="high_memory_usage">Hohe Speichernutzung</string>
+    <string name="device_label">Gerät</string>
+    <string name="total_ram_label">Gesamt-RAM</string>
+    <string name="available_ram_label">Verfügbarer RAM</string>
+    <string name="model_requires_label">Modell benötigt</string>
+    <string name="memory_usage_label">Speichernutzung</string>
+    <string name="cancel_button">Abbrechen</string>
+    <string name="use_2b_model">2B-Modell verwenden</string>
+    <string name="risk_it">Risiko eingehen</string>
+    <string name="continue_button">Weiter</string>
+    <string name="proceed_button">Fortfahren</string>
+    <string name="memory_usage_warning">Das Laden von %1$s wird %2$.0f%% des verfügbaren Speichers Ihres Geräts verbrauchen.\n\n%3$s</string>
+    <string name="memory_crash_warning">Dies kann zu einem Absturz der App führen.</string>
+    <string name="memory_stability_warning">Dies kann die App-Stabilität beeinträchtigen.</string>
+    <string name="memory_close_apps_suggestion">Erwägen Sie, zuerst andere Apps zu schließen.</string>
+    <string name="error_loading_course_suggestions">Fehler beim Laden der Kursvorschläge</string>
+    <string name="recommended_courses">Empfohlene Kurse</string>
+    <string name="chat_sessions">Chat-Sitzungen</string>
+    <string name="open_chapter_to_view_sessions">Öffnen Sie ein Kapitel, um verwandte Chat-Sitzungen anzuzeigen</string>
+    
+    <!-- Model Management -->
+    <string name="eliza_ready">Eliza ist bereit!</string>
+    <string name="eliza_cannot_run">Eliza kann auf diesem Gerät nicht ausgeführt werden :(</string>
+    <string name="eliza_getting_ready">Eliza wird vorbereitet…</string>
+    <string name="feel_free_to_switch_apps">Sie können gerne Apps wechseln oder das Gerät sperren.\nEliza wird die Vorbereitung im Hintergrund fortsetzen.</string>
+    
+    <!-- Video Generation -->
+    <string name="video_explanation">Video-Erklärung</string>
+    <string name="video_generation_failed">Video-Generierung fehlgeschlagen</string>
+    <string name="attempt_format">Versuch %1$d von %2$d</string>
+    <string name="duration_format">Dauer: %1$s</string>
+    <string name="size_format">Größe: %1$s</string>
+    
+    <!-- RAG (Retrieval Augmented Generation) -->
+    <string name="rag_enhanced">RAG-verstärkt</string>
+    <string name="enhanced_rag">Verbessertes RAG</string>
+    <string name="rag_description">Aktivieren Sie kontextbewusste Antworten mit Retrieval Augmented Generation</string>
+    <string name="not_initialized">Nicht initialisiert</string>
+    <string name="initializing">Initialisiere…</string>
+    <string name="ready">Bereit</string>
+    <string name="initialization_error">Initialisierungsfehler</string>
+    <string name="rag_settings">RAG-Einstellungen</string>
+    <string name="rag_status">RAG-Status</string>
+
+    <!-- Home Screen Tabs -->
+    <string name="continue_learning">Weiterlernen</string>
+    <string name="start_new_course">Neuen Kurs starten</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="error_icon_description">Fehler</string>
+    <string name="continue_button_description">Fortfahren</string>
+    <string name="back_button_description">Zurück</string>
+    
+
+
+    <!-- Animation Labels (for developers/testing) -->
+    <string name="progress_animation_label">progress_animation</string>
+    <string name="score_animation_label">score</string>
+    <string name="arrow_rotation_label">arrow_rotation</string>
+    <string name="progress_label">progress</string>
+</resources>

@@ -53,10 +53,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaButton
 import com.example.ai.edge.eliza.core.designsystem.component.ElizaMarkdownRenderer
+import com.example.ai.edge.eliza.core.common.R
 
 /**
  * Chapter screen that displays markdown content and provides test functionality.
@@ -84,7 +86,7 @@ fun ChapterScreen(
         modifier = modifier,
         topBar = {
             ChapterTopAppBar(
-                title = uiState.chapter?.title ?: "Chapter",
+                title = uiState.chapterTitle.ifEmpty { "Chapter" },
                 onBackClick = onBackClick,
                 onChatClick = { 
                     // Navigate to chapter-specific chat with proper context
@@ -119,6 +121,7 @@ fun ChapterScreen(
                     // Success state - show full-screen content only (no more split view)
                     FullScreenContent(
                         chapter = uiState.chapter!!,
+                        chapterContent = uiState.chapterContent,
                         onImageClick = viewModel::onImageClick,
                         onTakeTestClick = { action ->
                             when (action) {
@@ -194,6 +197,7 @@ private fun ChapterTopAppBar(
 @Composable
 private fun FullScreenContent(
     chapter: com.example.ai.edge.eliza.core.model.Chapter,
+    chapterContent: String,
     onImageClick: (String) -> Unit,
     onTakeTestClick: (TestButtonAction) -> Unit,
     modifier: Modifier = Modifier
@@ -206,7 +210,7 @@ private fun FullScreenContent(
             .verticalScroll(scrollState)
     ) {
         ElizaMarkdownRenderer(
-            content = chapter.markdownContent,
+            content = chapterContent,
             onImageClick = onImageClick,
             modifier = Modifier.fillMaxWidth()
         )
@@ -271,7 +275,7 @@ private fun ErrorState(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Error loading chapter",
+                text = stringResource(R.string.error_loading_chapter),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.error
             )
@@ -308,7 +312,7 @@ private fun EmptyState(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "No chapter content available",
+            text = stringResource(R.string.no_chapter_content_available),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -363,7 +367,7 @@ private fun ChapterTestButton(
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Chapter Complete",
+                    text = stringResource(R.string.chapter_complete),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )

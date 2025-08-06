@@ -122,22 +122,25 @@ sealed class ChatContext {
     companion object {
         /**
          * Create a ChapterReading context from domain models.
+         * Uses the specified language for RAG processing and AI interactions.
+         * IMPORTANT: Language should be the user's preferred language, not hardcoded English.
          */
         fun createChapterReading(
             course: Course,
             chapter: Chapter,
+            language: SupportedLanguage,
             completedChapters: Int = 0,
             readingProgress: Float = 0f
         ): ChapterReading {
             return ChapterReading(
                 courseId = course.id,
-                courseTitle = course.title,
+                courseTitle = course.title.get(language), // Use user's language for RAG
                 courseSubject = course.subject.name,
                 courseGrade = course.grade,
                 chapterId = chapter.id,
-                chapterTitle = chapter.title,
+                chapterTitle = chapter.title.get(language), // Use user's language for RAG
                 chapterNumber = chapter.chapterNumber,
-                markdownContent = chapter.markdownContent,
+                markdownContent = chapter.markdownContent.get(language), // Use user's language for RAG
                 totalChapters = course.totalChapters,
                 completedChapters = completedChapters,
                 readingProgress = readingProgress
@@ -146,36 +149,42 @@ sealed class ChatContext {
         
         /**
          * Create an ExerciseSolving context from domain models.
+         * Uses the specified language for RAG processing and AI interactions.
+         * IMPORTANT: Language should be the user's preferred language, not hardcoded English.
          */
         fun createExerciseSolving(
             course: Course,
             chapter: Chapter,
             exercise: Exercise,
+            language: SupportedLanguage,
             userAnswer: String? = null,
             userAnswerIndex: Int? = null,
             isTestQuestion: Boolean = false,
             attempts: Int = 0,
             previousAttempts: List<String> = emptyList()
         ): ExerciseSolving {
+            // Convert options to user's language for RAG processing
+            val localizedOptions = exercise.options.map { it.get(language) }
+            
             // If userAnswerIndex is provided, use that; otherwise try to find it from userAnswer
             val resolvedUserAnswerIndex = userAnswerIndex ?: userAnswer?.let { answer ->
-                exercise.options.indexOfFirst { it == answer }.takeIf { it >= 0 }
+                localizedOptions.indexOfFirst { it == answer }.takeIf { it >= 0 }
             }
             
             return ExerciseSolving(
                 exerciseId = exercise.id,
                 exerciseNumber = chapter.exercises.indexOfFirst { it.id == exercise.id } + 1,
-                questionText = exercise.questionText,
-                options = exercise.options,
+                questionText = exercise.questionText.get(language), // Use user's language for RAG
+                options = localizedOptions, // Use user's language for RAG
                 userAnswer = userAnswer,
-                correctAnswer = exercise.options.getOrNull(exercise.correctAnswerIndex),
+                correctAnswer = localizedOptions.getOrNull(exercise.correctAnswerIndex),
                 userAnswerIndex = resolvedUserAnswerIndex,
                 correctAnswerIndex = exercise.correctAnswerIndex,
                 chapterId = chapter.id,
-                chapterTitle = chapter.title,
-                chapterContent = chapter.markdownContent,
+                chapterTitle = chapter.title.get(language), // Use user's language for RAG
+                chapterContent = chapter.markdownContent.get(language), // Use user's language for RAG
                 courseId = course.id,
-                courseTitle = course.title,
+                courseTitle = course.title.get(language), // Use user's language for RAG
                 courseSubject = course.subject.name,
                 difficulty = exercise.difficulty.name,
                 attempts = attempts,

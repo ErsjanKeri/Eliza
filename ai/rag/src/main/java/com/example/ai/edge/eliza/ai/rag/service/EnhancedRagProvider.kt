@@ -394,14 +394,14 @@ class EnhancedRagProvider @Inject constructor(
     private suspend fun getBasicContent(context: ChatContext, maxChunks: Int): List<ContentChunk> {
         return when (context) {
             is ChatContext.ChapterReading -> {
-                val chapter = courseRepository.getChapterById(context.chapterId).firstOrNull()
-                chapter?.let { 
+                // Use the localized content from context instead of going back to repository
+                context.markdownContent?.let { content ->
                     listOf(
                         ContentChunk(
                             id = "basic_${context.chapterId}",
                             title = context.chapterTitle,
-                            content = chapter.markdownContent.take(MAX_CONTEXT_LENGTH),
-                            source = "Chapter ${chapter.chapterNumber}",
+                            content = content.take(MAX_CONTEXT_LENGTH),
+                            source = "Chapter ${context.chapterNumber}",
                             relevanceScore = 0.8f,
                             chunkType = ContentChunkType.CHAPTER_SECTION
                         )

@@ -18,6 +18,7 @@ package com.example.ai.edge.eliza.feature.home
 
 import com.example.ai.edge.eliza.core.model.Course
 import com.example.ai.edge.eliza.core.model.UserProgress
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 
 /**
  * A sealed hierarchy describing the course feed state for the home screen.
@@ -75,6 +76,7 @@ data class HomeScreenUiState(
     val progressState: ProgressUiState = ProgressUiState.Loading,
     val isSyncing: Boolean = false,
     val selectedTab: HomeTab = HomeTab.CONTINUE_LEARNING,
+    val currentLanguage: SupportedLanguage = SupportedLanguage.DEFAULT,
 ) {
     /**
      * True if any data is currently loading.
@@ -94,9 +96,9 @@ data class HomeScreenUiState(
 /**
  * Tabs for the home screen interface.
  */
-enum class HomeTab(val displayName: String) {
-    CONTINUE_LEARNING("Continue Learning"),
-    START_NEW_COURSE("Start New Course")
+enum class HomeTab {
+    CONTINUE_LEARNING,
+    START_NEW_COURSE
 }
 
 /**

@@ -49,6 +49,7 @@ import com.example.ai.edge.eliza.core.designsystem.theme.LocalTestColors
 import com.example.ai.edge.eliza.core.designsystem.theme.Green40
 import com.example.ai.edge.eliza.core.designsystem.theme.Red40
 import com.example.ai.edge.eliza.core.model.Trial
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 
 /**
  * Screen for practicing with AI-generated trial questions.
@@ -57,6 +58,7 @@ import com.example.ai.edge.eliza.core.model.Trial
 @Composable
 fun TrialPracticeScreen(
     trial: Trial,
+    userLanguage: SupportedLanguage,
     onAnswerSubmitted: (Int, Boolean) -> Unit,
     onGenerateAnother: () -> Unit,
     onBackToResults: () -> Unit,
@@ -91,6 +93,7 @@ fun TrialPracticeScreen(
                     trial = trial,
                     selectedAnswer = selectedAnswer,
                     isAnswered = isAnswered,
+                    userLanguage = userLanguage,
                     onAnswerSelected = { answerIndex ->
                         if (!isAnswered) {
                             selectedAnswer = answerIndex
@@ -115,6 +118,7 @@ fun TrialPracticeScreen(
                         trial = trial,
                         userAnswer = selectedAnswer!!,
                         isCorrect = isCorrect,
+                        userLanguage = userLanguage,
                         onGenerateAnother = onGenerateAnother,
                         onTryAgain = {
                             selectedAnswer = null
@@ -213,6 +217,7 @@ private fun QuestionContent(
     trial: Trial,
     selectedAnswer: Int?,
     isAnswered: Boolean,
+    userLanguage: SupportedLanguage,
     onAnswerSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -228,7 +233,7 @@ private fun QuestionContent(
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Text(
-                text = trial.questionText,
+                text = trial.questionText.get(userLanguage),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Medium
                 ),
@@ -239,7 +244,7 @@ private fun QuestionContent(
         // Answer options
         trial.options.forEachIndexed { index, option ->
             AnswerOption(
-                optionText = option,
+                optionText = option.get(userLanguage),
                 optionLetter = ('A' + index).toString(),
                 isSelected = selectedAnswer == index,
                 isCorrect = isAnswered && index == trial.correctAnswerIndex,
@@ -367,6 +372,7 @@ private fun ResultSection(
     trial: Trial,
     userAnswer: Int,
     isCorrect: Boolean,
+    userLanguage: SupportedLanguage,
     onGenerateAnother: () -> Unit,
     onTryAgain: () -> Unit,
     modifier: Modifier = Modifier
@@ -392,7 +398,7 @@ private fun ResultSection(
                     )
                 )
                 Text(
-                    text = trial.explanation,
+                    text = trial.explanation.get(userLanguage),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }

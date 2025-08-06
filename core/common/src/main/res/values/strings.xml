@@ -33,15 +33,12 @@
     <string name="welcome_back">Welcome back!</string>
     
     <!-- Course Related -->
-    <string name="course_details">Course Details</string>
     <string name="progress">Progress</string>
     <string name="about_this_course">About this course</string>
     <string name="progress_format">Progress: %1$d of %2$d chapters completed (%3$d%%)</string>
     <string name="error_loading_course">Error loading course</string>
     <string name="no_chapters_available">No chapters available for this course</string>
     <string name="estimated_time">Est. Time</string>
-    <string name="studied">Studied</string>
-    <string name="chapters">Chapters</string>
     <string name="available_offline">Available offline</string>
     <string name="requires_internet">Requires internet</string>
     
@@ -80,6 +77,10 @@
     <string name="ai_explanation">AI Explanation:</string>
     
     <!-- Settings -->
+    <string name="language_section">Language</string>
+    <string name="learning_profile_section">Learning Profile</string>
+    <string name="study_preferences_section">Study Preferences</string>
+    <string name="learning_goals_section">Learning Goals</string>
     <string name="experience_level">Experience Level</string>
     <string name="preferred_subjects">Preferred Subjects</string>
     <string name="available_time_hours_per_week">Available Time (hours per week)</string>
@@ -94,6 +95,28 @@
     <string name="eliza_name">Eliza</string>
     <string name="no_models_available">No models available for this task</string>
     <string name="error_loading_exercise">Error loading exercise</string>
+    
+    <!-- Memory Warning Dialog -->
+    <string name="device_information">Device Information:</string>
+    <string name="potential_issues">Potential Issues:</string>
+    <string name="memory_warning_content_description">Memory Warning</string>
+    <string name="high_memory_usage_detected">High Memory Usage Detected</string>
+    <string name="memory_warning_title">Memory Warning</string>
+    <string name="high_memory_usage">High Memory Usage</string>
+    <string name="device_label">Device</string>
+    <string name="total_ram_label">Total RAM</string>
+    <string name="available_ram_label">Available RAM</string>
+    <string name="model_requires_label">Model requires</string>
+    <string name="memory_usage_label">Memory usage</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="use_2b_model">Use 2B Model</string>
+    <string name="risk_it">Risk It</string>
+    <string name="continue_button">Continue</string>
+    <string name="proceed_button">Proceed</string>
+    <string name="memory_usage_warning">Loading %1$s will use %2$.0f%% of your device\'s available memory.\n\n%3$s</string>
+    <string name="memory_crash_warning">This may cause the app to crash.</string>
+    <string name="memory_stability_warning">This may affect app stability.</string>
+    <string name="memory_close_apps_suggestion">Consider closing other apps first.</string>
     <string name="error_loading_course_suggestions">Error loading course suggestions</string>
     <string name="recommended_courses">Recommended Courses</string>
     <string name="chat_sessions">Chat Sessions</string>
@@ -122,23 +145,18 @@
     <string name="initialization_error">Initialization error</string>
     <string name="rag_settings">RAG Settings</string>
     <string name="rag_status">RAG Status</string>
-    
-    <!-- Memory Warning -->
-    <string name="device_information">Device Information</string>
-    <string name="device_label">Device</string>
-    <string name="total_ram_label">Total RAM</string>
-    <string name="available_ram_label">Available RAM</string>
-    <string name="model_requires_label">Model requires</string>
-    <string name="memory_usage_label">Memory usage</string>
-    <string name="warnings">Warnings:</string>
-    <string name="potential_issues">Potential Issues:</string>
-    <string name="memory_warning_format">Loading %1$s will use %2$.0f%% of your device\'s available memory.\n\nThis may cause performance issues or app crashes. Consider:</string>
+
+    <!-- Home Screen Tabs -->
+    <string name="continue_learning">Continue Learning</string>
+    <string name="start_new_course">Start New Course</string>
     
     <!-- Content Descriptions (Accessibility) -->
     <string name="error_icon_description">Error</string>
     <string name="continue_button_description">Continue</string>
     <string name="back_button_description">Back</string>
     
+
+
     <!-- Animation Labels (for developers/testing) -->
     <string name="progress_animation_label">progress_animation</string>
     <string name="score_animation_label">score</string>

@@ -22,6 +22,7 @@ import com.example.ai.edge.eliza.ai.rag.data.ContentChunkEntity
 import com.example.ai.edge.eliza.ai.rag.data.VectorIndexMetadata
 import com.example.ai.edge.eliza.ai.rag.data.VectorIndexMetadataDao
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
@@ -35,6 +36,7 @@ import javax.inject.Singleton
 @Singleton
 class RagIndexingService @Inject constructor(
     private val courseRepository: CourseRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val textEmbeddingService: TextEmbeddingService,
     private val contentChunkingService: ContentChunkingService,
     private val contentChunkDao: ContentChunkDao,
@@ -77,11 +79,12 @@ class RagIndexingService @Inject constructor(
             Log.d(TAG, "Chunking chapter content: ${chapter.title}")
             
             // Chunk the chapter content
+            val userLanguage = userPreferencesRepository.getCurrentLanguage()
             val chunks = contentChunkingService.chunkChapterContent(
                 chapterId = chapterId,
                 courseId = chapter.courseId,
-                chapterTitle = chapter.title,
-                markdownContent = chapter.markdownContent,
+                chapterTitle = chapter.title.get(userLanguage),
+                markdownContent = chapter.markdownContent.get(userLanguage),
                 chapterNumber = chapter.chapterNumber
             )
             
@@ -228,12 +231,13 @@ class RagIndexingService @Inject constructor(
             }
             
             // Create comprehensive course description for embedding
+            val userLanguage = userPreferencesRepository.getCurrentLanguage()
             val courseContent = buildString {
-                appendLine("Course: ${course.title}")
+                appendLine("Course: ${course.title.get(userLanguage)}")
                 appendLine("Course ID: ${course.id}")
                 appendLine("Subject: ${course.subject.name}")
                 appendLine("Grade Level: ${course.grade}")
-                appendLine("Description: ${course.description}")
+                appendLine("Description: ${course.description.get(userLanguage)}")
                 appendLine("Total Chapters: ${course.totalChapters}")
                 appendLine("Estimated Duration: ${course.estimatedHours} hours")
                 
@@ -241,12 +245,12 @@ class RagIndexingService @Inject constructor(
                 if (course.chapters.isNotEmpty()) {
                     appendLine("\nChapter Overview:")
                     course.chapters.forEach { chapter ->
-                        appendLine("- Chapter ${chapter.chapterNumber}: ${chapter.title}")
+                        appendLine("- Chapter ${chapter.chapterNumber}: ${chapter.title.get(userLanguage)}")
                     }
                 }
                 
                 // Add searchable keywords for better discovery
-                appendLine("\nKeywords: ${course.subject.name.lowercase()}, ${course.title.lowercase()}, ${course.grade.lowercase()}")
+                appendLine("\nKeywords: ${course.subject.name.lowercase()}, ${course.title.get(userLanguage).lowercase()}, ${course.grade.lowercase()}")
             }
             
             // Generate embedding for course content
@@ -261,7 +265,7 @@ class RagIndexingService @Inject constructor(
                 id = "course_metadata_${course.id}",
                 courseId = course.id,
                 chapterId = "overview", // Special chapter ID for course metadata  
-                title = course.title,
+                title = course.title.get(userLanguage),
                 content = courseContent,
                 chunkType = "COURSE_OVERVIEW",
                 source = "Course Metadata",
@@ -271,10 +275,10 @@ class RagIndexingService @Inject constructor(
                 embedding = embedding,
                 metadata = mapOf(
                     "courseId" to course.id,
-                    "courseTitle" to course.title,
+                    "courseTitle" to course.title.get(userLanguage),
                     "subject" to course.subject.name,
                     "grade" to course.grade,
-                    "description" to course.description,
+                    "description" to course.description.get(userLanguage),
                     "totalChapters" to course.totalChapters.toString(),
                     "estimatedHours" to course.estimatedHours.toString(),
                     "isDownloaded" to course.isDownloaded.toString(),

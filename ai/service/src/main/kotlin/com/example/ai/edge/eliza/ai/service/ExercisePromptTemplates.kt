@@ -3,6 +3,7 @@ package com.example.ai.edge.eliza.ai.service
 import com.example.ai.edge.eliza.core.model.Exercise
 import com.example.ai.edge.eliza.core.model.ExerciseGenerationRequest
 import com.example.ai.edge.eliza.core.model.RelativeDifficulty
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 
 /**
  * Intelligent prompt templates for exercise generation with Gemma 3n.
@@ -14,28 +15,28 @@ object ExercisePromptTemplates {
      * Create a simple, effective generation prompt for the given request.
      * Uses line-by-line format to avoid JSON parsing issues with commas and quotes.
      */
-    fun createGenerationPrompt(request: ExerciseGenerationRequest): String {
+    fun createGenerationPrompt(request: ExerciseGenerationRequest, language: SupportedLanguage): String {
         val original = request.originalExercise
         val difficulty = request.selectedDifficulty
         
         return """
             Create a new math question similar to this one:
             
-            ORIGINAL: "${original.questionText}"
-            CORRECT ANSWER: ${original.options[original.correctAnswerIndex]}
+            ORIGINAL: "${original.questionText.get(language)}"
+            CORRECT ANSWER: ${original.options[original.correctAnswerIndex].get(language)}
             
             TASK: ${difficulty.promptModifier}
             CONCEPT: ${request.conceptFocus}
             
             Generate your response in EXACTLY this format (no extra text):
             
-            questionText: ${createExampleQuestion(original, difficulty)}
-            option1: ${getExampleOption(original, 0)}
-            option2: ${getExampleOption(original, 1)}
-            option3: ${getExampleOption(original, 2)}
-            option4: ${getExampleOption(original, 3)}
+            questionText: ${createExampleQuestion(original, difficulty, language)}
+            option1: ${getExampleOption(original, 0, language)}
+            option2: ${getExampleOption(original, 1, language)}
+            option3: ${getExampleOption(original, 2, language)}
+            option4: ${getExampleOption(original, 3, language)}
             correctAnswerIndex: ${original.correctAnswerIndex}
-            explanation: ${original.explanation.replace(":", " -").take(50)}
+            explanation: ${original.explanation.get(language).replace(":", " -").take(50)}
             conceptFocus: ${request.conceptFocus}
             difficultyAchieved: ${difficulty.name.lowercase()}
             
@@ -52,8 +53,8 @@ object ExercisePromptTemplates {
     /**
      * Create an example question showing the desired format.
      */
-    private fun createExampleQuestion(original: Exercise, difficulty: RelativeDifficulty): String {
-        val baseQuestion = original.questionText
+    private fun createExampleQuestion(original: Exercise, difficulty: RelativeDifficulty, language: SupportedLanguage): String {
+        val baseQuestion = original.questionText.get(language)
         return when {
             baseQuestion.contains("slope") -> "What is the slope of y = 2x + 3?"
             baseQuestion.contains("solve") && baseQuestion.contains("equation") -> "Solve: 3x + 2 = 11"
@@ -66,11 +67,12 @@ object ExercisePromptTemplates {
     /**
      * Get a specific example option for line-by-line format.
      */
-    private fun getExampleOption(original: Exercise, index: Int): String {
+    private fun getExampleOption(original: Exercise, index: Int, language: SupportedLanguage): String {
+        val questionText = original.questionText.get(language)
         val baseOptions = when {
-            original.questionText.contains("slope") -> listOf("2", "3", "-2", "-3")
-            original.questionText.contains("vertex") -> listOf("(2, -1)", "(2, 1)", "(-2, -1)", "(-2, 1)")
-            original.questionText.contains("factor") -> listOf("(x + 2)(x + 3)", "(x + 1)(x + 6)", "(x - 2)(x - 3)", "(x - 1)(x - 6)")
+            questionText.contains("slope") -> listOf("2", "3", "-2", "-3")
+            questionText.contains("vertex") -> listOf("(2, -1)", "(2, 1)", "(-2, -1)", "(-2, 1)")
+            questionText.contains("factor") -> listOf("(x + 2)(x + 3)", "(x + 1)(x + 6)", "(x - 2)(x - 3)", "(x - 1)(x - 6)")
             else -> listOf("x = 4", "x = 3", "x = 5", "x = 2")
         }
         return if (index < baseOptions.size) baseOptions[index] else "option ${index + 1}"
@@ -107,8 +109,8 @@ object ExercisePromptTemplates {
     /**
      * Extract the main mathematical concept from an exercise.
      */
-    fun extractConceptFocus(exercise: Exercise): String {
-        val questionText = exercise.questionText.lowercase()
+    fun extractConceptFocus(exercise: Exercise, language: SupportedLanguage): String {
+        val questionText = exercise.questionText.get(language).lowercase()
         
         return when {
             questionText.contains("slope") || questionText.contains("gradient") -> 

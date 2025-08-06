@@ -20,6 +20,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ai.edge.eliza.core.data.repository.CourseRepository
 import com.example.ai.edge.eliza.core.data.repository.ProgressRepository
+import com.example.ai.edge.eliza.core.data.repository.UserPreferencesRepository
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,7 +41,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ChapterViewModel @Inject constructor(
     private val courseRepository: CourseRepository,
-    private val progressRepository: ProgressRepository
+    private val progressRepository: ProgressRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
     
     // Default user ID for demo purposes
@@ -53,11 +56,20 @@ class ChapterViewModel @Inject constructor(
      */
     val uiState: StateFlow<ChapterScreenUiState> = combine(
         _contentState,
-        _refreshTrigger
-    ) { contentState, _ ->
+        _refreshTrigger,
+        userPreferencesRepository.getUserPreferences()
+    ) { contentState, _, userPreferences ->
+        val chapter = when (contentState) {
+            is ChapterContentUiState.Success -> contentState.chapter
+            else -> null
+        }
+        
         ChapterScreenUiState(
             contentState = contentState,
-            isLoading = contentState is ChapterContentUiState.Loading
+            isLoading = contentState is ChapterContentUiState.Loading,
+            currentLanguage = userPreferences.language,
+            chapterTitle = chapter?.title?.get(userPreferences.language) ?: "",
+            chapterContent = chapter?.markdownContent?.get(userPreferences.language) ?: ""
         )
     }.stateIn(
         viewModelScope,

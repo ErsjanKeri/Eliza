@@ -16,6 +16,7 @@
 
 package com.example.ai.edge.eliza.feature.settings
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,11 +65,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.ai.edge.eliza.core.common.R
+import com.example.ai.edge.eliza.core.model.SupportedLanguage
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -96,7 +101,7 @@ fun SettingsScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back_button_description)
                         )
                     }
                 },
@@ -137,7 +142,7 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Language Section
-                SettingsSection(title = "Language") {
+                SettingsSection(title = stringResource(R.string.language_section)) {
                     LanguageSelector(
                         selectedLanguage = uiState.userPreferences.language,
                         availableLanguages = uiState.availableLanguages,
@@ -146,10 +151,10 @@ fun SettingsScreen(
                 }
 
                 // Learning Profile Section
-                SettingsSection(title = "Learning Profile") {
+                SettingsSection(title = stringResource(R.string.learning_profile_section)) {
                     // Experience Level
                     Text(
-                        text = "Experience Level",
+                        text = stringResource(R.string.experience_level),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -181,7 +186,7 @@ fun SettingsScreen(
 
                     // Preferred Subjects
                     Text(
-                        text = "Preferred Subjects",
+                        text = stringResource(R.string.preferred_subjects),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -209,10 +214,10 @@ fun SettingsScreen(
                 }
 
                 // Study Preferences Section
-                SettingsSection(title = "Study Preferences") {
+                SettingsSection(title = stringResource(R.string.study_preferences_section)) {
                     // Available Time
                     Text(
-                        text = "Available Time (hours per week)",
+                        text = stringResource(R.string.available_time_hours_per_week),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -227,7 +232,7 @@ fun SettingsScreen(
                             val hours = newValue.toIntOrNull()
                             viewModel.updateAvailableTimeHours(hours)
                         },
-                        label = { Text("Hours per week") },
+                        label = { Text(stringResource(R.string.hours_per_week)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -236,7 +241,7 @@ fun SettingsScreen(
 
                     // Preferred Difficulty
                     Text(
-                        text = "Preferred Difficulty",
+                        text = stringResource(R.string.preferred_difficulty),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -258,7 +263,7 @@ fun SettingsScreen(
 
                     // Study Schedule
                     Text(
-                        text = "Preferred Study Time",
+                        text = stringResource(R.string.preferred_study_time),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -278,7 +283,7 @@ fun SettingsScreen(
                 }
 
                 // Learning Goals Section
-                SettingsSection(title = "Learning Goals") {
+                SettingsSection(title = stringResource(R.string.learning_goals_section)) {
                     val commonGoals = listOf(
                         "Improve problem-solving skills",
                         "Prepare for exams",
@@ -320,13 +325,13 @@ fun SettingsScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "Reset Settings",
+                            text = stringResource(R.string.reset_settings),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "This will reset all your preferences to default values.",
+                            text = stringResource(R.string.reset_settings_description),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -348,12 +353,13 @@ fun SettingsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LanguageSelector(
-    selectedLanguage: String,
-    availableLanguages: List<String>,
-    onLanguageSelected: (String) -> Unit,
+    selectedLanguage: SupportedLanguage,
+    availableLanguages: List<SupportedLanguage>,
+    onLanguageSelected: (SupportedLanguage) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -361,10 +367,10 @@ private fun LanguageSelector(
         modifier = modifier
     ) {
         OutlinedTextField(
-            value = selectedLanguage.replaceFirstChar { it.uppercase() },
+            value = selectedLanguage.nativeName,
             onValueChange = {},
             readOnly = true,
-            label = { Text("App Language") },
+                                    label = { Text(stringResource(R.string.app_language)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
             modifier = Modifier
@@ -377,10 +383,15 @@ private fun LanguageSelector(
         ) {
             availableLanguages.forEach { language ->
                 DropdownMenuItem(
-                    text = { Text(language.replaceFirstChar { it.uppercase() }) },
+                    text = { Text(language.nativeName) },
                     onClick = {
+                        // Save the language preference
                         onLanguageSelected(language)
                         expanded = false
+                        
+                        // Recreate activity to apply new locale immediately
+                        // This is necessary for Android locale changes to take effect
+                        (context as? Activity)?.recreate()
                     }
                 )
             }

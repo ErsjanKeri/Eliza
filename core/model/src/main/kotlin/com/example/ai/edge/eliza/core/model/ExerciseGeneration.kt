@@ -80,15 +80,16 @@ data class ExerciseGenerationResponse(
 ) {
     /**
      * Convert to Trial object using existing data model.
+     * Creates LocalizedContent with English-only content (AI generates in user's language later).
      */
     fun toTrial(originalExerciseId: String): Trial {
         return Trial(
             id = java.util.UUID.randomUUID().toString(),
             originalExerciseId = originalExerciseId,
-            questionText = questionText,
-            options = options,
+            questionText = LocalizedContent.englishOnly(questionText),
+            options = options.map { LocalizedContent.englishOnly(it) },
             correctAnswerIndex = correctAnswerIndex,
-            explanation = explanation,
+            explanation = LocalizedContent.englishOnly(explanation),
             difficulty = when (difficultyAchieved.lowercase()) {
                 "easy", "easier" -> Difficulty.EASY
                 "hard", "harder" -> Difficulty.HARD
