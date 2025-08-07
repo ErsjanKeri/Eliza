@@ -286,7 +286,7 @@ ELIZA is now ready to enhance your learning experience with cutting-edge AI tech
 
 ## 📸 Demo Video
 
-[![Watch the ELIZA Demo Video](https://img.youtube.com/vi/[YOUR_VIDEO_ID]/maxresdefault.jpg)](https://www.youtube.com/watch?v=[VIDEO_TIDI])
+[![Watch the ELIZA Demo Video](https://img.youtube.com/vi/_0wSE9-H2Vk/maxresdefault.jpg)](https://youtu.be/_0wSE9-H2Vk?si=46AEDwLWOv3F1UVM)
 
 ---
 
